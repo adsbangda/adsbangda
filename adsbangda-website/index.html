@@ -455,10 +455,25 @@ nav{
 
 /* ---------- TESTIMONIALS ---------- */
 .section-tint{background:var(--paper-deep);}
-.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.testi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
 .bubble{
   background:var(--white);border-radius:20px;border-bottom-left-radius:4px;
   padding:24px;box-shadow:0 10px 26px -18px rgba(21,23,27,.35);
+}
+.bubble-open{
+  background:transparent;border:1.5px dashed var(--teal);border-radius:20px;border-bottom-left-radius:4px;
+  padding:24px;box-shadow:none;display:flex;flex-direction:column;
+}
+.bubble-open .open-badge{
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--teal);border:1px solid var(--teal);border-radius:99px;padding:4px 10px;
+  display:inline-flex;align-self:flex-start;margin-bottom:14px;
+}
+.bubble-open b{font-size:14.5px;display:block;margin-bottom:8px;}
+.bubble-open p{font-size:14px;line-height:1.6;color:#33352f;flex-grow:1;}
+.bubble-open a{
+  margin-top:16px;font-family:'Space Mono',monospace;font-size:12px;color:var(--teal);
+  border-bottom:1px solid var(--teal);align-self:flex-start;padding-bottom:2px;
 }
 .bubble-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
 .bubble-avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;}
@@ -902,6 +917,12 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
         </div>
         <p data-i18n="testi3_q">Reporting-nya jujur, nggak cuma pamer angka bagus doang. Enak diajak diskusi strategi bareng.</p>
         <div class="meta" data-i18n="testi3_meta">✓✓ dibaca · 20:03</div>
+      </div>
+      <div class="bubble-open reveal">
+        <span class="open-badge" data-i18n="testi4_badge">SLOT TERBUKA</span>
+        <b data-i18n="testi4_h">Cerita website kamu bisa jadi yang berikutnya</b>
+        <p data-i18n="testi4_p">Kami baru mulai menerima klien internasional untuk Website & Landing Page — testimoni dari mereka akan tampil di sini begitu proyek pertama selesai.</p>
+        <a href="#kontak" data-i18n="testi4_cta">Jadi klien internasional pertama kami →</a>
       </div>
     </div>
   </div>
@@ -1539,6 +1560,10 @@ const translations = {
   testi3_role: {id:'Sales Manager, Johanes Toyota Batam', en:'Sales Manager, Johanes Toyota Batam'},
   testi3_q: {id:'Reporting-nya jujur, nggak cuma pamer angka bagus doang. Enak diajak diskusi strategi bareng.', en:'The reporting is honest, not just showing off good numbers. Great to discuss strategy with.'},
   testi3_meta: {id:'✓✓ dibaca · 20:03', en:'✓✓ read · 20:03'},
+  testi4_badge: {id:'SLOT TERBUKA', en:'OPEN SLOT'},
+  testi4_h: {id:'Cerita website kamu bisa jadi yang berikutnya', en:'Your website story could be next'},
+  testi4_p: {id:'Kami baru mulai menerima klien internasional untuk Website & Landing Page — testimoni dari mereka akan tampil di sini begitu proyek pertama selesai.', en:'We\'ve just started taking on international clients for Website & Landing Page projects — testimonials from them will show up here once the first project wraps.'},
+  testi4_cta: {id:'Jadi klien internasional pertama kami →', en:'Be our first international client →'},
   cta_h2: {id:'Yuk, Ceritain Kebutuhan Brand Kamu!', en:'Let\'s Talk About Your Brand\'s Needs!'},
   cta_p: {id:'Nggak perlu bingung harus mulai dari mana. Yuk ngobrol dulu, siapa tahu strategi yang tepat bisa jadi langkah awal buat bisnis kamu berkembang lebih jauh.', en:'No need to worry about where to start. Let\'s chat first — the right strategy could be the first step for your business to grow even further.'},
   foot_menu: {id:'Menu', en:'Menu'},
