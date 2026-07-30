@@ -466,7 +466,14 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   padding-bottom:40px;border-bottom:1px solid rgba(240,236,226,.14);
 }
 .footer-top .logo{color:var(--paper);}
-.foot-links{display:flex;gap:40px;flex-wrap:wrap;}
+.foot-links{display:flex;gap:32px;flex-wrap:wrap;}
+.foot-brand{max-width:250px;}
+.foot-col{min-width:140px;}
+.foot-tagline{font-size:13.5px;line-height:1.6;color:var(--muted);margin:14px 0 18px;}
+.foot-social{display:flex;gap:10px;}
+.foot-social a{width:34px;height:34px;border-radius:50%;border:1px solid rgba(240,236,226,.25);display:flex;align-items:center;justify-content:center;color:var(--paper);opacity:.85;transition:opacity .2s,border-color .2s,color .2s;}
+.foot-social a:hover{opacity:1;border-color:var(--yellow);color:var(--yellow);}
+.foot-col-spacer{visibility:hidden;}
 .foot-col h4{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px;font-family:'Space Mono',monospace;}
 .foot-col a{display:block;font-size:14.5px;margin-bottom:9px;opacity:.85;}
 .foot-col a:hover{opacity:1;color:var(--yellow);}
@@ -732,7 +739,14 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
 <footer>
   <div class="wrap">
     <div class="footer-top">
-      <a href="index.html" class="logo"><span class="sq"></span>adsbangda</a>
+      <div class="foot-brand">
+          <a href="index.html" class="logo"><span class="sq"></span>adsbangda</a>
+          <p class="foot-tagline" data-i18n-nav="foot_tagline">Partner digital marketing yang bantu brand dan UMKM tumbuh lewat strategi konten, iklan, dan branding yang terukur.</p>
+        <div class="foot-social">
+          <a href="https://www.instagram.com/adsbangda/" target="_blank" rel="noopener" aria-label="Instagram adsbangda"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1"/></svg></a>
+          <a href="https://www.linkedin.com/company/adsbangda/posts/?feedView=all" target="_blank" rel="noopener" aria-label="LinkedIn adsbangda"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 8.98h4V21H3V8.98zM9 8.98h3.6v1.71h.05c.5-.95 1.73-1.95 3.56-1.95 3.81 0 4.51 2.51 4.51 5.78V21h-4v-5.6c0-1.34-.02-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V21H9V8.98z"/></svg></a>
+        </div>
+        </div>
       <div class="foot-links">
         <div class="foot-col">
           <h4 data-i18n-nav="menu">Menu</h4>
@@ -744,10 +758,25 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
           <a href="kontak.html" data-i18n-nav="kontak">Kontak</a>
         </div>
         <div class="foot-col">
+          <h4 data-i18n-nav="layanan">Layanan</h4>
+          <a href="layanan-sosial-media-management.html">Social Media Management</a>
+          <a href="layanan-content-strategy.html">Content Strategy</a>
+          <a href="layanan-meta-ads.html">Meta Ads Performance</a>
+          <a href="layanan-kol-management.html">KOL &amp; Influencer Management</a>
+        </div>
+        <div class="foot-col">
+          <h4 aria-hidden="true" class="foot-col-spacer">Layanan</h4>
+          <a href="layanan-branding-visual-identity.html">Branding &amp; Visual Identity</a>
+          <a href="layanan-website-landing-page.html">Website &amp; Landing Page</a>
+          <a href="layanan-creative-design.html">Creative Design</a>
+          <a href="layanan-digital-growth-consulting.html">Digital Growth Consulting</a>
+        </div>
+        <div class="foot-col">
           <h4 data-i18n-nav="kontak_h">Kontak</h4>
           <a href="mailto:adsbangda@gmail.com">adsbangda@gmail.com</a>
           <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6282289348724">+62 822 8934 8724</a>
           <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6281282262002">+62 812 8226 2002</a>
+          <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6285713644514">+62 857 1364 4514</a>
           <a href="#" data-i18n-nav="lokasi">Jakarta, Indonesia</a>
         </div>
       </div>
@@ -779,7 +808,7 @@ revealEls.forEach(el=>io.observe(el));
 // whatsapp links with prefilled message
 let currentLang = localStorage.getItem('adsbangda_lang') || 'id';
 const waMessages = {
-  id: 'Halo Adsbangda! \ud83d\udc4b\nSaya ingin konsultasi mengenai kebutuhan digital marketing untuk bisnis saya. Apakah bisa dibantu?',
+  id: 'Halo Adsbangda! \ud83d\udc4b\nSaya ingin berkonsultasi mengenai kebutuhan bisnis saya. Boleh dibantu merekomendasikan layanan yang paling sesuai? Terima kasih.',
   en: 'Hello Adsbangda! \ud83d\udc4b\nI would like to consult about the digital marketing needs for my business. Could you help?'
 };
 function updateWaLinks(){
@@ -840,6 +869,7 @@ const navTranslations = {
   blog: {id:'Blog', en:'Blog'},
   kontak: {id:'Kontak', en:'Contact'},
   cta: {id:'Mulai Proyek', en:'Start a Project'},
+  foot_tagline: {id:'Partner digital marketing yang bantu brand dan UMKM tumbuh lewat strategi konten, iklan, dan branding yang terukur.', en:'A digital marketing partner helping brands and SMEs grow through measurable content, ads, and branding strategies.'},
   menu: {id:'Menu', en:'Menu'},
   kontak_h: {id:'Kontak', en:'Contact'},
   lokasi: {id:'Jakarta, Indonesia', en:'Jakarta, Indonesia'},
