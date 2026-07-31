@@ -548,7 +548,7 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
   <div class="wrap">
     <div class="section-head reveal">
       <h2 data-i18n="port_h2">Brand yang udah kita garap bareng</h2>
-      <p style="margin-top:14px;font-size:15.5px;" data-i18n="port_p">Sebagian studi kasus dari klien yang kita pegang — geser buat lihat semua, klik kartunya buat lihat detail.</p>
+      <p style="margin-top:14px;font-size:15.5px;" data-i18n="port_p">Sebagian portofolio dari klien yang kita pegang — geser buat lihat semua, klik kartunya buat lihat detail.</p>
     </div>
     <div class="slider-controls">
       <button class="slider-btn" id="sliderPrev" aria-label="Sebelumnya">
@@ -1018,7 +1018,7 @@ function brandSlug(brand){ return brand.toLowerCase().trim().replace(/\s+/g,'-')
 
 function openClientModal(client){
   modalContent.innerHTML = `
-    <div class="modal-eyebrow">${currentLang === 'id' ? 'Studi Kasus' : 'Case Study'}</div>
+    <div class="modal-eyebrow">${currentLang === 'id' ? 'Portofolio' : 'Portfolio'}</div>
     <div class="modal-title">${client.brand}</div>
     <div class="modal-tags">${T(client.tags)}</div>
     ${client.projects.map(p => `
@@ -1061,7 +1061,7 @@ function buildCard(client, immediate){
       <div class="view-more">${currentLang === 'id' ? 'Lihat detail proyek →' : 'View project details →'}</div>
     </div>
   `;
-  el.addEventListener('click', ()=> { window.location.href = 'studi-kasus-' + brandSlug(client.brand) + '.html'; });
+  el.addEventListener('click', ()=> { window.location.href = 'portofolio-' + brandSlug(client.brand) + '.html'; });
   return el;
 }
 // Original set
@@ -1247,7 +1247,7 @@ const translations = {
   svc8_desc: {id:'Konsultasi strategis buat bisnis yang mau tumbuh lebih terarah di dunia digital, berdasarkan data.', en:'Strategic consulting for businesses that want to grow more purposefully online, backed by data.'},
   port_eyebrow: {id:'PORTOFOLIO', en:'PORTFOLIO'},
   port_h2: {id:'Brand yang udah kita garap bareng', en:'Brands we\'ve worked with'},
-  port_p: {id:'Sebagian studi kasus dari klien yang kita pegang — geser buat lihat semua, klik kartunya buat lihat detail.', en:'A selection of case studies from our clients — swipe to see them all, click a card for details.'},
+  port_p: {id:'Sebagian portofolio dari klien yang kita pegang — geser buat lihat semua, klik kartunya buat lihat detail.', en:'A selection of portfolio pieces from our clients — swipe to see them all, click a card for details.'},
   proses_eyebrow: {id:'PROSES', en:'PROCESS'},
   proses_h2: {id:'Tahapan Bekerja Sama', en:'Our Working Stages'},
   proses_intro: {id:'Kami percaya bahwa setiap bisnis memiliki kebutuhan dan tujuan yang berbeda. Oleh karena itu, setiap kerja sama diawali dengan proses yang terstruktur agar strategi yang dijalankan benar-benar sesuai dengan kebutuhan bisnis Anda.', en:'We believe every business has different needs and goals. That\'s why every partnership starts with a structured process, so the strategy we run truly fits your business needs.'},

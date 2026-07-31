@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adsbangda - Portofolio</title>
-<meta name="description" content="Lihat studi kasus dan hasil kerja adsbangda bersama berbagai klien di bidang F&B, properti, edukasi, dan lainnya.">
+<meta name="description" content="Lihat portofolio dan hasil kerja adsbangda bersama berbagai klien di bidang F&B, properti, edukasi, dan lainnya.">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/img-e9729fe63a0c.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/img-e99e528fab28.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/img-e3b9b32f9157.png">
@@ -103,7 +103,7 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
 <section class="page-hero">
   <div class="wrap">
     <h1 data-i18n="hero_h1">Brand yang udah kita garap bareng</h1>
-    <p data-i18n="hero_p">Sebagian studi kasus dari klien yang kita pegang &mdash; geser buat lihat semua, klik kartunya buat lihat detail.</p>
+    <p data-i18n="hero_p">Sebagian portofolio dari klien yang kita pegang &mdash; geser buat lihat semua, klik kartunya buat lihat detail.</p>
   </div>
 </section>
 
@@ -124,7 +124,7 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
 
 <section class="cta">
   <div class="wrap">
-    <h2 data-i18n="cta_h2">Mau Jadi Studi Kasus Berikutnya?</h2>
+    <h2 data-i18n="cta_h2">Mau Jadi Portofolio Berikutnya?</h2>
     <p data-i18n="cta_p">Ceritain bisnis kamu, kita bantu rancang strategi digital yang paling pas.</p>
     <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Mulai Proyek &rarr;</a>
   </div>
@@ -383,7 +383,7 @@ function brandSlug(brand){ return brand.toLowerCase().trim().replace(/\s+/g,'-')
 
 function openClientModal(client){
   modalContent.innerHTML = `
-    <div class="modal-eyebrow">${currentLang === 'id' ? 'Studi Kasus' : 'Case Study'}</div>
+    <div class="modal-eyebrow">${currentLang === 'id' ? 'Portofolio' : 'Portfolio'}</div>
     <div class="modal-title">${client.brand}</div>
     <div class="modal-tags">${T(client.tags)}</div>
     ${client.projects.map(p => `
@@ -426,7 +426,7 @@ function buildCard(client, immediate){
       <div class="view-more">${currentLang === 'id' ? 'Lihat detail proyek →' : 'View project details →'}</div>
     </div>
   `;
-  el.addEventListener('click', ()=> { window.location.href = 'studi-kasus-' + brandSlug(client.brand) + '.html'; });
+  el.addEventListener('click', ()=> { window.location.href = 'portofolio-' + brandSlug(client.brand) + '.html'; });
   return el;
 }
 // Original set
@@ -573,8 +573,8 @@ portfolioVisibility.observe(portfolioSection);
 // ---- page-specific translations (Portofolio) ----
 const translations = {
   hero_h1: {id:'Brand yang udah kita garap bareng', en:'Brands we\'ve worked on together'},
-  hero_p: {id:'Sebagian studi kasus dari klien yang kita pegang &mdash; geser buat lihat semua, klik kartunya buat lihat detail.', en:'A selection of case studies from clients we\'ve worked with &mdash; scroll to see them all, click a card to see the details.'},
-  cta_h2: {id:'Mau Jadi Studi Kasus Berikutnya?', en:'Want to Be Our Next Case Study?'},
+  hero_p: {id:'Sebagian portofolio dari klien yang kita pegang &mdash; geser buat lihat semua, klik kartunya buat lihat detail.', en:'A selection of portfolio pieces from clients we\'ve worked with &mdash; scroll to see them all, click a card to see the details.'},
+  cta_h2: {id:'Mau Jadi Portofolio Berikutnya?', en:'Want to Be Our Next Portfolio Piece?'},
   cta_p: {id:'Ceritain bisnis kamu, kita bantu rancang strategi digital yang paling pas.', en:'Tell us about your business, and we\'ll help design the digital strategy that fits best.'},
   cta_btn: {id:'Mulai Proyek &rarr;', en:'Start a Project &rarr;'},
 };

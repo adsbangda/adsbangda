@@ -4,8 +4,8 @@
 <script>try{if(localStorage.getItem('adsbangda_lang')==='en'){document.documentElement.style.visibility='hidden';}}catch(e){}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adsbangda - Studi Kasus Johanes Toyota Batam</title>
-<meta name="description" content="Studi kasus Johanes Toyota Batam: Konten promosi &amp; edukasi seputar penjualan mobil yang informatif dan up-to-date.">
+<title>Adsbangda - Portofolio Wellner Academy</title>
+<meta name="description" content="Portofolio Wellner Academy: strategi Social Media Management untuk konten edukasi finansial, pajak, akuntansi, dan desain.">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/img-e9729fe63a0c.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/img-e99e528fab28.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/img-e3b9b32f9157.png">
@@ -19,20 +19,39 @@
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"></noscript>
 <link rel="stylesheet" href="assets/css/style.css">
-<link rel="stylesheet" href="assets/css/studi-kasus.css">
+<link rel="stylesheet" href="assets/css/portofolio-detail.css">
 <style>
-.cd-summary{font-size:16px;line-height:1.75;color:#3b3d3a;margin:28px 0 50px;text-align:justify;}
+/* ---------- SERVICES ---------- */
+.section{padding:80px 0;}
 
-.hero-meta{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.2fr);gap:28px;margin-top:40px;padding-top:32px;border-top:1px solid rgba(21,23,27,.14);}
+.section-head{margin-bottom:32px;}
+
+.cd-summary{font-size:16px;line-height:1.75;color:#3b3d3a;margin:0 0 20px;text-align:justify;}
+
+.cd-summary:last-child{margin-bottom:0;}
+
+.hero-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:40px;padding-top:32px;border-top:1px solid rgba(21,23,27,.14);}
 
 .project-block .mp-thumb img{width:100%;display:block;}
 
+.mp-thumb img,.modal-project .mp-thumb img{cursor:zoom-in;}
+
+.img-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,16,14,.92);align-items:center;justify-content:center;padding:32px;cursor:zoom-out;}
+
+.img-lightbox.active{display:flex;}
+
+.img-lightbox img{max-width:min(1100px,92vw);max-height:90vh;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+
+.img-lightbox-close{position:absolute;top:20px;right:28px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;cursor:pointer;}
+
+.img-lightbox-close:hover{background:rgba(255,255,255,.22);}
+
 /* ---- case study: tools & software ---- */
-.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:40px 32px;margin-top:0;}
+.tools-grid{display:flex;flex-wrap:wrap;align-items:flex-start;gap:40px 64px;margin-top:0;}
 
-.tools-icon-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px;}
+.tools-icon-row{display:flex;flex-wrap:nowrap;gap:20px;}
 
-.tool-item{display:flex;flex-direction:column;align-items:flex-start;gap:8px;width:100%;text-align:left;min-width:0;}
+.tool-item{display:flex;flex-direction:column;align-items:flex-start;gap:8px;width:64px;flex-shrink:0;text-align:left;min-width:0;}
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -113,10 +132,10 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
 <section class="page-hero">
   <div class="wrap">
     <a href="portofolio.html" class="back-link reveal" data-i18n="back_link" style="margin-bottom:22px;display:inline-flex;">&larr; Kembali ke Portofolio</a>
-    <h1>Johanes Toyota Batam</h1>
-    <p data-i18n="hero_h2" style="font-size:20px;font-weight:700;margin-top:18px;line-height:1.5;">Bangun Kehadiran Digital Johanes Toyota Batam yang Profesional dan Konsisten</p>
-    <p class="cd-summary" data-i18n="hero_lede1" style="margin:20px 0 0;">Adsbangda membantu Johanes Toyota Batam mengembangkan kehadiran digital melalui strategi yang terintegrasi, mulai dari pengelolaan media sosial, kampanye iklan digital, hingga pengembangan materi konten dan branding.</p>
-    <p class="cd-summary" data-i18n="hero_lede2" style="margin:14px 0 0;">Selama kerja sama berlangsung, kami berfokus pada peningkatan kredibilitas brand, memperluas jangkauan audiens, serta membangun fondasi pemasaran digital yang konsisten untuk mendukung pertumbuhan bisnis Johanes Toyota Batam.</p>
+    <h1>Wellner Academy</h1>
+    <p data-i18n="hero_h2" style="font-size:20px;font-weight:700;margin-top:18px;line-height:1.5;">Bangun Kehadiran Digital Wellner Academy Melalui Konten Edukasi yang Konsisten</p>
+    <p class="cd-summary" data-i18n="hero_lede1" style="margin:20px 0 0;">Adsbangda membantu Wellner Academy membangun kehadiran digital melalui strategi Social Media Management yang berfokus pada penyajian konten edukatif, relevan, dan konsisten.</p>
+    <p class="cd-summary" data-i18n="hero_lede2" style="margin:20px 0 0;">Selama kerja sama berlangsung, kami bertanggung jawab dalam proses perencanaan konten, desain visual, copywriting, hingga publikasi secara berkala untuk membangun kredibilitas brand, meningkatkan engagement, dan memperluas jangkauan audiens di media sosial.</p>
 
     <div class="hero-meta reveal">
       <div class="hero-meta-item">
@@ -125,7 +144,7 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
         </div>
         <div class="ov-text">
           <span data-i18n="ov_k3">Layanan</span>
-          <b data-i18n="ov_v3">Social Media Management, Meta Ads, Website Development, Company Profile Design</b>
+          <b data-i18n="ov_v3">Social Media Management</b>
         </div>
       </div>
       <div class="hero-meta-item">
@@ -134,7 +153,7 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
         </div>
         <div class="ov-text">
           <span data-i18n="ov_k4">Platform</span>
-          <b data-i18n="ov_v4">Instagram, Tiktok, Facebook, X, Threads</b>
+          <b data-i18n="ov_v4">Instagram, TikTok</b>
         </div>
       </div>
       <div class="hero-meta-item">
@@ -143,48 +162,48 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
         </div>
         <div class="ov-text">
           <span data-i18n="ov_k5">Kategori</span>
-          <b data-i18n="ov_v5">Digital Marketing, Website Development &amp; Branding</b>
+          <b data-i18n="ov_v5">Social Media Management</b>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section section-tint" style="padding-top:80px;padding-bottom:80px;">
+<section class="section section-tint">
   <div class="wrap">
     <div class="cd-wrap">
-      <div class="section-head reveal" style="margin-bottom:24px;">
+      <div class="section-head reveal">
         <h2 data-i18n="about_label">Tentang Proyek</h2>
       </div>
-      <p class="cd-summary reveal" data-i18n="about_p1" style="margin:0 0 20px;">Wellner Consulting merupakan firma konsultan pajak yang melayani perusahaan, UMKM, maupun individu dalam berbagai kebutuhan perpajakan dan kepatuhan bisnis.</p>
-      <p class="cd-summary reveal" data-i18n="about_p2" style="margin:0 0 20px;">Untuk memperkuat kehadiran digitalnya, Adsbangda dipercaya sebagai partner kreatif yang menangani berbagai kebutuhan pemasaran digital secara menyeluruh. Mulai dari produksi konten edukasi perpajakan, pengelolaan kampanye Meta Ads, hingga pengembangan materi branding perusahaan.</p>
-      <p class="cd-summary reveal" data-i18n="about_p3" style="margin:0;">Pendekatan ini membantu Wellner Consulting membangun citra profesional sekaligus meningkatkan konsistensi komunikasi di berbagai platform digital.</p>
+      <p class="cd-summary reveal" data-i18n="about_p1">Wellner Academy merupakan platform edukasi yang menghadirkan berbagai materi seputar finansial, perpajakan, akuntansi, hingga desain kreatif untuk membantu masyarakat dan profesional meningkatkan kompetensi mereka.</p>
+      <p class="cd-summary reveal" data-i18n="about_p2">Untuk mendukung pertumbuhan brand di media sosial, Wellner Academy mempercayakan Adsbangda sebagai partner kreatif dalam mengelola strategi konten secara menyeluruh. Kami memastikan setiap konten diproduksi secara konsisten dengan pendekatan visual yang menarik, informasi yang mudah dipahami, serta tetap relevan dengan kebutuhan audiens.</p>
+      <p class="cd-summary reveal" data-i18n="about_p3">Melalui strategi tersebut, media sosial Wellner Academy berkembang sebagai kanal edukasi yang aktif, informatif, dan mampu membangun hubungan yang lebih dekat dengan para pengikutnya.</p>
     </div>
   </div>
 </section>
 
-<section class="section" style="padding-top:0;">
+<section class="section">
   <div class="wrap">
     <div class="cd-wrap">
-      <p class="cd-summary reveal" data-i18n="summary">Konten promosi &amp; edukasi seputar penjualan mobil yang informatif dan up-to-date.</p>
-            <div class="project-block reveal">
-        <h3 data-i18n="p1_h2">Sosial Media Content</h3>
-        <div class="mp-thumb"><img src="assets/img/img-js-b15b343e8353.jpg" alt="Sosial Media Content — Johanes Toyota Batam"></div>
-        <p data-i18n="p1_desc">Konten promosi &amp; edukasi seputar penjualan mobil. Rutin produksi 3–4 konten baru tiap minggu, informatif dan up-to-date sama tren.</p>
+      <div class="project-block reveal">
+        <h3 data-i18n="p1_h2">Menghadirkan Konten Edukasi yang Informatif dan Konsisten</h3>
+        <div class="mp-thumb"><img src="assets/img/img-6504d61ced62.webp" alt="Sosial Media Content — Wellner Academy"></div>
+        <p data-i18n="p1_desc">Kami mengelola seluruh proses produksi konten media sosial Wellner Academy, mulai dari penyusunan content plan, riset topik, copywriting, desain visual, hingga penjadwalan publikasi. Setiap konten dirancang untuk menyampaikan informasi mengenai finansial, perpajakan, akuntansi, dan desain dengan bahasa yang mudah dipahami serta visual yang menarik sehingga mampu meningkatkan engagement sekaligus memperkuat positioning Wellner Academy sebagai platform edukasi yang terpercaya.</p>
         <div class="highlight-grid">
-          <div class="highlight-chip"><div class="hc-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4-4 3 3 5-6"/><path d="M11 5h3v3"/></svg></div><span data-i18n="p1_hl1">3–4 konten / minggu</span></div>
-          <div class="highlight-chip"><div class="hc-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4-4 3 3 5-6"/><path d="M11 5h3v3"/></svg></div><span data-i18n="p1_hl2">Otomotif kategori brand</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4-4 3 3 5-6"/><path d="M11 5h3v3"/></svg></div><span data-i18n="p1_hl1">3-5 konten / minggu</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4-4 3 3 5-6"/><path d="M11 5h3v3"/></svg></div><span data-i18n="p1_hl2">5% engagement rate</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4-4 3 3 5-6"/><path d="M11 5h3v3"/></svg></div><span data-i18n="p1_hl3">Konten edukasi konsisten &amp; relevan</span></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section section-tint" style="padding:90px 0;">
+<section class="section section-tint">
   <div class="wrap">
-    <div class="section-head reveal" style="margin-bottom:28px;">
+    <div class="section-head reveal">
       <h2 data-i18n="wf_label">Workflow Project</h2>
-      <p data-i18n="wf_desc">Kami menerapkan proses kerja yang terstruktur untuk memastikan setiap aktivitas pemasaran digital berjalan efektif dan menghasilkan output yang konsisten.</p>
+      <p data-i18n="wf_desc">Kami menerapkan alur kerja yang terstruktur untuk memastikan setiap konten diproduksi secara konsisten, memiliki kualitas visual yang baik, dan sesuai dengan strategi komunikasi brand.</p>
     </div>
     <div class="wf-track reveal">
       <svg class="wf-connector" viewBox="0 0 1200 320" fill="none" preserveAspectRatio="none">
@@ -192,24 +211,24 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
       </svg>
       <div class="wf-grid">
         <div class="wf-node"><span class="num">01</span><h4 data-i18n="wf_1">Discovery</h4></div>
-        <div class="wf-node"><span class="num">02</span><h4 data-i18n="wf_2">Research</h4></div>
+        <div class="wf-node"><span class="num">02</span><h4 data-i18n="wf_2">Content Research</h4></div>
         <div class="wf-node"><span class="num">03</span><h4 data-i18n="wf_3">Content Planning</h4></div>
-        <div class="wf-node"><span class="num">04</span><h4 data-i18n="wf_4">Design</h4></div>
-        <div class="wf-node"><span class="num">05</span><h4 data-i18n="wf_5">Campaign Setup</h4></div>
-        <div class="wf-node"><span class="num">06</span><h4 data-i18n="wf_6">Publishing</h4></div>
-        <div class="wf-node"><span class="num">07</span><h4 data-i18n="wf_7">Monitoring</h4></div>
-        <div class="wf-node"><span class="num">08</span><h4 data-i18n="wf_8">Optimization</h4></div>
-        <div class="wf-node"><span class="num">09</span><h4 data-i18n="wf_9">Reporting</h4></div>
+        <div class="wf-node"><span class="num">04</span><h4 data-i18n="wf_4">Copywriting</h4></div>
+        <div class="wf-node"><span class="num">05</span><h4 data-i18n="wf_5">Visual Design</h4></div>
+        <div class="wf-node"><span class="num">06</span><h4 data-i18n="wf_6">Content Review</h4></div>
+        <div class="wf-node"><span class="num">07</span><h4 data-i18n="wf_7">Publishing</h4></div>
+        <div class="wf-node"><span class="num">08</span><h4 data-i18n="wf_8">Monitoring</h4></div>
+        <div class="wf-node"><span class="num">09</span><h4 data-i18n="wf_9">Evaluation</h4></div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section" style="padding:90px 0;">
+<section class="section">
   <div class="wrap">
     <div class="section-head reveal">
       <h2 data-i18n="tools_label">Tools &amp; Software</h2>
-      <p data-i18n="tools_desc">Dalam proyek Wellner Consulting, kami menggunakan berbagai software profesional untuk mendukung proses produksi konten, pengembangan website, pengelolaan kampanye, hingga proses kerja berbasis AI secara menyeluruh.</p>
+      <p data-i18n="tools_desc">Dalam proyek Wellner Academy, kami menggunakan berbagai software profesional untuk mendukung proses produksi konten, pengelolaan kampanye, desain, hingga proses kerja berbasis AI secara menyeluruh.</p>
     </div>
     <div class="tools-grid reveal">
       <div class="tools-cat">
@@ -217,52 +236,31 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
         <div class="tools-icon-row">
           <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-24ae85c4ad59.png" alt="Adobe Photoshop"></div><span>Photoshop</span></div>
           <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-31d06b608bbc.png" alt="Adobe Illustrator"></div><span>Illustrator</span></div>
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-c8b74368a17e.png" alt="Adobe Premiere Pro"></div><span>Premiere Pro</span></div>
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-4e3ff4c32574.png" alt="Adobe After Effects"></div><span>After Effects</span></div>
           <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-3d6909954fce.png" alt="CapCut"></div><span>CapCut</span></div>
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-f2725ecd67be.png" alt="Figma"></div><span>Figma</span></div>
-        </div>
-      </div>
-      <div class="tools-cat">
-        <h4 data-i18n="tools_cat2">Website Development</h4>
-        <div class="tools-icon-row">
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-b36714c19c08.png" alt="Hostinger"></div><span>Hostinger</span></div>
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-aeee84293d93.png" alt="WordPress"></div><span>WordPress</span></div>
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-8fd515b16c19.png" alt="Elementor"></div><span>Elementor</span></div>
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-eca488a6cc75.png" alt="Google Analytics 4"></div><span>Analytics 4</span></div>
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-055fed13042c.png" alt="Google Tag Manager"></div><span>Tag Manager</span></div>
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-b32a0e36fdab.png" alt="Google Search Console"></div><span>Search Console</span></div>
         </div>
       </div>
       <div class="tools-cat">
         <h4 data-i18n="tools_cat4">AI &amp; Productivity</h4>
         <div class="tools-icon-row">
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-bc4935657e86.png" alt="Claude AI"></div><span>Claude AI</span></div>
           <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-a077fd0cc438.png" alt="ChatGPT"></div><span>ChatGPT</span></div>
           <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-38a2ce323997.png" alt="Gemini"></div><span>Gemini</span></div>
           <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-d9168d6f790c.png" alt="Magnific AI"></div><span>Magnific AI</span></div>
           <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-fee42bc9b96c.png" alt="Envato Elements"></div><span>Envato Elements</span></div>
         </div>
       </div>
-      <div class="tools-cat">
-        <h4 data-i18n="tools_cat3">Digital Advertising</h4>
-        <div class="tools-icon-row">
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-cd47ca03b973.png" alt="Meta Ads Manager"></div><span>Ads Manager</span></div>
-          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-5a1608d58abf.png" alt="WhatsApp Business"></div><span>WhatsApp Business</span></div>
-        </div>
-      </div>
     </div>
+  </div>
   </div>
 </section>
 
-<section class="section section-tint" style="padding:90px 0;">
+<section class="section section-tint">
   <div class="wrap">
     <div class="cd-wrap">
-      <div class="section-head reveal" style="margin-bottom:24px;">
+      <div class="section-head reveal">
         <h2 data-i18n="impact_label">Project Impact</h2>
       </div>
-      <p class="cd-summary reveal" data-i18n="impact_p1" style="margin:0 0 20px;">Melalui kombinasi strategi konten, iklan digital, dan branding visual, Wellner Consulting kini memiliki kehadiran digital yang lebih konsisten dan profesional.</p>
-      <p class="cd-summary reveal" data-i18n="impact_p2" style="margin:0;">Pendekatan ini membantu perusahaan menjangkau audiens yang lebih luas, memperkuat kredibilitas brand, serta membangun fondasi pemasaran digital yang dapat terus dikembangkan seiring pertumbuhan bisnis.</p>
+      <p class="cd-summary reveal" data-i18n="impact_p1">Melalui strategi Social Media Management yang konsisten, Wellner Academy kini memiliki identitas digital yang lebih profesional dengan penyampaian konten yang terstruktur dan relevan bagi target audiens.</p>
+      <p class="cd-summary reveal" data-i18n="impact_p2">Konsistensi publikasi, kualitas visual, dan penyampaian materi edukasi membantu memperkuat kredibilitas brand, meningkatkan interaksi dengan audiens, serta membangun fondasi komunikasi digital yang dapat terus dikembangkan seiring pertumbuhan Wellner Academy.</p>
     </div>
   </div>
 </section>
@@ -337,55 +335,84 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
 const translations = {
   tags: {id:'Sosial Media Content', en:'Social Media Content'},
   back_link: {id:'&larr; Kembali ke Portofolio', en:'&larr; Back to Portfolio'},
-  summary: {id:'Konten promosi &amp; edukasi seputar penjualan mobil yang informatif dan up-to-date.', en:'Informative, up-to-date promotional &amp; educational content around car sales.'},
+  summary: {id:'Konten edukasi finansial, pajak, akuntansi, dan desain buat audiens muda.', en:'Financial education content on tax, accounting, and design aimed at a younger audience.'},
   p1_h: {id:'Sosial Media Content', en:'Social Media Content'},
-  p1_p: {id:'Konten promosi &amp; edukasi seputar penjualan mobil. Rutin produksi 3–4 konten baru tiap minggu, informatif dan up-to-date sama tren.', en:'Promotional &amp; educational content around car sales. We consistently produce 3–4 new pieces of content weekly, informative and up to date with trends.'},
+  p1_p: {id:'Konten edukasi finansial, pajak, akuntansi, dan desain. Rutin produksi 3–4 konten baru tiap minggu dengan engagement rate stabil.', en:'Educational content on finance, tax, accounting, and design. We consistently produce 3–4 new pieces of content weekly with a stable engagement rate.'},
   p1_m1: {id:'konten / minggu', en:'content / week'},
-  p1_m2: {id:'kategori brand', en:'brand category'},
+  p1_m2: {id:'engagement rate', en:'engagement rate'},
   cta_h2: {id:'Mau Hasil Serupa untuk Bisnis Kamu?', en:'Want Similar Results for Your Business?'},
   cta_p: {id:'Yuk diskusiin strategi digital marketing yang pas buat brand kamu &mdash; konsultasi awal gratis.', en:'Let\'s discuss the digital marketing strategy that fits your brand &mdash; free initial consultation.'},
   cta_btn: {id:'Mulai Proyek &rarr;', en:'Start a Project &rarr;'},
   ov_k3: {id:'Layanan', en:'Services'},
-  ov_v3: {id:'Social Media Management, Meta Ads, Website Development, Company Profile Design', en:'Social Media Management, Meta Ads, Website Development, Company Profile Design'},
+  ov_v3: {id:'Social Media Management', en:'Social Media Management'},
   ov_k4: {id:'Platform', en:'Platform'},
-  ov_v4: {id:'Instagram, Tiktok, Facebook, X, Threads', en:'Instagram, Tiktok, Facebook, X, Threads'},
+  ov_v4: {id:'Instagram, TikTok', en:'Instagram, TikTok'},
   ov_k5: {id:'Kategori', en:'Category'},
-  ov_v5: {id:'Digital Marketing, Website Development &amp; Branding', en:'Digital Marketing, Website Development &amp; Branding'},
-  hero_h2: {id:'Bangun Kehadiran Digital Johanes Toyota Batam yang Profesional dan Konsisten', en:'Building a Professional and Consistent Digital Presence for Johanes Toyota Batam'},
-  hero_lede1: {id:'Adsbangda membantu Johanes Toyota Batam mengembangkan kehadiran digital melalui strategi yang terintegrasi, mulai dari pengelolaan media sosial, kampanye iklan digital, hingga pengembangan materi konten dan branding.', en:'Adsbangda helped Johanes Toyota Batam grow its digital presence through an integrated strategy — from social media management and digital ad campaigns to the development of content and branding materials.'},
-  hero_lede2: {id:'Selama kerja sama berlangsung, kami berfokus pada peningkatan kredibilitas brand, memperluas jangkauan audiens, serta membangun fondasi pemasaran digital yang konsisten untuk mendukung pertumbuhan bisnis Johanes Toyota Batam.', en:'Throughout the collaboration, we focused on strengthening brand credibility, expanding audience reach, and building a consistent digital marketing foundation to support Johanes Toyota Batam\'s business growth.'},
-  p1_h2: {id:'Sosial Media Content', en:'Sosial Media Content'},
-  p1_desc: {id:'Konten promosi &amp; edukasi seputar penjualan mobil. Rutin produksi 3–4 konten baru tiap minggu, informatif dan up-to-date sama tren.', en:'Konten promosi &amp; edukasi seputar penjualan mobil. Rutin produksi 3–4 konten baru tiap minggu, informatif dan up-to-date sama tren.'},
-  p1_hl1: {id:'3–4 konten / minggu', en:'3–4 konten / minggu'},
-  p1_hl2: {id:'Otomotif kategori brand', en:'Otomotif kategori brand'},
+  ov_v5: {id:'Social Media Management', en:'Social Media Management'},
+  hero_h2: {id:'Bangun Kehadiran Digital Wellner Academy Melalui Konten Edukasi yang Konsisten', en:'Building Wellner Academy\'s Digital Presence Through Consistent Educational Content'},
+  hero_lede1: {id:'Adsbangda membantu Wellner Academy membangun kehadiran digital melalui strategi Social Media Management yang berfokus pada penyajian konten edukatif, relevan, dan konsisten.', en:'Adsbangda helped Wellner Academy build its digital presence through a Social Media Management strategy focused on delivering educational, relevant, and consistent content.'},
+  hero_lede2: {id:'Selama kerja sama berlangsung, kami bertanggung jawab dalam proses perencanaan konten, desain visual, copywriting, hingga publikasi secara berkala untuk membangun kredibilitas brand, meningkatkan engagement, dan memperluas jangkauan audiens di media sosial.', en:'Throughout the collaboration, we were responsible for content planning, visual design, copywriting, and regular publishing to build brand credibility, boost engagement, and expand audience reach on social media.'},
+  p1_h2: {id:'Menghadirkan Konten Edukasi yang Informatif dan Konsisten', en:'Delivering Informative and Consistent Educational Content'},
+  p1_desc: {id:'Kami mengelola seluruh proses produksi konten media sosial Wellner Academy, mulai dari penyusunan content plan, riset topik, copywriting, desain visual, hingga penjadwalan publikasi. Setiap konten dirancang untuk menyampaikan informasi mengenai finansial, perpajakan, akuntansi, dan desain dengan bahasa yang mudah dipahami serta visual yang menarik sehingga mampu meningkatkan engagement sekaligus memperkuat positioning Wellner Academy sebagai platform edukasi yang terpercaya.', en:'We manage the entire content production process for Wellner Academy\'s social media, from content planning, topic research, copywriting, and visual design, to publishing schedules. Every piece of content is designed to convey information on finance, taxation, accounting, and design in easy-to-understand language with engaging visuals, boosting engagement while strengthening Wellner Academy\'s positioning as a trusted education platform.'},
+  p1_hl1: {id:'3-5 konten / minggu', en:'3-5 posts / week'},
+  p1_hl2: {id:'5% engagement rate', en:'5% engagement rate'},
+  p1_hl3: {id:'Konten edukasi konsisten & relevan', en:'Consistent, relevant educational content'},
   tools_label: {id:'Tools &amp; Software', en:'Tools &amp; Software'},
-  tools_desc: {id:'Dalam proyek Johanes Toyota Batam, kami menggunakan berbagai software profesional untuk mendukung proses produksi konten, pengelolaan kampanye, desain, hingga proses kerja berbasis AI secara menyeluruh.', en:'For the Johanes Toyota Batam project, we use a range of professional software to support content production, campaign management, design, and AI-assisted workflows end-to-end.'},
+  tools_desc: {id:'Dalam proyek Wellner Academy, kami menggunakan berbagai software profesional untuk mendukung proses produksi konten, pengelolaan kampanye, desain, hingga proses kerja berbasis AI secara menyeluruh.', en:'For the Wellner Academy project, we use a range of professional software to support content production, campaign management, design, and AI-assisted workflows end-to-end.'},
   tools_cat1: {id:'Creative &amp; Design', en:'Creative &amp; Design'},
   tools_cat2: {id:'Website Development', en:'Website Development'},
   tools_cat3: {id:'Digital Advertising', en:'Digital Advertising'},
   tools_cat4: {id:'AI &amp; Productivity', en:'AI &amp; Productivity'},
   about_label: {id:'Tentang Proyek', en:'About The Project'},
-  about_p1: {id:'Johanes Toyota Batam merupakan bisnis yang dipercaya Adsbangda sebagai partner kreatif untuk mengembangkan kehadiran digitalnya.', en:'Johanes Toyota Batam is a business that trusted Adsbangda as its creative partner to grow its digital presence.'},
-  about_p2: {id:'Untuk memperkuat kehadiran digitalnya, Adsbangda dipercaya sebagai partner kreatif yang menangani berbagai kebutuhan pemasaran digital secara menyeluruh. Mulai dari produksi konten, pengelolaan kampanye, hingga pengembangan materi branding perusahaan.', en:'To strengthen its digital presence, Adsbangda was trusted as the creative partner handling its digital marketing needs end-to-end — from content production and campaign management, to developing the company\'s branding materials.'},
-  about_p3: {id:'Pendekatan ini membantu Johanes Toyota Batam membangun citra profesional sekaligus meningkatkan konsistensi komunikasi di berbagai platform digital.', en:'This approach helped Johanes Toyota Batam build a professional image while improving communication consistency across its digital platforms.'},
+  about_p1: {id:'Wellner Academy merupakan platform edukasi yang menghadirkan berbagai materi seputar finansial, perpajakan, akuntansi, hingga desain kreatif untuk membantu masyarakat dan profesional meningkatkan kompetensi mereka.', en:'Wellner Academy is an education platform presenting materials on finance, taxation, accounting, and creative design to help the public and professionals improve their skills.'},
+  about_p2: {id:'Untuk mendukung pertumbuhan brand di media sosial, Wellner Academy mempercayakan Adsbangda sebagai partner kreatif dalam mengelola strategi konten secara menyeluruh. Kami memastikan setiap konten diproduksi secara konsisten dengan pendekatan visual yang menarik, informasi yang mudah dipahami, serta tetap relevan dengan kebutuhan audiens.', en:'To support the brand\'s growth on social media, Wellner Academy trusted Adsbangda as its creative partner to manage the content strategy end-to-end. We ensure every piece of content is produced consistently with an engaging visual approach, easy-to-understand information, and relevance to audience needs.'},
+  about_p3: {id:'Melalui strategi tersebut, media sosial Wellner Academy berkembang sebagai kanal edukasi yang aktif, informatif, dan mampu membangun hubungan yang lebih dekat dengan para pengikutnya.', en:'Through this strategy, Wellner Academy\'s social media has grown into an active, informative educational channel that builds closer relationships with its followers.'},
   wf_label: {id:'Workflow Project', en:'Project Workflow'},
-  wf_desc: {id:'Kami menerapkan proses kerja yang terstruktur untuk memastikan setiap aktivitas pemasaran digital berjalan efektif dan menghasilkan output yang konsisten.', en:'We apply a structured workflow to make sure every digital marketing activity runs effectively and delivers consistent output.'},
+  wf_desc: {id:'Kami menerapkan alur kerja yang terstruktur untuk memastikan setiap konten diproduksi secara konsisten, memiliki kualitas visual yang baik, dan sesuai dengan strategi komunikasi brand.', en:'We apply a structured workflow to ensure every piece of content is produced consistently, maintains strong visual quality, and stays aligned with the brand\'s communication strategy.'},
   wf_1: {id:'Discovery', en:'Discovery'},
-  wf_2: {id:'Research', en:'Research'},
+  wf_2: {id:'Content Research', en:'Content Research'},
   wf_3: {id:'Content Planning', en:'Content Planning'},
-  wf_4: {id:'Design', en:'Design'},
-  wf_5: {id:'Campaign Setup', en:'Campaign Setup'},
-  wf_6: {id:'Publishing', en:'Publishing'},
-  wf_7: {id:'Monitoring', en:'Monitoring'},
-  wf_8: {id:'Optimization', en:'Optimization'},
-  wf_9: {id:'Reporting', en:'Reporting'},
+  wf_4: {id:'Copywriting', en:'Copywriting'},
+  wf_5: {id:'Visual Design', en:'Visual Design'},
+  wf_6: {id:'Content Review', en:'Content Review'},
+  wf_7: {id:'Publishing', en:'Publishing'},
+  wf_8: {id:'Monitoring', en:'Monitoring'},
+  wf_9: {id:'Evaluation', en:'Evaluation'},
   impact_label: {id:'Project Impact', en:'Project Impact'},
-  impact_p1: {id:'Melalui kombinasi strategi konten dan pemasaran digital, Johanes Toyota Batam kini memiliki kehadiran digital yang lebih konsisten dan profesional.', en:'Through a combination of content strategy and digital marketing, Johanes Toyota Batam now has a more consistent and professional digital presence.'},
-  impact_p2: {id:'Pendekatan ini membantu bisnis menjangkau audiens yang lebih luas, memperkuat kredibilitas brand, serta membangun fondasi pemasaran digital yang dapat terus dikembangkan seiring pertumbuhan bisnis.', en:'This approach helps the business reach a wider audience, strengthen brand credibility, and build a digital marketing foundation that can keep growing alongside the business.'},
+  impact_p1: {id:'Melalui strategi Social Media Management yang konsisten, Wellner Academy kini memiliki identitas digital yang lebih profesional dengan penyampaian konten yang terstruktur dan relevan bagi target audiens.', en:'Through a consistent Social Media Management strategy, Wellner Academy now has a more professional digital identity with structured, relevant content for its target audience.'},
+  impact_p2: {id:'Konsistensi publikasi, kualitas visual, dan penyampaian materi edukasi membantu memperkuat kredibilitas brand, meningkatkan interaksi dengan audiens, serta membangun fondasi komunikasi digital yang dapat terus dikembangkan seiring pertumbuhan Wellner Academy.', en:'Consistent publishing, strong visual quality, and clear delivery of educational material have helped strengthen brand credibility, boost audience interaction, and build a digital communication foundation that can keep growing alongside Wellner Academy.'},
 };
 
 </script>
 
+<div class="img-lightbox" id="imgLightbox">
+  <div class="img-lightbox-close" id="imgLightboxClose">&times;</div>
+  <img id="imgLightboxImg" src="" alt="">
+</div>
+<script>
+(function(){
+  var lb = document.getElementById('imgLightbox');
+  var lbImg = document.getElementById('imgLightboxImg');
+  var lbClose = document.getElementById('imgLightboxClose');
+  function openLightbox(src, alt){
+    lbImg.src = src;
+    lbImg.alt = alt || '';
+    lb.classList.add('active');
+  }
+  function closeLightbox(){
+    lb.classList.remove('active');
+    lbImg.src = '';
+  }
+  document.addEventListener('click', function(e){
+    var img = e.target.closest('.mp-thumb img');
+    if (img) { openLightbox(img.src, img.alt); return; }
+    if (e.target === lb || e.target === lbClose) { closeLightbox(); }
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeLightbox();
+  });
+})();
+</script>
 <script src="assets/js/main.js"></script>
 </body>
 </html>
