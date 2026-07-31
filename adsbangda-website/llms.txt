@@ -1,0 +1,41 @@
+# Adsbangda
+
+> Adsbangda adalah digital marketing agency yang berbasis di Jakarta, Indonesia. Kami membantu brand dan UMKM tumbuh lewat strategi konten, Meta Ads, KOL management, branding, dan pengelolaan media sosial yang terukur.
+
+Adsbangda berfokus pada hasil bisnis nyata — brand awareness, leads, dan penjualan — bukan sekadar konten yang estetik. Setiap strategi disusun berdasarkan data dan tujuan bisnis klien.
+
+## Halaman Utama
+
+- [Beranda](https://www.adsbangda.com/index.html): Ringkasan layanan, keunggulan, dan proses kerja Adsbangda.
+- [Tentang](https://www.adsbangda.com/tentang.html): Profil dan pendekatan kerja Adsbangda sebagai digital marketing agency.
+- [Portofolio](https://www.adsbangda.com/portofolio.html): Studi kasus brand yang pernah digarap Adsbangda.
+- [Layanan](https://www.adsbangda.com/layanan.html): Daftar lengkap layanan digital marketing yang ditawarkan.
+- [Blog](https://www.adsbangda.com/blog.html): Artikel dan insight seputar digital marketing.
+- [Kontak](https://www.adsbangda.com/kontak.html): Cara menghubungi Adsbangda untuk konsultasi gratis.
+
+## Layanan
+
+- [Social Media Management](https://www.adsbangda.com/layanan-sosial-media-management.html): Produksi konten harian/mingguan untuk media sosial brand.
+- [Content Strategy](https://www.adsbangda.com/layanan-content-strategy.html): Riset tren dan perencanaan kalender konten.
+- [Meta Ads Performance](https://www.adsbangda.com/layanan-meta-ads.html): Pengelolaan campaign iklan Instagram dan Facebook.
+- [KOL & Influencer Management](https://www.adsbangda.com/layanan-kol-management.html): Matchmaking brand dengan key opinion leader dan influencer.
+- [Branding & Visual Identity](https://www.adsbangda.com/layanan-branding-visual-identity.html): Pembangunan identitas visual brand yang konsisten.
+- [Website & Landing Page](https://www.adsbangda.com/layanan-website-landing-page.html): Pembuatan website dan landing page yang dirancang untuk konversi.
+- [Creative Design](https://www.adsbangda.com/layanan-creative-design.html): Desain grafis untuk kebutuhan promosi bisnis.
+- [Digital Growth Consulting](https://www.adsbangda.com/layanan-digital-growth-consulting.html): Konsultasi strategi pertumbuhan digital berbasis data.
+
+## Studi Kasus
+
+- [Amati Coffee](https://www.adsbangda.com/studi-kasus-amati-coffee.html)
+- [InsideRuma](https://www.adsbangda.com/studi-kasus-insideruma.html)
+- [Johanes Toyota Batam](https://www.adsbangda.com/studi-kasus-johanes-toyota-batam.html)
+- [Primaroof ID](https://www.adsbangda.com/studi-kasus-primaroof-id.html)
+- [Resa Living ID](https://www.adsbangda.com/studi-kasus-resa-living-id.html)
+- [Umroh Rekivatour](https://www.adsbangda.com/studi-kasus-umroh-rekivatour.html)
+- [Wellner Academy](https://www.adsbangda.com/studi-kasus-wellner-academy.html)
+- [Wellner Consulting](https://www.adsbangda.com/studi-kasus-wellner-consulting.html)
+
+## Artikel
+
+- [Kesalahan Umum Social Media UMKM](https://www.adsbangda.com/artikel-kesalahan-umum-social-media-umkm.html)
+- [Meta Ads vs Boost Post](https://www.adsbangda.com/artikel-meta-ads-vs-boost-post.html)
