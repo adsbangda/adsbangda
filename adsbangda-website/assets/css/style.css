@@ -620,7 +620,11 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
 
 .footer-top .logo{color:var(--paper);}
 
-.foot-links{display:flex;gap:32px;flex-wrap:wrap;}
+.foot-links{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;}
+
+.foot-col-layanan{grid-column:span 2;}
+
+.foot-layanan-list{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,auto);grid-auto-flow:column;column-gap:32px;}
 
 .foot-brand{max-width:250px;}
 
@@ -633,8 +637,6 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
 .foot-social a{width:34px;height:34px;border-radius:50%;border:1px solid rgba(240,236,226,.25);display:flex;align-items:center;justify-content:center;color:var(--paper);opacity:.85;transition:opacity .2s,border-color .2s,color .2s;}
 
 .foot-social a:hover{opacity:1;border-color:var(--yellow);color:var(--yellow);}
-
-.foot-col-spacer{visibility:hidden;}
 
 .foot-col h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px;font-family:'IBM Plex Mono',monospace;font-weight:700;}
 
@@ -660,7 +662,8 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   .foot-brand{max-width:100%;}
   .foot-links{display:grid;grid-template-columns:1fr;gap:28px 16px;width:100%;}
   .foot-col{min-width:0;}
-  .foot-col-spacer{visibility:visible;}
+  .foot-col-layanan{grid-column:auto;}
+  .foot-layanan-list{display:block;}
 }
 
 /* Tablet: give portrait tablets (iPad, etc.) a layout in between desktop and phone
