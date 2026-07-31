@@ -618,9 +618,7 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   padding-bottom:40px;border-bottom:1px solid rgba(240,236,226,.14);
 }
 
-.foot-links{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;}
-
-.foot-col-layanan{grid-column:span 2;}
+.foot-links{display:flex;gap:32px;}
 
 .foot-layanan-list{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,auto);grid-auto-flow:column;column-gap:32px;}
 
@@ -660,7 +658,6 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   .foot-brand{max-width:100%;}
   .foot-links{display:grid;grid-template-columns:1fr;gap:28px 16px;width:100%;}
   .foot-col{min-width:0;}
-  .foot-col-layanan{grid-column:auto;}
   .foot-layanan-list{display:block;}
 }
 
