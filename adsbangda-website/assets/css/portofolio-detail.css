@@ -2,7 +2,7 @@
 
 .section-head p{max-width:none;text-align:justify;margin-top:16px;font-size:16px;line-height:1.75;color:#3b3d3a;}
 
-.back-link{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--coral-text);font-weight:700;display:inline-flex;align-items:center;gap:6px;}
+.back-link{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--coral-text);font-weight:700;display:inline-flex;align-items:center;gap:6px;}
 
 .back-link:hover{text-decoration:underline;}
 
@@ -18,7 +18,7 @@
 
 .ov-text{min-width:0;width:100%;box-sizing:border-box;}
 
-.ov-text span{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.ov-text span{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
 
 .ov-text b{font-size:16.5px;font-weight:700;line-height:1.35;display:block;width:100%;}
 
@@ -56,7 +56,7 @@
 
 .wf-node .num{
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--coral-text);
+  font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--coral-text);
   background:var(--white);padding:6px 14px;border-radius:100px;display:inline-block;white-space:nowrap;
   box-shadow:0 8px 18px -10px rgba(21,23,27,.3);z-index:2;
 }
