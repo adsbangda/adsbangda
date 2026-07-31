@@ -656,6 +656,10 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   .mobile-nav-group{display:flex;}
   .services-grid{grid-template-columns:1fr 1fr;}
   .mini-stats{margin-top:40px;}
+  .footer-top{flex-direction:column;align-items:stretch;gap:28px;}
+  .foot-brand{max-width:100%;}
+  .foot-links{display:grid;grid-template-columns:1fr 1fr;gap:28px 16px;width:100%;}
+  .foot-col{min-width:0;}
 }
 
 /* Tablet: give portrait tablets (iPad, etc.) a layout in between desktop and phone
@@ -686,6 +690,8 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
     display:block;position:absolute;top:2px;bottom:2px;width:1px;
     background:rgba(21,23,27,.15);
   }
+  .foot-col a{font-size:13.5px;word-break:break-word;}
+  .footer-bottom{flex-direction:column;align-items:flex-start;gap:8px;}
 }
 
 /* ---- shared inner-page additions ---- */
