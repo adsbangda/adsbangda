@@ -658,8 +658,9 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   .mini-stats{margin-top:40px;}
   .footer-top{flex-direction:column;align-items:stretch;gap:28px;}
   .foot-brand{max-width:100%;}
-  .foot-links{display:grid;grid-template-columns:1fr 1fr;gap:28px 16px;width:100%;}
+  .foot-links{display:grid;grid-template-columns:1fr;gap:28px 16px;width:100%;}
   .foot-col{min-width:0;}
+  .foot-col-spacer{visibility:visible;}
 }
 
 /* Tablet: give portrait tablets (iPad, etc.) a layout in between desktop and phone
