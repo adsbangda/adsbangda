@@ -95,12 +95,12 @@ nav{
 }
 
 .logo{
-  font-family:'Plus Jakarta Sans',sans-serif;
-  font-weight:700;font-size:22px;letter-spacing:-.01em;
-  display:flex;align-items:center;gap:8px;
+  display:flex;align-items:center;
 }
 
-.logo .sq{width:11px;height:11px;background:var(--coral);border-radius:3px;transform:rotate(8deg);}
+.logo img{display:block;height:26px;width:auto;}
+
+.footer-top .logo img{filter:brightness(0) invert(1);}
 
 .nav-links{display:flex;gap:34px;align-items:center;}
 
@@ -617,8 +617,6 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:30px;
   padding-bottom:40px;border-bottom:1px solid rgba(240,236,226,.14);
 }
-
-.footer-top .logo{color:var(--paper);}
 
 .foot-links{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;}
 
