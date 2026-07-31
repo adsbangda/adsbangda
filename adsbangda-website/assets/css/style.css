@@ -693,6 +693,17 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   }
   .foot-col a{font-size:13.5px;word-break:break-word;}
   .footer-bottom{flex-direction:column;align-items:flex-start;gap:8px;}
+  .hero p.lede,
+  .section-head p,
+  .page-hero p,
+  .service-detail p.desc,
+  .article-body p,
+  .faq-item p,
+  .service-page-hero p.lede,
+  .project-block p,
+  .cd-summary{
+    text-align:left !important;
+  }
 }
 
 /* ---- shared inner-page additions ---- */
