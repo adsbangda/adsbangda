@@ -19,7 +19,7 @@ const io = new IntersectionObserver((entries)=>{
 revealEls.forEach(el=>io.observe(el));
 
 // ---- whatsapp links with prefilled message ----
-let currentLang = localStorage.getItem('adsbangda_lang') || 'id';
+var currentLang = localStorage.getItem('adsbangda_lang') || 'id';
 const waMessages = {
   id: 'Halo Adsbangda! \ud83d\udc4b\nSaya ingin berkonsultasi mengenai kebutuhan bisnis saya. Boleh dibantu merekomendasikan layanan yang paling sesuai? Terima kasih.',
   en: 'Hello Adsbangda! \ud83d\udc4b\nI would like to consult about the digital marketing needs for my business. Could you help?'
