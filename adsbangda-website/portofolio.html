@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adsbangda - Portofolio</title>
 <meta name="description" content="Lihat portofolio dan hasil kerja adsbangda bersama berbagai klien di bidang F&B, properti, edukasi, dan lainnya.">
+<link rel="canonical" href="https://www.adsbangda.com/portofolio.html">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
@@ -48,7 +49,7 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
 
 <nav>
   <div class="nav-inner">
-    <a href="index.html" class="logo"><img src="assets/img/logo-header.png" alt="adsbangda" width="133" height="26"></a>
+    <a href="index.html" class="logo"><img src="assets/img/logo-header.png" alt="adsbangda" width="133" height="26" loading="lazy"></a>
     <div class="nav-links">
       <a href="index.html" data-i18n-nav="home">Home</a>
       <a href="tentang.html" data-i18n-nav="tentang">Tentang</a>
@@ -408,7 +409,7 @@ function openClientModal(client){
     <div class="modal-tags">${T(client.tags)}</div>
     ${client.projects.map(p => `
       <div class="modal-project">
-        <div class="mp-thumb"><img src="${p.img}" alt="${T(p.title)} — ${client.brand}"></div>
+        <div class="mp-thumb"><img src="${p.img}" alt="${T(p.title)} — ${client.brand}" loading="lazy"></div>
         <h4>${T(p.title)}</h4>
         <p>${T(p.desc)}</p>
         <div class="mp-meta">
@@ -438,7 +439,7 @@ function buildCard(client, immediate){
   const el = document.createElement('div');
   el.className = immediate ? 'case-card reveal in' : 'case-card reveal';
   el.innerHTML = `
-    <div class="thumb"><img src="${client.thumb}" alt="Contoh konten ${client.brand}"></div>
+    <div class="thumb"><img src="${client.thumb}" alt="Contoh konten ${client.brand}" loading="lazy"></div>
     <div class="case-body">
       <div class="cat">${T(client.tags)}</div>
       <h3>${client.brand}</h3>
