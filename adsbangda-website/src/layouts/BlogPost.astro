@@ -63,22 +63,30 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
     </div>
 
     <aside class="article-sidebar">
-      <div class="sidebar-card sidebar-cta">
-        <h4>Mau Hasil Kayak Gini Juga?</h4>
-        <p>Konsultasi gratis soal strategi digital marketing buat bisnis kamu.</p>
-        <a href="#" target="_blank" rel="noopener" class="btn-full wa-cta" data-wa-phone="6282289348724">Chat via WhatsApp</a>
+      <div class="sidebar-card">
+        <h4>Layanan</h4>
+        <div class="sidebar-links">
+          <a href="/layanan-sosial-media-management.html">Social Media Management</a>
+          <a href="/layanan-content-strategy.html">Content Strategy</a>
+          <a href="/layanan-meta-ads.html">Meta Ads Performance</a>
+          <a href="/layanan-kol-management.html">KOL &amp; Influencer Management</a>
+          <a href="/layanan-branding-visual-identity.html">Branding &amp; Visual Identity</a>
+          <a href="/layanan-website-landing-page.html">Website &amp; Landing Page</a>
+          <a href="/layanan-creative-design.html">Creative Design</a>
+          <a href="/layanan-digital-growth-consulting.html">Digital Growth Consulting</a>
+        </div>
       </div>
 
-      {tocHeadings.length > 0 && (
-        <div class="sidebar-card">
-          <h4>Daftar Isi</h4>
-          <div class="toc-list">
-            {tocHeadings.map((h) => (
-              <a href={`#${h.slug}`} class={h.depth === 3 ? "toc-h3" : ""}>{h.text}</a>
-            ))}
-          </div>
+      <div class="sidebar-card">
+        <h4>Kontak</h4>
+        <div class="sidebar-links">
+          <a href="mailto:info@adsbangda.com">info@adsbangda.com</a>
+          <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6282289348724">+62 822 8934 8724</a>
+          <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6281282262002">+62 812 8226 2002</a>
+          <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6285713644514">+62 857 1364 4514</a>
+          <a href="/kontak.html">Jakarta, Indonesia</a>
         </div>
-      )}
+      </div>
 
       {relatedPosts.length > 0 && (
         <div class="sidebar-card">
