@@ -6,9 +6,12 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
 <Layout title={title} description={description} path="index.html" includeMainJs={false}>
 <Fragment slot="head-style">
 <style is:global>
-/* --- TES TEMA WARNA BIRU (cuma homepage) --- */
+/* --- TES TEMA WARNA BIRU TOTAL (cuma homepage) --- */
 :root{
-  --yellow:#0047FF; /* nama variabelnya tetap "yellow" tapi isinya sekarang biru, biar nggak perlu ubah semua CSS satu-satu */
+  --yellow:#0047FF;   /* aksen utama (tombol, CTA) */
+  --coral:#2F5FFF;    /* aksen sekunder (dulu merah/coral) */
+  --coral-text:#0033CC; /* versi lebih gelap buat teks/hover */
+  --teal:#0A1F52;     /* dulu teal gelap, sekarang navy gelap */
 }
 .cta h2{color:var(--paper);}
 .cta p{color:rgba(240,236,226,.82);}
