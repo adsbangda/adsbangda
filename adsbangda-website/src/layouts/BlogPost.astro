@@ -4,6 +4,17 @@
 // dan CTA di bagian bawah, lalu memakai Layout.astro utama untuk nav/footer.
 import Layout from "./Layout.astro";
 
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface RelatedPost {
+  id: string;
+  data: { title: string; category: string };
+}
+
 interface Props {
   title: string;
   description: string;
@@ -11,9 +22,12 @@ interface Props {
   date: string;
   readTime: string;
   path: string;
+  headings?: Heading[];
+  relatedPosts?: RelatedPost[];
 }
 
-const { title, description, category, date, readTime, path } = Astro.props;
+const { title, description, category, date, readTime, path, headings = [], relatedPosts = [] } = Astro.props;
+const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 ---
 <Layout title={`Adsbangda - ${title}`} description={description} path={path}>
 <section class="article-header">
@@ -35,14 +49,51 @@ const { title, description, category, date, readTime, path } = Astro.props;
 </div>
 
 <div class="wrap">
-  <div class="article-body">
-    <slot />
+  <div class="article-layout">
+    <div class="article-main">
+      <div class="article-body">
+        <slot />
 
-    <div class="article-cta">
-      <h3>Butuh Bantuan Mengelola Sosial Media Bisnis Kamu?</h3>
-      <p>Tim kami bisa bantu susun strategi, produksi konten, sampai laporan performa bulanan.</p>
-      <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" style="background:var(--yellow);color:var(--ink);">Konsultasi Gratis &rarr;</a>
+        <div class="article-cta">
+          <h3>Butuh Bantuan Mengelola Sosial Media Bisnis Kamu?</h3>
+          <p>Tim kami bisa bantu susun strategi, produksi konten, sampai laporan performa bulanan.</p>
+          <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" style="background:var(--yellow);color:var(--ink);">Konsultasi Gratis &rarr;</a>
+        </div>
+      </div>
     </div>
+
+    <aside class="article-sidebar">
+      <div class="sidebar-card sidebar-cta">
+        <h4>Mau Hasil Kayak Gini Juga?</h4>
+        <p>Konsultasi gratis soal strategi digital marketing buat bisnis kamu.</p>
+        <a href="#" target="_blank" rel="noopener" class="btn-full wa-cta" data-wa-phone="6282289348724">Chat via WhatsApp</a>
+      </div>
+
+      {tocHeadings.length > 0 && (
+        <div class="sidebar-card">
+          <h4>Daftar Isi</h4>
+          <nav class="toc-list">
+            {tocHeadings.map((h) => (
+              <a href={`#${h.slug}`} class={h.depth === 3 ? "toc-h3" : ""}>{h.text}</a>
+            ))}
+          </nav>
+        </div>
+      )}
+
+      {relatedPosts.length > 0 && (
+        <div class="sidebar-card">
+          <h4>Artikel Terkait</h4>
+          <div class="related-list">
+            {relatedPosts.map((p) => (
+              <a href={`/artikel-${p.id}.html`} class="related-item">
+                <div class="rel-cat">{p.data.category}</div>
+                <div class="rel-title">{p.data.title}</div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </aside>
   </div>
 </div>
 </Layout>

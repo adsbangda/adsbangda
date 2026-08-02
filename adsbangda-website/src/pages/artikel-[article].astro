@@ -9,12 +9,15 @@ export async function getStaticPaths() {
   const posts = await getCollection("blog");
   return posts.map((post) => ({
     params: { article: post.id },
-    props: { post },
+    props: { post, allPosts: posts },
   }));
 }
 
-const { post } = Astro.props;
-const { Content } = await render(post);
+const { post, allPosts } = Astro.props;
+const { Content, headings } = await render(post);
+
+// artikel terkait: ambil sampai 3 artikel lain (bukan artikel ini sendiri)
+const relatedPosts = allPosts.filter((p) => p.id !== post.id).slice(0, 3);
 ---
 <BlogPost
   title={post.data.title}
@@ -23,6 +26,8 @@ const { Content } = await render(post);
   date={post.data.date}
   readTime={post.data.readTime}
   path={`artikel-${post.id}.html`}
+  headings={headings}
+  relatedPosts={relatedPosts}
 >
   <Content />
 </BlogPost>

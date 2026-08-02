@@ -800,6 +800,34 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
 
 .article-cta p{color:#a9a79c;font-size:14.5px;margin-bottom:20px;text-align:center;}
 
+/* article sidebar layout (CTA + daftar isi + artikel terkait) */
+.article-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:56px;max-width:var(--maxw);margin:0 auto;align-items:start;}
+.article-main{min-width:0;}
+.article-main .article-body{max-width:none;margin:0;padding:40px 0 0;}
+.article-sidebar{position:sticky;top:100px;display:flex;flex-direction:column;gap:20px;}
+.sidebar-card{background:var(--white);border:1px solid rgba(21,23,27,.09);border-radius:16px;padding:22px;}
+.sidebar-card h4{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:14px;font-weight:700;}
+.sidebar-cta{background:var(--ink);border:none;padding:26px 22px;}
+.sidebar-cta h4{color:var(--paper);font-size:17px;text-transform:none;letter-spacing:0;font-weight:700;margin-bottom:8px;}
+.sidebar-cta p{color:#a9a79c;font-size:13.5px;line-height:1.6;margin-bottom:18px;}
+.sidebar-cta .btn-full{display:block;width:100%;text-align:center;background:var(--yellow);color:var(--ink);font-weight:700;padding:12px;border-radius:100px;font-size:14px;}
+.sidebar-cta .btn-full:hover{background:var(--coral);}
+.toc-list{display:flex;flex-direction:column;gap:2px;}
+.toc-list a{display:block;font-size:13.5px;color:#4d4f4a;padding:7px 10px;border-radius:8px;line-height:1.4;}
+.toc-list a:hover{background:var(--paper-deep);color:var(--ink);}
+.toc-list a.toc-h3{padding-left:22px;font-size:13px;opacity:.85;}
+.related-list{display:flex;flex-direction:column;gap:16px;}
+.related-item{display:block;padding-bottom:16px;border-bottom:1px solid rgba(21,23,27,.08);}
+.related-item:last-child{border-bottom:none;padding-bottom:0;}
+.related-item .rel-cat{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--coral-text);text-transform:uppercase;margin-bottom:4px;}
+.related-item .rel-title{font-size:14px;font-weight:600;color:var(--ink);line-height:1.4;}
+
+@media (max-width:900px){
+  .article-layout{grid-template-columns:1fr;gap:0;}
+  .article-sidebar{position:static;flex-direction:column;margin-top:32px;}
+  .article-main .article-body{padding-top:20px;}
+}
+
 /* kontak */
 .kontak-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:stretch;}
 
