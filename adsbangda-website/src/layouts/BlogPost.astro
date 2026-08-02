@@ -1,0 +1,48 @@
+---
+// Layout khusus untuk halaman artikel blog.
+// Membungkus konten markdown dengan header artikel (judul, tanggal, breadcrumb)
+// dan CTA di bagian bawah, lalu memakai Layout.astro utama untuk nav/footer.
+import Layout from "./Layout.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  readTime: string;
+  path: string;
+}
+
+const { title, description, category, date, readTime, path } = Astro.props;
+---
+<Layout title={`Adsbangda - ${title}`} description={description} path={path}>
+<section class="article-header">
+  <div class="wrap">
+    <div class="breadcrumb"><a href="/blog.html">Blog</a> / <span>{category}</span></div>
+    <h1>{title}</h1>
+    <div class="article-meta-row">
+      <span>Tim adsbangda</span>
+      <span>&middot;</span>
+      <span>{date}</span>
+      <span>&middot;</span>
+      <span>{readTime}</span>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="article-cover"></div>
+</div>
+
+<div class="wrap">
+  <div class="article-body">
+    <slot />
+
+    <div class="article-cta">
+      <h3>Butuh Bantuan Mengelola Sosial Media Bisnis Kamu?</h3>
+      <p>Tim kami bisa bantu susun strategi, produksi konten, sampai laporan performa bulanan.</p>
+      <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" style="background:var(--yellow);color:var(--ink);">Konsultasi Gratis &rarr;</a>
+    </div>
+  </div>
+</div>
+</Layout>

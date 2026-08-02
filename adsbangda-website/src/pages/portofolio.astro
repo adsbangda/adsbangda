@@ -1,0 +1,471 @@
+---
+import Layout from "../layouts/Layout.astro";
+const title = 'Adsbangda - Portofolio';
+const description = 'Lihat portofolio dan hasil kerja adsbangda bersama berbagai klien di bidang F&B, properti, edukasi, dan lainnya.';
+---
+<Layout title={title} description={description} path="portofolio.html" portfolioCss={false}>
+{ /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
+<Fragment slot="head-style">
+<style>
+/* kontak */
+.kontak-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start;}
+
+.kontak-card{background:var(--white);border:1px solid rgba(21,23,27,.09);border-radius:20px;padding:28px;margin-bottom:16px;}
+</style>
+</Fragment>
+
+
+
+<section class="page-hero">
+  <div class="wrap">
+    <h1 data-i18n="hero_h1">Brand yang udah kita garap bareng</h1>
+    <p data-i18n="hero_p">Sebagian portofolio dari klien yang kita pegang &mdash; geser buat lihat semua, klik kartunya buat lihat detail.</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="portofolio" style="padding-top:56px;">
+  <div class="wrap">
+    <div class="slider-controls">
+      <button class="slider-btn" id="sliderPrev" aria-label="Sebelumnya">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="slider-btn" id="sliderNext" aria-label="Selanjutnya">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="case-grid" id="portfolioGrid"></div>
+    <div class="slider-dots" id="sliderDots"></div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2 data-i18n="cta_h2">Mau Jadi Portofolio Berikutnya?</h2>
+    <p data-i18n="cta_p">Ceritain bisnis kamu, kita bantu rancang strategi digital yang paling pas.</p>
+    <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Mulai Proyek &rarr;</a>
+  </div>
+</section>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose" aria-label="Tutup">&times;</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+
+<Fragment slot="page-scripts">
+<script>
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var currentLang = localStorage.getItem('adsbangda_lang') || 'id';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ---- portfolio grid: real client case studies ----
+const clients = [
+  {
+    brand:'Wellner Consulting',
+    tags:{id:'Social Media Management · Meta Ads · Website · Company Profile', en:'Social Media Management · Meta Ads · Website · Company Profile'},
+    thumb:'assets/img/img-js-d80bc8af087e.webp',
+    summary:{id:'Membangun kehadiran digital firma konsultan pajak melalui strategi media sosial, Meta Ads, website, dan branding yang terintegrasi.', en:'Building the digital presence of a tax consulting firm through an integrated strategy across social media, Meta Ads, website, and branding.'},
+    projects:[
+      {
+        title:{id:'Sosial Media Content', en:'Social Media Content'},
+        img:'assets/img/img-js-a825defdf3ce.webp',
+        desc:{id:'Konten profesional seputar perpajakan untuk pengusaha, UMKM, dan korporasi. Diproduksi dan diupload 1–2 konten baru tiap hari, selalu update sama berita terkini.', en:'Professional content on tax matters for entrepreneurs, SMEs, and corporations. 1–2 new pieces of content are produced and uploaded daily, always up to date with the latest news.'},
+        meta1:['1–2',{id:'konten / hari', en:'content / day'}], meta2:['5%',{id:'engagement rate', en:'engagement rate'}]
+      },
+      {
+        title:{id:'Meta Ads', en:'Meta Ads'},
+        img:'assets/img/img-js-b32e8caacd67.jpg',
+        desc:{id:'Kelola campaign Meta Ads buat generate leads konsultasi pajak — dari Instagram/Facebook Feed, Stories, sampai Reels, dengan performa yang dipantau ketat lewat Ads Manager.', en:'Managing Meta Ads campaigns to generate tax-consultation leads — across Instagram/Facebook Feed, Stories, and Reels, with performance closely tracked via Ads Manager.'},
+        meta1:['90',{id:'campaign dijalankan', en:'campaigns run'}], meta2:['178K+',{id:'impressions', en:'impressions'}]
+      },
+      {
+        title:{id:'Company Profile Design', en:'Company Profile Design'},
+        img:'assets/img/img-js-fd16d8927ce6.jpg',
+        desc:{id:'Desain company profile sesuai brand guideline — warna oranye & biru, konsisten, dan profesional buat memperkuat citra perusahaan.', en:'A company profile design following the brand guideline — orange & blue color scheme, consistent, and professional to strengthen the company image.'},
+        meta1:[{id:'Digital', en:'Digital'},{id:'& Cetak', en:'& Print'}], meta2:[{id:'Brand', en:'Brand'},{id:'guideline', en:'guideline'}]
+      }
+    ]
+  },
+  {
+    brand:'Wellner Academy',
+    tags:{id:'Social Media Management', en:'Social Media Management'},
+    thumb:'assets/img/img-js-8874da302d43.webp',
+    summary:{id:'Mengelola media sosial Wellner Academy melalui konten edukatif yang konsisten untuk membangun kredibilitas brand dan menjangkau audiens yang lebih luas.', en:"Managing Wellner Academy's social media through consistent educational content to build brand credibility and reach a wider audience."},
+    projects:[
+      {
+        title:{id:'Sosial Media Content', en:'Social Media Content'},
+        img:'assets/img/img-js-8874da302d43.webp',
+        desc:{id:'Konten edukasi finansial, pajak, akuntansi, dan desain. Rutin produksi 3–4 konten baru tiap minggu dengan engagement rate stabil.', en:'Educational content on finance, tax, accounting, and design. We consistently produce 3–4 new pieces of content weekly with a stable engagement rate.'},
+        meta1:['3–4',{id:'konten / minggu', en:'content / week'}], meta2:['1%',{id:'engagement rate', en:'engagement rate'}]
+      }
+    ]
+  },
+  {
+    brand:'Amati Coffee',
+    tags:{id:'Sosial Media Content · KOL Management · Collaboration', en:'Social Media Content · KOL Management · Collaboration'},
+    thumb:'assets/img/img-js-ee7bcd835b90.webp',
+    summary:{id:'Konten promosi menu, KOL management, sampai konten top-performing yang tembus 554K views.', en:'Menu promotion content, KOL management, and top-performing content that reached 554K views.'},
+    projects:[
+      {
+        title:{id:'Sosial Media Content', en:'Social Media Content'},
+        img:'assets/img/img-js-bb1e6d2d86ab.jpg',
+        desc:{id:'Konten promosi menu, edukasi, dan light entertainment untuk coffee shop. Rutin produksi 5–7 konten relevan tiap minggu.', en:'Menu promotion, educational, and light entertainment content for a coffee shop. We consistently produce 5–7 relevant pieces of content weekly.'},
+        meta1:['5–7',{id:'konten / minggu', en:'content / week'}], meta2:[{id:'Coffee · Tea · Resto', en:'Coffee · Tea · Resto'},{id:'kategori brand', en:'brand category'}]
+      },
+      {
+        title:{id:'KOL Management', en:'KOL Management'},
+        img:'assets/img/img-js-b025adbde196.jpg',
+        desc:{id:'Kelola kolaborasi dengan food & lifestyle KOL lokal Batam buat review menu dan bangun awareness brand secara organik.', en:'Managing collaborations with local Batam food & lifestyle KOLs for menu reviews and building organic brand awareness.'},
+        meta1:['25,7K',{id:'views tertinggi KOL', en:'highest KOL views'}], meta2:['7',{id:'kreator dikelola', en:'creators managed'}]
+      },
+      {
+        title:{id:'Top-Performing Content', en:'Top-Performing Content'},
+        img:'assets/img/img-js-174185e7b8d1.jpg',
+        desc:{id:'Konten POV di balik layar barista yang relate dan lucu — jadi konten dengan performa tertinggi, salah satunya tembus 554K views.', en:'Relatable, funny behind-the-scenes barista POV content — our highest-performing content, one of which reached 554K views.'},
+        meta1:['554K',{id:'views tertinggi', en:'highest views'}], meta2:['POV',{id:'format konten', en:'content format'}]
+      },
+      {
+        title:{id:'Collaboration', en:'Collaboration'},
+        img:'assets/img/img-js-65f1b96c26e2.jpg',
+        desc:{id:'Kolaborasi cross-brand dan komunitas — dari event lari bareng brand lain sampai konten bersama produk lifestyle lokal.', en:'Cross-brand and community collaborations — from a run event with other brands to joint content with local lifestyle products.'},
+        meta1:['726',{id:'likes salah satu post', en:'likes on one post'}], meta2:[{id:'Cross-brand', en:'Cross-brand'},{id:'kolaborasi', en:'collaboration'}]
+      }
+    ]
+  },
+  {
+    brand:'Johanes Toyota Batam',
+    tags:{id:'Sosial Media Content', en:'Social Media Content'},
+    thumb:'assets/img/img-js-a0f388eb82c8.webp',
+    summary:{id:'Konten promosi & edukasi seputar penjualan mobil yang informatif dan up-to-date.', en:'Informative, up-to-date promotional and educational content about car sales.'},
+    projects:[
+      {
+        title:{id:'Sosial Media Content', en:'Social Media Content'},
+        img:'assets/img/img-js-b15b343e8353.jpg',
+        desc:{id:'Konten promosi & edukasi seputar penjualan mobil. Rutin produksi 3–4 konten baru tiap minggu, informatif dan up-to-date sama tren.', en:'Promotional and educational content about car sales. We consistently produce 3–4 new pieces of content weekly, informative and on top of current trends.'},
+        meta1:['3–4',{id:'konten / minggu', en:'content / week'}], meta2:[{id:'Otomotif', en:'Automotive'},{id:'kategori brand', en:'brand category'}]
+      }
+    ]
+  },
+  {
+    brand:'Umroh Rekivatour',
+    tags:{id:'Sosial Media Content · Meta Ads', en:'Social Media Content · Meta Ads'},
+    thumb:'assets/img/img-js-f4db9360c071.webp',
+    summary:{id:'Strategi sosial media & ads buat brand Umrah yang lagi berkembang pesat, konten viral tembus 5 juta views.', en:'Social media & ads strategy for a fast-growing Umrah brand, with viral content reaching 5 million views.'},
+    projects:[
+      {
+        title:{id:'Sosial Media Content & Meta Ads', en:'Social Media Content & Meta Ads'},
+        img:'assets/img/img-js-b2b14ae0eb17.jpg',
+        desc:{id:'Kelola strategi sosial media & ads buat brand Umrah dengan goal jadi provider nomor satu di Indonesia. Konten viral tembus 5 juta views dan hasilkan ratusan calon jamaah.', en:'Managing social media & ads strategy for an Umrah brand with the goal of becoming the number one provider in Indonesia. Viral content reached 5 million views and generated hundreds of prospective pilgrims.'},
+        meta1:['5M',{id:'views konten viral', en:'viral content views'}], meta2:['100+',{id:'calon klien', en:'prospective clients'}]
+      }
+    ]
+  },
+  {
+    brand:'Resa Living ID',
+    tags:{id:'Sosial Media Content · Meta Ads', en:'Social Media Content · Meta Ads'},
+    thumb:'assets/img/img-js-7f6356545a85.webp',
+    summary:{id:'Bangun Resaliving jadi brand properti nomor satu di BSD & Gading Serpong.', en:'Building Resaliving into the number one property brand in BSD & Gading Serpong.'},
+    projects:[
+      {
+        title:{id:'Sosial Media Content & Meta Ads', en:'Social Media Content & Meta Ads'},
+        img:'assets/img/img-js-04d685d9ce51.jpg',
+        desc:{id:'Bantu Resaliving jadi brand properti nomor satu di BSD & Gading Serpong lewat konten sosial media strategis dan Meta Ads yang performance-driven, menyasar homebuyer serius dan investor.', en:'Helping Resaliving become the number one property brand in BSD & Gading Serpong through strategic social media content and performance-driven Meta Ads, targeting serious homebuyers and investors.'},
+        meta1:[{id:'BSD', en:'BSD'},{id:'& Gading Serpong', en:'& Gading Serpong'}], meta2:[{id:'Properti', en:'Property'},{id:'kategori brand', en:'brand category'}]
+      }
+    ]
+  },
+  {
+    brand:'InsideRuma',
+    tags:{id:'Sosial Media Content', en:'Social Media Content'},
+    thumb:'assets/img/img-js-2cff05177dfe.webp',
+    summary:{id:'Konten segar dan relevan buat audiens muda, bangun komunitas media platform.', en:'Fresh, relevant content for a young audience, building a media platform community.'},
+    projects:[
+      {
+        title:{id:'Sosial Media Content', en:'Social Media Content'},
+        img:'assets/img/img-js-c23f2158d904.jpg',
+        desc:{id:'Bangun kehadiran digital media platform yang fokus ke audiens muda — konten segar dan relevan buat naikin engagement dan komunitas.', en:'Building the digital presence of a media platform focused on a young audience — fresh, relevant content to grow engagement and community.'},
+        meta1:[{id:'Media', en:'Media'},{id:'kategori brand', en:'brand category'}], meta2:[{id:'Youth', en:'Youth'},{id:'target audiens', en:'target audience'}]
+      }
+    ]
+  },
+  {
+    brand:'Primaroof ID',
+    tags:{id:'Sosial Media Management', en:'Social Media Management'},
+    thumb:'assets/img/img-js-b2bf1d5d79a8.webp',
+    summary:{id:'Kelola sosial media produk atap & baja ringan buat edukasi distributor se-Indonesia.', en:'Managing social media for a roofing & lightweight steel product to educate distributors across Indonesia.'},
+    projects:[
+      {
+        title:{id:'Sosial Media Management', en:'Social Media Management'},
+        img:'assets/img/img-js-87039c6977c7.jpg',
+        desc:{id:'Kelola sosial media untuk produk atap & baja ringan, edukasi distributor material bangunan di seluruh Indonesia.', en:'Managing social media for a roofing & lightweight steel product, educating building-material distributors across Indonesia.'},
+        meta1:[{id:'B2B', en:'B2B'},{id:'target audiens', en:'target audience'}], meta2:[{id:'Material', en:'Material'},{id:'kategori brand', en:'brand category'}]
+      }
+    ]
+  },
+  {
+    brand:'Batam Dental Center',
+    tags:{id:'Social Media Management', en:'Social Media Management'},
+    thumb:'assets/img/placeholder-batam-dental-center.webp',
+    summary:{id:'Kelola media sosial dan jalankan kampanye Meta Ads buat klinik gigi ini lebih dikenal di Batam.', en:'Managing social media and running Meta Ads campaigns to help this dental clinic get known around Batam.'},
+    projects:[
+      {
+        title:{id:'Social Media Management & Meta Ads', en:'Social Media Management & Meta Ads'},
+        img:'assets/img/placeholder-batam-dental-center.webp',
+        desc:{id:'Produksi konten edukasi & promosi seputar layanan gigi, dikombinasikan dengan kampanye Meta Ads yang menyasar calon pasien di area Batam.', en:'Production of educational and promotional content about dental services, combined with Meta Ads campaigns targeting prospective patients in the Batam area.'},
+        meta1:[{id:'Dental', en:'Dental'},{id:'kategori bisnis', en:'business category'}], meta2:[{id:'Batam', en:'Batam'},{id:'target lokal', en:'local targeting'}]
+      }
+    ]
+  },
+];
+
+// ---- render portfolio grid: one card per client ----
+const portfolioGrid = document.getElementById('portfolioGrid');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalContent = document.getElementById('modalContent');
+const modalClose = document.getElementById('modalClose');
+
+function T(v){ return (v && typeof v === 'object' && !Array.isArray(v)) ? (v[currentLang] !== undefined ? v[currentLang] : (v.id || v.en)) : v; }
+function brandSlug(brand){ return brand.toLowerCase().trim().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''); }
+
+function openClientModal(client){
+  modalContent.innerHTML = `
+    <div class="modal-eyebrow">${currentLang === 'id' ? 'Portofolio' : 'Portfolio'}</div>
+    <div class="modal-title">${client.brand}</div>
+    <div class="modal-tags">${T(client.tags)}</div>
+    ${client.projects.map(p => `
+      <div class="modal-project">
+        <div class="mp-thumb"><img src="${p.img}" alt="${T(p.title)} — ${client.brand}" loading="lazy"></div>
+        <h4>${T(p.title)}</h4>
+        <p>${T(p.desc)}</p>
+        <div class="mp-meta">
+          <div><b>${T(p.meta1[0])}</b>${T(p.meta1[1])}</div>
+          <div><b>${T(p.meta2[0])}</b>${T(p.meta2[1])}</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+  modalOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  isAutoScrolling = false;
+  if(autoRafId) cancelAnimationFrame(autoRafId);
+  clearTimeout(window._autoSlideResume);
+}
+function closeClientModal(){
+  modalOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+  startAutoSlide();
+}
+modalClose.addEventListener('click', closeClientModal);
+modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeClientModal(); });
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeClientModal(); });
+
+const cardRefs = [];
+function buildCard(client, immediate){
+  const el = document.createElement('div');
+  el.className = immediate ? 'case-card reveal in' : 'case-card reveal';
+  el.innerHTML = `
+    <div class="thumb"><img src="${client.thumb}" alt="Contoh konten ${client.brand}" loading="lazy"></div>
+    <div class="case-body">
+      <div class="cat">${T(client.tags)}</div>
+      <h3>${client.brand}</h3>
+      <p>${T(client.summary)}</p>
+      <div class="view-more">${currentLang === 'id' ? 'Lihat detail proyek →' : 'View project details →'}</div>
+    </div>
+  `;
+  el.addEventListener('click', ()=> { window.location.href = 'portofolio-' + brandSlug(client.brand) + '.html'; });
+  return el;
+}
+// Original set
+clients.forEach(client=>{
+  const el = buildCard(client, true);
+  portfolioGrid.appendChild(el);
+  cardRefs.push({client, el});
+});
+const originalCardCount = cardRefs.length;
+// Duplicate set(s) appended right after, so the track can scroll forward endlessly and wrap invisibly.
+// Keep adding full duplicate sets until the track is comfortably wider than the viewport,
+// so ultra-wide monitors never run out of content before the wrap point.
+function addDuplicateCardSet(){
+  clients.forEach(client=>{
+    const el = buildCard(client, true);
+    portfolioGrid.appendChild(el);
+    cardRefs.push({client, el});
+  });
+}
+addDuplicateCardSet();
+while(portfolioGrid.scrollWidth < window.innerWidth * 2.2){
+  addDuplicateCardSet();
+}
+
+function updatePortfolioCardsLang(){
+  cardRefs.forEach(({client, el})=>{
+    el.querySelector('.cat').textContent = T(client.tags);
+    el.querySelector('.case-body p').textContent = T(client.summary);
+    el.querySelector('.view-more').textContent = currentLang === 'id' ? 'Lihat detail proyek →' : 'View project details →';
+  });
+}
+
+// ---- portfolio slider controls (seamless infinite loop) ----
+const sliderPrev = document.getElementById('sliderPrev');
+const sliderNext = document.getElementById('sliderNext');
+const sliderDots = document.getElementById('sliderDots');
+const cardEls = Array.from(portfolioGrid.children);
+
+for(let i=0;i<originalCardCount;i++){
+  const dot = document.createElement('span');
+  if(i === 0) dot.classList.add('active');
+  dot.addEventListener('click', ()=>{
+    portfolioGrid.scrollTo({left: i * cachedCardStep, behavior:'smooth'});
+    pauseAutoSlide();
+  });
+  sliderDots.appendChild(dot);
+}
+const dotEls2 = Array.from(sliderDots.children);
+
+let cachedCardStep = 360;
+function recomputeCardStep(){
+  const card = cardEls[0];
+  const style = getComputedStyle(portfolioGrid);
+  const gap = parseFloat(style.columnGap || style.gap || 20);
+  cachedCardStep = card.getBoundingClientRect().width + gap;
+}
+recomputeCardStep();
+
+function setWidth(){ return cachedCardStep * originalCardCount; }
+
+function wrapCheck(){
+  const sw = setWidth();
+  if(portfolioGrid.scrollLeft >= sw){
+    portfolioGrid.scrollLeft -= sw;
+  } else if(portfolioGrid.scrollLeft < 0){
+    portfolioGrid.scrollLeft += sw;
+  }
+}
+function updateSliderState(){
+  const idx = Math.round(portfolioGrid.scrollLeft / cachedCardStep) % originalCardCount;
+  dotEls2.forEach((d,i)=> d.classList.toggle('active', i === idx));
+}
+let scrollDebounce = null;
+portfolioGrid.addEventListener('scroll', ()=>{
+  updateSliderState();
+  clearTimeout(scrollDebounce);
+  scrollDebounce = setTimeout(wrapCheck, 150);
+});
+sliderPrev.addEventListener('click', ()=>{
+  if(portfolioGrid.scrollLeft < cachedCardStep){
+    portfolioGrid.scrollLeft += setWidth();
+  }
+  portfolioGrid.scrollBy({left: -cachedCardStep, behavior:'smooth'});
+  pauseAutoSlide();
+});
+sliderNext.addEventListener('click', ()=>{
+  portfolioGrid.scrollBy({left: cachedCardStep, behavior:'smooth'});
+  pauseAutoSlide();
+});
+window.addEventListener('resize', ()=>{ recomputeCardStep(); updateSliderState(); });
+updateSliderState();
+
+// ---- auto-play slider ----
+let isAutoScrolling = false;
+let autoSlideTimer = null;
+
+function autoSlideTick(){
+  portfolioGrid.scrollBy({left: cachedCardStep, behavior:'smooth'});
+}
+function startAutoSlide(){
+  if(reduceMotion) return;
+  if(isAutoScrolling) return;
+  isAutoScrolling = true;
+  autoSlideTimer = setInterval(autoSlideTick, 2800);
+}
+function pauseAutoSlide(){
+  isAutoScrolling = false;
+  clearInterval(autoSlideTimer);
+  clearTimeout(window._autoSlideResume);
+  window._autoSlideResume = setTimeout(startAutoSlide, 4500);
+}
+const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+if(supportsHover){
+  portfolioGrid.addEventListener('mouseenter', ()=>{ isAutoScrolling = false; clearInterval(autoSlideTimer); });
+  portfolioGrid.addEventListener('mouseleave', startAutoSlide);
+}
+// Note: we deliberately do NOT pause on touchstart/touchend anymore.
+// On touch devices, simply scrolling the page vertically past this section
+// often touches down inside the slider bounding box, which was killing
+// the auto-slide permanently on iPad/mobile even without any real interaction
+// with the slider itself. Manual swipes on the track still work natively;
+// the interval loop just keeps nudging it forward afterward, which is harmless.
+sliderDots.addEventListener('click', pauseAutoSlide);
+
+// Only run the auto-slide while the portfolio section is actually visible on screen,
+// so it always starts cleanly from the first card instead of already mid-scroll
+// by the time the user scrolls down to it.
+const portfolioSection = document.getElementById('portofolio');
+const portfolioVisibility = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      startAutoSlide();
+    } else {
+      isAutoScrolling = false;
+      clearInterval(autoSlideTimer);
+      clearTimeout(window._autoSlideResume);
+    }
+  });
+}, {threshold: 0.15});
+portfolioVisibility.observe(portfolioSection);
+
+
+
+// ---- page-specific translations (Portofolio) ----
+const translations = {
+  hero_h1: {id:'Brand yang udah kita garap bareng', en:'Brands we\'ve worked on together'},
+  hero_p: {id:'Sebagian portofolio dari klien yang kita pegang &mdash; geser buat lihat semua, klik kartunya buat lihat detail.', en:'A selection of portfolio pieces from clients we\'ve worked with &mdash; scroll to see them all, click a card to see the details.'},
+  cta_h2: {id:'Mau Jadi Portofolio Berikutnya?', en:'Want to Be Our Next Portfolio Piece?'},
+  cta_p: {id:'Ceritain bisnis kamu, kita bantu rancang strategi digital yang paling pas.', en:'Tell us about your business, and we\'ll help design the digital strategy that fits best.'},
+  cta_btn: {id:'Mulai Proyek &rarr;', en:'Start a Project &rarr;'},
+};
+
+window.extraLangHook = function(lang){
+  cardRefs.forEach(({client, el})=>{
+    const catEl = el.querySelector('.cat');
+    const pEl = el.querySelector('.case-body p');
+    const moreEl = el.querySelector('.view-more');
+    if(catEl) catEl.textContent = T(client.tags);
+    if(pEl) pEl.textContent = T(client.summary);
+    if(moreEl) moreEl.textContent = lang === 'id' ? 'Lihat detail proyek →' : 'View project details →';
+  });
+};
+</script>
+</Fragment>
+</Layout>

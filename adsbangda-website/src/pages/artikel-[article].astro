@@ -1,0 +1,28 @@
+---
+// Halaman artikel dibuat OTOMATIS dari setiap file .md di src/content/blog/
+// Tidak perlu bikin file HTML baru lagi -- cukup tambah file markdown baru,
+// halaman "/artikel-<nama-file>.html" langsung ke-generate otomatis saat build.
+import { getCollection, render } from "astro:content";
+import BlogPost from "../layouts/BlogPost.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  return posts.map((post) => ({
+    params: { article: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+<BlogPost
+  title={post.data.title}
+  description={post.data.description}
+  category={post.data.category}
+  date={post.data.date}
+  readTime={post.data.readTime}
+  path={`artikel-${post.id}.html`}
+>
+  <Content />
+</BlogPost>

@@ -1,0 +1,104 @@
+---
+import Layout from "../layouts/Layout.astro";
+const title = 'Adsbangda - Tentang';
+const description = 'Adsbangda adalah digital marketing agency yang fokus pada Social Media Management, Meta Ads, dan strategi konten yang berorientasi hasil untuk bisnis Anda.';
+---
+<Layout title={title} description={description} path="tentang.html" portfolioCss={false}>
+{ /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
+<Fragment slot="head-style">
+<style>
+/* kontak */
+.kontak-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start;}
+
+.kontak-card{background:var(--white);border:1px solid rgba(21,23,27,.09);border-radius:20px;padding:28px;margin-bottom:16px;}
+</style>
+</Fragment>
+
+
+
+<section class="page-hero">
+  <div class="wrap">
+    <h1 data-i18n="hero_h1">Kami Membangun Sistem Digital yang Membantu Bisnis Bertumbuh</h1>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="wrap">
+    <div class="reveal">
+      <p style="font-size:16px;line-height:1.8;color:#3b3d3a;text-align:justify;margin-bottom:20px;" data-i18n="about_p1">Di Adsbangda, kami percaya bahwa setiap bisnis memiliki peluang untuk tumbuh lebih besar dengan strategi digital yang tepat.</p>
+      <p style="font-size:16px;line-height:1.8;color:#3b3d3a;text-align:justify;margin-bottom:20px;" data-i18n="about_p2">Kami hadir sebagai partner yang membantu bisnis membangun kehadiran digital, menjangkau audiens yang tepat, dan menghasilkan peluang bisnis melalui Meta Ads, Social Media Management, serta strategi konten yang terukur.</p>
+      <p style="font-size:16px;line-height:1.8;color:#3b3d3a;text-align:justify;margin-bottom:20px;" data-i18n="about_p3">Setiap campaign yang kami jalankan dirancang berdasarkan tujuan bisnis klien, bukan sekadar mengikuti tren. Mulai dari membangun brand awareness hingga menghasilkan leads dan meningkatkan penjualan, kami memastikan setiap langkah memiliki arah yang jelas dan dapat diukur.</p>
+      <p style="font-size:16px;line-height:1.8;color:#3b3d3a;text-align:justify;margin-bottom:20px;" data-i18n="about_p4">Kami percaya bahwa pemasaran yang baik bukan tentang menghabiskan anggaran lebih besar, tetapi tentang membuat setiap investasi marketing bekerja lebih efektif.</p>
+      <p style="font-size:16px;line-height:1.8;color:#3b3d3a;text-align:justify;" data-i18n="about_p5">Adsbangda berkomitmen menjadi partner jangka panjang bagi bisnis yang ingin berkembang secara berkelanjutan di era digital.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tint">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2 data-i18n="why_h2">Mengapa Memilih Adsbangda?</h2>
+    </div>
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
+        <h3 data-i18n="why1_h">Berorientasi pada Pertumbuhan Bisnis</h3>
+        <p data-i18n="why1_p">Setiap campaign dirancang untuk mendukung tujuan yang jelas, mulai dari meningkatkan brand awareness, menghasilkan leads berkualitas, hingga mendorong penjualan.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><path d="M12 3l2.5 5.5L20 9l-4.5 4 1.5 6-5-3-5 3 1.5-6L4 9l5.5-.5z"/></svg></div>
+        <h3 data-i18n="why2_h">Strategi yang Disesuaikan dengan Bisnis Anda</h3>
+        <p data-i18n="why2_p">Tidak ada pendekatan yang sama untuk setiap bisnis. Kami menyusun strategi berdasarkan industri, target audiens, dan objektif yang ingin dicapai.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><path d="M4 19V10M12 19V5M20 19v-7"/></svg></div>
+        <h3 data-i18n="why3_h">Keputusan Berdasarkan Data</h3>
+        <p data-i18n="why3_p">Kami memanfaatkan data dan performa campaign sebagai dasar dalam mengambil keputusan, sehingga setiap optimasi dilakukan secara terukur.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M17 10l4-2v8l-4-2"/></svg></div>
+        <h3 data-i18n="why4_h">Eksekusi yang Terstruktur</h3>
+        <p data-i18n="why4_p">Mulai dari perencanaan strategi, pembuatan konten, copywriting, pengelolaan Meta Ads, hingga monitoring performa, semua dikerjakan sistematis.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2 data-i18n="cta_h2">Yuk, Kenalan Lebih Jauh</h2>
+    <p data-i18n="cta_p">Ceritain bisnis kamu, kita bantu rancang strategi digital yang paling pas.</p>
+    <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Mulai Proyek &rarr;</a>
+  </div>
+</section>
+
+
+<Fragment slot="page-scripts">
+<script>
+
+
+// ---- page-specific translations (Tentang Kami) ----
+const translations = {
+  hero_h1: {id:'Kami Membangun Sistem Digital yang Membantu Bisnis Bertumbuh', en:'We Build Digital Systems That Help Businesses Grow'},
+  about_p1: {id:'Di Adsbangda, kami percaya bahwa setiap bisnis memiliki peluang untuk tumbuh lebih besar dengan strategi digital yang tepat.', en:'At Adsbangda, we believe every business has the opportunity to grow bigger with the right digital strategy.'},
+  about_p2: {id:'Kami hadir sebagai partner yang membantu bisnis membangun kehadiran digital, menjangkau audiens yang tepat, dan menghasilkan peluang bisnis melalui Meta Ads, Social Media Management, serta strategi konten yang terukur.', en:'We act as a partner that helps businesses build a digital presence, reach the right audience, and generate business opportunities through Meta Ads, Social Media Management, and measurable content strategy.'},
+  about_p3: {id:'Setiap campaign yang kami jalankan dirancang berdasarkan tujuan bisnis klien, bukan sekadar mengikuti tren. Mulai dari membangun brand awareness hingga menghasilkan leads dan meningkatkan penjualan, kami memastikan setiap langkah memiliki arah yang jelas dan dapat diukur.', en:'Every campaign we run is designed around our clients\' business goals, not just following trends. From building brand awareness to generating leads and boosting sales, we make sure every step has a clear, measurable direction.'},
+  about_p4: {id:'Kami percaya bahwa pemasaran yang baik bukan tentang menghabiskan anggaran lebih besar, tetapi tentang membuat setiap investasi marketing bekerja lebih efektif.', en:'We believe good marketing isn\'t about spending a bigger budget, but about making every marketing investment work more effectively.'},
+  about_p5: {id:'Adsbangda berkomitmen menjadi partner jangka panjang bagi bisnis yang ingin berkembang secara berkelanjutan di era digital.', en:'Adsbangda is committed to being a long-term partner for businesses that want to grow sustainably in the digital era.'},
+  why_h2: {id:'Mengapa Memilih Adsbangda?', en:'Why Choose Adsbangda?'},
+  why1_h: {id:'Berorientasi pada Pertumbuhan Bisnis', en:'Focused on Business Growth'},
+  why1_p: {id:'Setiap campaign dirancang untuk mendukung tujuan yang jelas, mulai dari meningkatkan brand awareness, menghasilkan leads berkualitas, hingga mendorong penjualan.', en:'Every campaign is designed to support clear goals, from boosting brand awareness and generating quality leads to driving sales.'},
+  why2_h: {id:'Strategi yang Disesuaikan dengan Bisnis Anda', en:'Strategy Tailored to Your Business'},
+  why2_p: {id:'Tidak ada pendekatan yang sama untuk setiap bisnis. Kami menyusun strategi berdasarkan industri, target audiens, dan objektif yang ingin dicapai.', en:'No two businesses are the same. We build strategies based on your industry, target audience, and the goals you want to achieve.'},
+  why3_h: {id:'Keputusan Berdasarkan Data', en:'Data-Driven Decisions'},
+  why3_p: {id:'Kami memanfaatkan data dan performa campaign sebagai dasar dalam mengambil keputusan, sehingga setiap optimasi dilakukan secara terukur.', en:'We use data and campaign performance as the basis for every decision, so each optimization is made in a measurable way.'},
+  why4_h: {id:'Eksekusi yang Terstruktur', en:'Structured Execution'},
+  why4_p: {id:'Mulai dari perencanaan strategi, pembuatan konten, copywriting, pengelolaan Meta Ads, hingga monitoring performa, semua dikerjakan sistematis.', en:'From strategy planning, content creation, and copywriting to Meta Ads management and performance monitoring, everything is done systematically.'},
+  cta_h2: {id:'Yuk, Kenalan Lebih Jauh', en:'Let\'s Get to Know Each Other'},
+  cta_p: {id:'Ceritain bisnis kamu, kita bantu rancang strategi digital yang paling pas.', en:'Tell us about your business, and we\'ll help design the digital strategy that fits best.'},
+  cta_btn: {id:'Mulai Proyek &rarr;', en:'Start a Project &rarr;'},
+};
+
+</script>
+</Fragment>
+</Layout>

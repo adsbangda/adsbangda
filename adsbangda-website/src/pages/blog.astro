@@ -1,0 +1,47 @@
+---
+// Halaman /blog.html -- daftar artikel di-generate OTOMATIS dari
+// semua file markdown di src/content/blog/. Tambah artikel baru = otomatis
+// muncul di sini, urut dari yang terbaru, tanpa perlu edit halaman ini.
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("blog");
+// urutkan terbaru dulu berdasarkan field date -- karena formatnya teks bebas
+// (mis. "19 Juli 2026"), urutan file di-reverse saja (artikel baru = ditambah belakangan).
+posts.reverse();
+---
+<Layout
+  title="Adsbangda - Blog"
+  description="Insight, tips, dan strategi digital marketing praktis dari tim Adsbangda -- social media, Meta Ads, sampai branding."
+  path="blog.html"
+>
+<section class="page-hero">
+  <div class="wrap">
+    <h1>Insight seputar social media &amp; digital marketing</h1>
+    <p>Tips, strategi, dan pembahasan praktis yang bisa langsung kamu terapkan buat bisnis kamu.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="wrap">
+    <div class="blog-grid">
+      {posts.map((post) => (
+        <a href={`/artikel-${post.id}.html`} class="blog-card reveal" style="text-decoration:none;color:inherit;">
+          <div class="blog-thumb" style={`background:${post.data.thumbGradient};`}>
+            <span style={`color:${post.data.thumbTextColor};`}>{post.data.thumbText}</span>
+          </div>
+          <div class="blog-body">
+            <div class="blog-cat">{post.data.category}</div>
+            <h3>{post.data.title}</h3>
+            <p>{post.data.description}</p>
+            <div class="blog-meta">
+              <span>{post.data.date} &middot; {post.data.readTime}</span>
+              <span class="read-more">Baca &rarr;</span>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+</Layout>
