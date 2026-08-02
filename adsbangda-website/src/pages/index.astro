@@ -5,7 +5,15 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
 ---
 <Layout title={title} description={description} path="index.html" includeMainJs={false}>
 <Fragment slot="head-style">
-<style>
+<style is:global>
+/* --- TES TEMA WARNA BIRU (cuma homepage) --- */
+:root{
+  --yellow:#0047FF; /* nama variabelnya tetap "yellow" tapi isinya sekarang biru, biar nggak perlu ubah semua CSS satu-satu */
+}
+.cta h2{color:var(--paper);}
+.cta p{color:rgba(240,236,226,.82);}
+/* --- akhir tes tema biru --- */
+
 .mini-stats{display:flex;gap:0;margin-top:52px;margin-bottom:8px;flex-wrap:nowrap;position:relative;}
 
 .mini-stat{padding-right:clamp(10px,2.2vw,28px);margin-right:clamp(10px,2.2vw,28px);border-right:1px solid rgba(21,23,27,.15);min-width:0;}
