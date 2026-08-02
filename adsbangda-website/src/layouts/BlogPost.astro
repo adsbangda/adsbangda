@@ -72,11 +72,11 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
       {tocHeadings.length > 0 && (
         <div class="sidebar-card">
           <h4>Daftar Isi</h4>
-          <nav class="toc-list">
+          <div class="toc-list">
             {tocHeadings.map((h) => (
               <a href={`#${h.slug}`} class={h.depth === 3 ? "toc-h3" : ""}>{h.text}</a>
             ))}
-          </nav>
+          </div>
         </div>
       )}
 
