@@ -6,24 +6,56 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
 <Layout title={title} description={description} path="index.html" includeMainJs={false}>
 <Fragment slot="head-style">
 <style is:global>
-/* --- TES TEMA WARNA BIRU TOTAL (cuma homepage) --- */
+/* ==========================================================
+   DESIGN SYSTEM — Premium Blue/Dark/White (homepage only)
+   ========================================================== */
 :root{
-  --yellow:#0047FF;   /* aksen utama (tombol, CTA, angka) */
-  --coral:#2F5FFF;    /* aksen sekunder */
-  --coral-text:#0033CC; /* versi gelap buat teks/hover */
-  --teal:#0A1F52;     /* dulu teal, sekarang navy gelap */
-  --paper:#FAFBFF;    /* dulu cream, sekarang putih dingin */
-  --paper-deep:#EEF1FA; /* dulu cream gelap, sekarang biru pucat (buat section tint & hover) */
-  --white:#FFFFFF;    /* dulu putih hangat, sekarang putih murni */
+  /* --- Color System --- */
+  --yellow:#2563EB;      /* Primary Blue (dipakai sbg aksen utama) */
+  --coral:#1D4ED8;       /* Blue Hover */
+  --coral-text:#1D4ED8;  /* Blue Hover (versi teks/highlight) */
+  --teal:#18181B;        /* Dark */
+  --ink:#18181B;         /* Dark (background tombol/footer/section gelap) */
+  --ink-soft:#23262F;    /* Portfolio card surface */
+  --paper:#FAFAFA;       /* Background utama halaman */
+  --paper-deep:#FFFFFF;  /* Section alternate (White) */
+  --white:#FFFFFF;       /* Surface / kartu */
+  --muted:#6B7280;       /* Text Secondary */
+  --radius:20px;         /* Card radius */
 }
-nav{background:rgba(255,255,255,.86) !important;}
-.cta{background:var(--yellow) !important;}
+
+/* --- Navbar --- */
+nav{background:rgba(255,255,255,.86) !important;box-shadow:0 1px 2px rgba(0,0,0,.06);border-bottom:1px solid #E5E7EB;}
+
+/* --- Hero: subtle white-to-light-gray gradient --- */
+.hero{background:linear-gradient(180deg,#FFFFFF 0%,#FAFAFA 100%);}
+
+/* --- Buttons: soft blue shadow --- */
+.btn-primary,.nav-cta{box-shadow:0 4px 12px rgba(37,99,235,.20);}
+
+/* --- Cards: soft neutral shadow --- */
+.service-card,.blog-card{box-shadow:0 8px 24px rgba(0,0,0,.08);border-color:#E5E7EB !important;}
+.service-card:hover,.blog-card:hover{box-shadow:0 12px 32px rgba(0,0,0,.12);}
+
+/* --- Portfolio section (dark) --- */
+.case-card{background:#23262F;}
+.case-card p{color:#D1D5DB;}
+.case-card .cat{color:#9CA3AF !important;}
+.case-card .view-more{color:#60A5FA !important;}
+.case-card h3{color:#fff;}
+
+/* --- CTA: subtle blue gradient, tetap tombol hitam --- */
+.cta{background:linear-gradient(135deg,#2563EB 0%,#1D4ED8 100%) !important;}
 .cta h2{color:#fff;}
 .cta p{color:rgba(255,255,255,.85);}
-.cta .btn-primary{background:var(--ink) !important;color:#fff !important;}
-.marquee span.acc{color:#6699FF !important;}
-.case-card .cat{color:rgba(255,255,255,.5) !important;}
-/* --- akhir tes tema biru --- */
+.cta .btn-primary{background:var(--ink) !important;color:#fff !important;box-shadow:0 4px 12px rgba(0,0,0,.25);}
+
+/* --- Footer --- */
+footer{background:#18181B !important;}
+
+/* --- Marquee (teks kecil di atas dasar gelap, versi terang biar kebaca) --- */
+.marquee span.acc{color:#60A5FA !important;}
+/* ============================================================ */
 
 .mini-stats{display:flex;gap:0;margin-top:52px;margin-bottom:8px;flex-wrap:nowrap;position:relative;}
 
