@@ -24,22 +24,33 @@ interface Props {
   path: string;
   headings?: Heading[];
   relatedPosts?: RelatedPost[];
+  titleEn?: string;
+  categoryEn?: string;
+  readTimeEn?: string;
+  bodyEn?: string;
 }
 
-const { title, description, category, date, readTime, path, headings = [], relatedPosts = [] } = Astro.props;
+const {
+  title, description, category, date, readTime, path,
+  headings = [], relatedPosts = [],
+  titleEn, categoryEn, readTimeEn, bodyEn,
+} = Astro.props;
 const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const hasEn = !!bodyEn; // artikel ini punya versi Inggris atau nggak
+// key unik per artikel biar nggak bentrok sama translations object halaman lain
+const slugKey = path.replace(/[^a-zA-Z0-9]/g, "_");
 ---
 <Layout title={`Adsbangda - ${title}`} description={description} path={path}>
 <section class="article-header">
   <div class="wrap">
-    <div class="breadcrumb"><a href="/blog.html" data-i18n-nav="blog">Blog</a> / <span>{category}</span></div>
-    <h1>{title}</h1>
+    <div class="breadcrumb"><a href="/blog.html" data-i18n-nav="blog">Blog</a> / <span data-i18n={hasEn ? `${slugKey}_cat` : undefined}>{category}</span></div>
+    <h1 data-i18n={hasEn ? `${slugKey}_title` : undefined}>{title}</h1>
     <div class="article-meta-row">
       <span data-i18n-nav="tim_adsbangda">Tim adsbangda</span>
       <span>&middot;</span>
       <span>{date}</span>
       <span>&middot;</span>
-      <span>{readTime}</span>
+      <span data-i18n={hasEn ? `${slugKey}_readtime` : undefined}>{readTime}</span>
     </div>
   </div>
 </section>
@@ -52,7 +63,8 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
   <div class="article-layout">
     <div class="article-main">
       <div class="article-body">
-        <slot />
+        <div id="body-id"><slot /></div>
+        {hasEn && <div id="body-en" style="display:none" set:html={bodyEn} />}
 
         <div class="article-cta">
           <h3 data-i18n-nav="blog_cta_h">Butuh Bantuan Mengelola Sosial Media Bisnis Kamu?</h3>
@@ -133,4 +145,25 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
     </aside>
   </div>
 </div>
+
+{hasEn && (
+  <Fragment slot="page-scripts">
+    <script is:inline define:vars={{ slugKey, title, titleEn, category, categoryEn, readTime, readTimeEn }}>
+      window.translations = window.translations || {};
+      window.translations[slugKey + "_title"] = { id: title, en: titleEn };
+      window.translations[slugKey + "_cat"] = { id: category, en: categoryEn };
+      window.translations[slugKey + "_readtime"] = { id: readTime, en: readTimeEn };
+      // dipakai sama script data-i18n generik di main.js
+      var translations = window.translations;
+      window.extraLangHook = function (lang) {
+        var idEl = document.getElementById("body-id");
+        var enEl = document.getElementById("body-en");
+        if (idEl && enEl) {
+          idEl.style.display = lang === "en" ? "none" : "";
+          enEl.style.display = lang === "en" ? "" : "none";
+        }
+      };
+    </script>
+  </Fragment>
+)}
 </Layout>

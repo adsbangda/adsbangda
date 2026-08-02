@@ -43,7 +43,26 @@ CARA PAKAI TEMPLATE INI:
 6. SELESAI -- halaman artikel + kartu di /blog.html + sitemap.xml
    otomatis muncul sendiri, kamu TIDAK perlu edit file lain sama sekali.
 
-Kalau mau pakai gambar di dalam artikel:
+CARA DAPAT VERSI BAHASA INGGRIS OTOMATIS IKUT TOGGLE ID/EN:
+Tambahkan field-field ini di frontmatter (semuanya opsional -- kalau
+dikosongin, artikel itu tetap tampil normal, cuma nggak ikut translate
+pas tombol EN dipencet):
+
+  title_en: "English version of the title"
+  description_en: "English version of the description"
+  category_en: "SOCIAL MEDIA"
+  readTime_en: "5 min read"
+  thumbText_en: "Short thumbnail text in English"
+  body_en: |
+    <p>Paragraf pertama versi Inggris, ditulis sebagai HTML (bukan Markdown).</p>
+    <h2>Sub judul versi Inggris</h2>
+    <p>Paragraf lagi...</p>
+
+PALING GAMPANG: tulis dulu artikel ID-nya lengkap pakai Markdown biasa
+kayak contoh di atas, terus minta tolong Claude buat translate + isiin
+field-field _en itu sekalian (termasuk body_en dalam bentuk HTML).
+
+Kalau mau gambar di dalam artikel:
 1. Taruh file gambarnya di public/assets/img/nama-gambar.jpg
 2. Panggil dengan: ![Teks alt gambar](/assets/img/nama-gambar.jpg)
 -->

@@ -25,23 +25,48 @@ posts.reverse();
 <section class="section" style="padding-top:0;">
   <div class="wrap">
     <div class="blog-grid">
-      {posts.map((post) => (
-        <a href={`/artikel-${post.id}.html`} class="blog-card reveal" style="text-decoration:none;color:inherit;">
-          <div class="blog-thumb" style={`background:${post.data.thumbGradient};`}>
-            <span style={`color:${post.data.thumbTextColor};`}>{post.data.thumbText}</span>
-          </div>
-          <div class="blog-body">
-            <div class="blog-cat">{post.data.category}</div>
-            <h3>{post.data.title}</h3>
-            <p>{post.data.description}</p>
-            <div class="blog-meta">
-              <span>{post.data.date} &middot; {post.data.readTime}</span>
-              <span class="read-more" data-i18n-nav="baca">Baca &rarr;</span>
+      {posts.map((post) => {
+        const hasEn = !!post.data.body_en;
+        const slugKey = post.id.replace(/[^a-zA-Z0-9]/g, "_");
+        return (
+          <a href={`/artikel-${post.id}.html`} class="blog-card reveal" style="text-decoration:none;color:inherit;">
+            <div class="blog-thumb" style={`background:${post.data.thumbGradient};`}>
+              <span style={`color:${post.data.thumbTextColor};`}>{post.data.thumbText}</span>
             </div>
-          </div>
-        </a>
-      ))}
+            <div class="blog-body">
+              <div class="blog-cat" data-i18n={hasEn ? `${slugKey}_lcat` : undefined}>{post.data.category}</div>
+              <h3 data-i18n={hasEn ? `${slugKey}_ltitle` : undefined}>{post.data.title}</h3>
+              <p data-i18n={hasEn ? `${slugKey}_ldesc` : undefined}>{post.data.description}</p>
+              <div class="blog-meta">
+                <span>{post.data.date} &middot; {post.data.readTime}</span>
+                <span class="read-more" data-i18n-nav="baca">Baca &rarr;</span>
+              </div>
+            </div>
+          </a>
+        );
+      })}
     </div>
   </div>
 </section>
+
+<Fragment slot="page-scripts">
+  <script is:inline define:vars={{
+    entries: posts.filter((p) => p.data.body_en).map((p) => {
+      const slugKey = p.id.replace(/[^a-zA-Z0-9]/g, "_");
+      return {
+        titleKey: `${slugKey}_ltitle`, title: p.data.title, titleEn: p.data.title_en,
+        descKey: `${slugKey}_ldesc`, desc: p.data.description, descEn: p.data.description_en,
+        catKey: `${slugKey}_lcat`, cat: p.data.category, catEn: p.data.category_en,
+      };
+    }),
+  }}>
+    window.translations = window.translations || {};
+    entries.forEach(function (e) {
+      window.translations[e.titleKey] = { id: e.title, en: e.titleEn };
+      window.translations[e.descKey] = { id: e.desc, en: e.descEn };
+      window.translations[e.catKey] = { id: e.cat, en: e.catEn };
+    });
+    var translations = window.translations;
+  </script>
+</Fragment>
 </Layout>

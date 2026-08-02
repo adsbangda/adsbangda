@@ -28,6 +28,10 @@ const relatedPosts = allPosts.filter((p) => p.id !== post.id).slice(0, 3);
   path={`artikel-${post.id}.html`}
   headings={headings}
   relatedPosts={relatedPosts}
+  titleEn={post.data.title_en}
+  categoryEn={post.data.category_en}
+  readTimeEn={post.data.readTime_en}
+  bodyEn={post.data.body_en}
 >
   <Content />
 </BlogPost>

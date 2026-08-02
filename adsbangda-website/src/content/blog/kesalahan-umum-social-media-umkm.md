@@ -6,6 +6,32 @@ date: "19 Juli 2026"
 readTime: "6 menit baca"
 thumbGradient: "linear-gradient(155deg,var(--coral),#2a1410)"
 thumbText: "5 Kesalahan Umum UMKM di Sosial Media"
+title_en: "5 Common Social Media Mistakes SMEs Make (and How to Fix Them)"
+description_en: "Many SMEs post consistently but still see no growth. Here are 5 common social media mistakes and how to fix them."
+category_en: "SOCIAL MEDIA"
+readTime_en: "6 min read"
+thumbText_en: "5 Common SME Social Media Mistakes"
+body_en: |
+  <p>Almost every small business now has an Instagram or TikTok account. But the reality is, many post diligently every day and still see no follower growth, low engagement, and barely any sales through social media. If that sounds familiar, it's probably not because your content is bad — it's likely a few fundamental mistakes that often go unnoticed.</p>
+  <p>Here are the 5 most common mistakes we've seen from managing dozens of business accounts, plus how to fix them.</p>
+  <h2>1. Posting Without a Clear Strategy</h2>
+  <p>This is the most common one. Content gets made just to have something to post, with no clear goal — whether it's awareness, education, or direct sales. The result: inconsistent themes and confused audiences who don't know "what does this account actually sell?"</p>
+  <p><strong>How to fix it:</strong> Start by defining 3-4 content pillars (big themes) relevant to your business. For a food business, for example: ingredient education, behind-the-scenes kitchen content, customer testimonials, and menu promotions. Every piece of content should fit into one of these pillars.</p>
+  <h2>2. Too Focused on Selling, Forgetting to Build Connection</h2>
+  <p>A feed that's just product photos and prices on repeat actually makes people less likely to follow, let alone engage. Social media is about building a relationship first, then a transaction.</p>
+  <p><strong>How to fix it:</strong> Apply an 80:20 content ratio — 80% content that adds value for your audience (education, entertainment, stories), 20% direct sales content. People trust buying from a brand whose "personality" they already know, not just one that shows up during a sale.</p>
+  <h2>3. Inconsistent Posting Schedule</h2>
+  <p>Posting every day this week, disappearing for a week, then coming back with 5 posts at once. This pattern confuses the platform's algorithm and makes it harder to reach new audiences.</p>
+  <p><strong>How to fix it:</strong> Build a weekly or monthly content calendar. You don't need to post daily if you can't keep up — what matters is consistency, like 3-4 times a week at the same time.</p>
+  <h2>4. Long Captions With No "Hook"</h2>
+  <p>The first three seconds determine whether someone keeps watching/reading or scrolls away. A lot of SME content only gets to the point on the 4th or 5th sentence — by then, the audience is already gone.</p>
+  <p><strong>How to fix it:</strong> The first sentence of your caption (or the first 3 seconds of a video) needs to hook immediately — a question, a surprising statement, or straight to the result/benefit. Save the details for later in the post.</p>
+  <h2>5. Never Checking Data & Insights</h2>
+  <p>Many people keep posting without ever looking at which content actually works and which doesn't. But insight data is the most honest indicator of what your audience actually likes.</p>
+  <p><strong>How to fix it:</strong> Set aside time at the end of each month to review your insights — which content had the highest reach, which got the most saves/shares. Repeat and build on those patterns.</p>
+  <blockquote>Great content isn't about how expensive the production is, but how relevant and consistently it shows up for the right audience.</blockquote>
+  <h2>Conclusion</h2>
+  <p>Managing a business's social media does take time and strategy, not just diligent posting. If these five things still feel like a challenge for your business, that's normal — plenty of other businesses went through the same thing before finally building a content system that works.</p>
 ---
 
 Hampir semua UMKM sekarang punya akun Instagram atau TikTok bisnis. Tapi kenyataannya, banyak yang udah rajin posting setiap hari, tetap aja followers-nya nggak nambah, engagement rendah, apalagi jualan lewat sosial media. Kalau kamu ngerasa relate, kemungkinan besar bukan karena kontennya jelek — tapi karena ada beberapa kesalahan mendasar yang sering nggak disadari.
