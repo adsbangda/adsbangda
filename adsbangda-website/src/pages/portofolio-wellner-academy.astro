@@ -186,7 +186,7 @@ const description = 'Portofolio Wellner Academy: strategi Social Media Managemen
 
 
 <Fragment slot="page-scripts">
-<script>
+<script is:inline>
 
 
 // ---- shared nav/footer translation (site-wide, all pages) ----
@@ -247,7 +247,7 @@ const translations = {
   <div class="img-lightbox-close" id="imgLightboxClose">&times;</div>
   <img id="imgLightboxImg" src="" alt="" loading="lazy">
 </div>
-<script>
+<script is:inline>
 (function(){
   var lb = document.getElementById('imgLightbox');
   var lbImg = document.getElementById('imgLightboxImg');

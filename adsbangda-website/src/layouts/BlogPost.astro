@@ -32,10 +32,10 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 <Layout title={`Adsbangda - ${title}`} description={description} path={path}>
 <section class="article-header">
   <div class="wrap">
-    <div class="breadcrumb"><a href="/blog.html">Blog</a> / <span>{category}</span></div>
+    <div class="breadcrumb"><a href="/blog.html" data-i18n-nav="blog">Blog</a> / <span>{category}</span></div>
     <h1>{title}</h1>
     <div class="article-meta-row">
-      <span>Tim adsbangda</span>
+      <span data-i18n-nav="tim_adsbangda">Tim adsbangda</span>
       <span>&middot;</span>
       <span>{date}</span>
       <span>&middot;</span>
@@ -55,16 +55,16 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
         <slot />
 
         <div class="article-cta">
-          <h3>Butuh Bantuan Mengelola Sosial Media Bisnis Kamu?</h3>
-          <p>Tim kami bisa bantu susun strategi, produksi konten, sampai laporan performa bulanan.</p>
-          <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" style="background:var(--yellow);color:var(--ink);">Konsultasi Gratis &rarr;</a>
+          <h3 data-i18n-nav="blog_cta_h">Butuh Bantuan Mengelola Sosial Media Bisnis Kamu?</h3>
+          <p data-i18n-nav="blog_cta_p">Tim kami bisa bantu susun strategi, produksi konten, sampai laporan performa bulanan.</p>
+          <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n-nav="blog_cta_btn" style="background:var(--yellow);color:var(--ink);">Konsultasi Gratis &rarr;</a>
         </div>
       </div>
     </div>
 
     <aside class="article-sidebar">
       <div class="sidebar-card">
-        <h4>Layanan</h4>
+        <h4 data-i18n-nav="layanan">Layanan</h4>
         <div class="sidebar-links">
           <a href="/layanan-sosial-media-management.html">Social Media Management<span class="link-arrow">&rarr;</span></a>
           <a href="/layanan-content-strategy.html">Content Strategy<span class="link-arrow">&rarr;</span></a>
@@ -78,7 +78,7 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
       </div>
 
       <div class="sidebar-card">
-        <h4>Kontak</h4>
+        <h4 data-i18n-nav="kontak_h">Kontak</h4>
         <div class="sidebar-contact">
           <a href="mailto:info@adsbangda.com" class="sidebar-contact-item">
             <span class="sc-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F0ECE2" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 6l8 7 8-7"/></svg></span>
@@ -98,13 +98,13 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
           </a>
           <a href="/kontak.html" class="sidebar-contact-item">
             <span class="sc-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F0ECE2" stroke-width="1.8"><path d="M12 21s-7-5-7-11a7 7 0 0114 0c0 6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
-            <span>Jakarta, Indonesia</span>
+            <span data-i18n-nav="lokasi">Jakarta, Indonesia</span>
           </a>
         </div>
       </div>
 
       <div class="sidebar-card">
-        <h4>Ikuti Kami</h4>
+        <h4 data-i18n-nav="ikuti_kami">Ikuti Kami</h4>
         <div class="sidebar-socials">
           <a href="https://www.instagram.com/adsbangda/" target="_blank" rel="noopener" class="sidebar-social-item">
             <span class="sc-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F0ECE2" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1"/></svg></span>
@@ -119,7 +119,7 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
       {relatedPosts.length > 0 && (
         <div class="sidebar-card">
-          <h4>Artikel Terkait</h4>
+          <h4 data-i18n-nav="artikel_terkait">Artikel Terkait</h4>
           <div class="related-list">
             {relatedPosts.map((p) => (
               <a href={`/artikel-${p.id}.html`} class="related-item">

@@ -46,6 +46,15 @@ const navTranslations = {
   lokasi: {id:'Jakarta, Indonesia', en:'Jakarta, Indonesia'},
   copy: {id:'&copy; 2026 adsbangda. Semua konten dibikin, bukan dicomot.', en:'&copy; 2026 adsbangda. All content made, not copied.'},
   made: {id:'Dibuat dengan adsbangda', en:'Made with adsbangda'},
+  tim_adsbangda: {id:'Tim adsbangda', en:'Adsbangda Team'},
+  ikuti_kami: {id:'Ikuti Kami', en:'Follow Us'},
+  artikel_terkait: {id:'Artikel Terkait', en:'Related Articles'},
+  blog_cta_h: {id:'Butuh Bantuan Mengelola Sosial Media Bisnis Kamu?', en:'Need Help Managing Your Business Social Media?'},
+  blog_cta_p: {id:'Tim kami bisa bantu susun strategi, produksi konten, sampai laporan performa bulanan.', en:'Our team can help with strategy, content production, and monthly performance reports.'},
+  blog_cta_btn: {id:'Konsultasi Gratis &rarr;', en:'Free Consultation &rarr;'},
+  blog_hero_h: {id:'Insight seputar social media &amp; digital marketing', en:'Insights on social media &amp; digital marketing'},
+  blog_hero_p: {id:'Tips, strategi, dan pembahasan praktis yang bisa langsung kamu terapkan buat bisnis kamu.', en:'Practical tips, strategies, and discussions you can apply to your business right away.'},
+  baca: {id:'Baca &rarr;', en:'Read &rarr;'},
 };
 
 function applySharedLang(lang){

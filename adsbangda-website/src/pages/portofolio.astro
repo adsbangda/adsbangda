@@ -55,7 +55,7 @@ const description = 'Lihat portofolio dan hasil kerja adsbangda bersama berbagai
 
 
 <Fragment slot="page-scripts">
-<script>
+<script is:inline>
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 var currentLang = localStorage.getItem('adsbangda_lang') || 'id';
 
