@@ -803,8 +803,8 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
 /* article sidebar layout (CTA + daftar isi + artikel terkait) */
 .article-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:56px;max-width:var(--maxw);margin:0 auto;align-items:start;}
 .article-main{min-width:0;}
-.article-main .article-body{max-width:none;margin:0;padding:40px 0 0;}
-.article-sidebar{display:flex;flex-direction:column;gap:20px;}
+.article-main .article-body{max-width:none;margin:0;padding:40px 0 80px;}
+.article-sidebar{position:sticky;top:100px;display:flex;flex-direction:column;gap:20px;margin-top:40px;}
 .sidebar-card{background:var(--white);border:1px solid rgba(21,23,27,.09);border-radius:16px;padding:22px;}
 .sidebar-card h4{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:14px;font-weight:700;}
 .sidebar-cta{background:var(--ink);border:none;padding:26px 22px;}
@@ -824,7 +824,7 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
 
 @media (max-width:900px){
   .article-layout{grid-template-columns:1fr;gap:0;}
-  .article-sidebar{position:static;flex-direction:column;margin-top:32px;}
+  .article-sidebar{display:none;}
   .article-main .article-body{padding-top:20px;}
 }
 
