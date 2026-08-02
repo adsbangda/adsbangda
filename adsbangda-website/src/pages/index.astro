@@ -8,13 +8,18 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
 <style is:global>
 /* --- TES TEMA WARNA BIRU TOTAL (cuma homepage) --- */
 :root{
-  --yellow:#0047FF;   /* aksen utama (tombol, CTA) */
-  --coral:#2F5FFF;    /* aksen sekunder (dulu merah/coral) */
-  --coral-text:#0033CC; /* versi lebih gelap buat teks/hover */
-  --teal:#0A1F52;     /* dulu teal gelap, sekarang navy gelap */
+  --yellow:#0047FF;   /* aksen utama (tombol, CTA, angka) */
+  --coral:#2F5FFF;    /* aksen sekunder */
+  --coral-text:#0033CC; /* versi gelap buat teks/hover */
+  --teal:#0A1F52;     /* dulu teal, sekarang navy gelap */
+  --paper:#FAFBFF;    /* dulu cream, sekarang putih dingin */
+  --paper-deep:#EEF1FA; /* dulu cream gelap, sekarang biru pucat (buat section tint & hover) */
+  --white:#FFFFFF;    /* dulu putih hangat, sekarang putih murni */
 }
+.cta{background:var(--ink) !important;}
 .cta h2{color:var(--paper);}
-.cta p{color:rgba(240,236,226,.82);}
+.cta p{color:rgba(250,251,255,.75);}
+.cta .btn-primary{background:var(--yellow) !important;color:#fff !important;}
 /* --- akhir tes tema biru --- */
 
 .mini-stats{display:flex;gap:0;margin-top:52px;margin-bottom:8px;flex-wrap:nowrap;position:relative;}
