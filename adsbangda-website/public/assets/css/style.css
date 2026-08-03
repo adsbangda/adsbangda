@@ -235,9 +235,13 @@ nav{
 
 .btn-secondary:hover{background:var(--ink);color:var(--paper);transform:translateY(-2px);}
 
-.mini-stats{display:flex;gap:28px;margin-top:52px;margin-bottom:8px;flex-wrap:wrap;position:relative;}
+.mini-stats{display:flex;gap:0;margin-top:52px;margin-bottom:8px;flex-wrap:wrap;position:relative;}
 
 .mini-divider{display:none;}
+
+.mini-stat{padding-right:28px;margin-right:28px;border-right:1px solid rgba(21,23,27,.15);}
+
+.mini-stat:last-child{border-right:none !important;padding-right:0;margin-right:0;}
 
 .mini-stat b{
   font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;display:block;
