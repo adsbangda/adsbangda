@@ -395,7 +395,7 @@ nav{
 .back-link:hover{color:var(--ink);}
 
 /* Wrapper konten case study (lebar baca nyaman) */
-.cd-wrap{max-width:760px;}
+.cd-wrap{max-width:none;}
 
 /* Baris ringkasan (Layanan / Platform / Kategori) di bawah hero */
 .hero-meta{display:flex;flex-wrap:wrap;gap:28px;margin-top:36px;}
@@ -419,14 +419,13 @@ nav{
 
 /* Workflow diagram (Discovery -> Research -> ... -> Reporting) */
 .wf-track{position:relative;}
-.wf-connector{position:absolute;inset:0;width:100%;height:100%;z-index:0;}
-.wf-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:40px 24px;}
+.wf-connector{display:none;}
+.wf-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
 .wf-node{background:var(--white);border:1px solid #E5E7EB;border-radius:16px;padding:22px 20px;box-shadow:0 8px 24px rgba(0,0,0,.08);}
 .wf-node .num{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:8px;}
 .wf-node h4{font-size:15px;font-weight:700;}
 
 @media (max-width:700px){
-  .wf-connector{display:none;}
   .wf-grid{grid-template-columns:1fr;}
   .hero-meta{flex-direction:column;gap:18px;}
 }
