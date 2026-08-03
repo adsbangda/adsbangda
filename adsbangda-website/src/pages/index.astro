@@ -6,9 +6,9 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
 <Layout title={title} description={description} path="index.html" includeMainJs={false}>
 <Fragment slot="head-style">
 <style>
-.mini-stats{display:flex;gap:0;margin-top:52px;margin-bottom:8px;flex-wrap:nowrap;position:relative;}
+.mini-stats{display:flex;gap:clamp(10px,2.2vw,28px);margin-top:52px;margin-bottom:8px;flex-wrap:nowrap;position:relative;}
 
-.mini-stat{padding-right:clamp(10px,2.2vw,28px);margin-right:clamp(10px,2.2vw,28px);border-right:1px solid rgba(21,23,27,.15);min-width:0;}
+.mini-stat{min-width:0;}
 
 .mini-stat b{
   font-family:'IBM Plex Mono',monospace;font-size:clamp(17px,2.4vw,26px);font-weight:700;display:block;white-space:nowrap;
