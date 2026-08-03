@@ -386,6 +386,52 @@ nav{
 
 .section-head{margin-bottom:56px;}
 
+/* ==========================================================
+   PORTFOLIO DETAIL PAGE — komponen yang belum pernah ada CSS-nya
+   ========================================================== */
+
+/* Link "Kembali ke Portofolio" */
+.back-link{align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--muted);}
+.back-link:hover{color:var(--ink);}
+
+/* Wrapper konten case study (lebar baca nyaman) */
+.cd-wrap{max-width:760px;}
+
+/* Baris ringkasan (Layanan / Platform / Kategori) di bawah hero */
+.hero-meta{display:flex;flex-wrap:wrap;gap:28px;margin-top:36px;}
+.hero-meta-item{display:flex;align-items:center;gap:14px;}
+.overview-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ov-text{display:flex;flex-direction:column;gap:2px;}
+.ov-text span{font-size:12px;color:var(--muted);}
+.ov-text b{font-size:14.5px;font-weight:700;color:var(--ink);}
+
+/* Chip highlight di bawah tiap project block */
+.highlight-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;}
+.highlight-chip{display:inline-flex;align-items:center;gap:8px;background:var(--yellow);color:#fff;padding:9px 16px;border-radius:100px;font-size:13.5px;font-weight:600;}
+.hc-icon{display:flex;color:#fff;flex-shrink:0;}
+
+/* Kategori tools & software */
+.tools-cat{display:flex;flex-direction:column;gap:20px;}
+.tools-cat h4{font-size:15px;font-weight:700;}
+.tool-item span{font-size:12.5px;color:var(--muted);text-align:center;}
+.tool-logo{width:56px;height:56px;border-radius:14px;background:var(--white);border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;padding:10px;box-shadow:0 4px 12px rgba(0,0,0,.06);}
+.tool-logo img{width:100%;height:100%;object-fit:contain;}
+
+/* Workflow diagram (Discovery -> Research -> ... -> Reporting) */
+.wf-track{position:relative;}
+.wf-connector{position:absolute;inset:0;width:100%;height:100%;z-index:0;}
+.wf-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:40px 24px;}
+.wf-node{background:var(--white);border:1px solid #E5E7EB;border-radius:16px;padding:22px 20px;box-shadow:0 8px 24px rgba(0,0,0,.08);}
+.wf-node .num{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:8px;}
+.wf-node h4{font-size:15px;font-weight:700;}
+
+@media (max-width:700px){
+  .wf-connector{display:none;}
+  .wf-grid{grid-template-columns:1fr;}
+  .hero-meta{flex-direction:column;gap:18px;}
+}
+/* ============================================================ */
+
 .section-head p{max-width:none;text-align:justify;}
 
 .section-head h2{font-size:clamp(28px,3.4vw,42px);}
