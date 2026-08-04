@@ -7,6 +7,33 @@ readTime: "5 menit baca"
 thumbGradient: "linear-gradient(155deg,var(--yellow),#5a4a00)"
 thumbText: "5 Ide Konten Anti Mentok"
 thumbTextColor: "#15171B"
+title_en: "5 Content Ideas That Always Work for Small Businesses (Steal These)"
+description_en: "Out of content ideas? Here are 5 content formats that consistently drive high engagement for small-to-medium businesses, complete with execution examples."
+category_en: "CONTENT STRATEGY"
+readTime_en: "5 min read"
+thumbText_en: "5 Ideas to Never Run Dry"
+body_en: |
+  <p>One of the most common complaints we hear from small business owners: "I don't know what to post anymore." But most businesses actually have plenty of content material — they just haven't figured out how to package it into something worth watching.</p>
+  <p>Here are 5 content formats proven to consistently drive engagement, based on our experience managing dozens of business accounts.</p>
+  <h2>1. Behind The Scenes (BTS)</h2>
+  <p>People like seeing the process, not just the finished result. The process of making a product, a casual internal meeting, or even a chaotic behind-the-scenes moment often feels more relatable than an overly "perfect" product photo.</p>
+  <p><strong>Execution example:</strong> A 15-second video of the order-packing process, or a "a day as our shop's admin" story.</p>
+  <h2>2. Q&A from Comments/DMs</h2>
+  <p>Collect the questions that frequently come in from potential buyers, then answer them as content. This kills two birds with one stone: it educates potential customers, while also serving as social proof that people are genuinely asking about your product.</p>
+  <p><strong>Execution example:</strong> A carousel titled "5 most-asked questions about our product," with a short answer on each slide.</p>
+  <h2>3. Before-After</h2>
+  <p>A classic format that always works, especially for businesses in beauty, renovation, fitness, or anything with a clear visual transformation. The human brain is naturally drawn to comparisons.</p>
+  <blockquote>Good content isn't about how expensive the production is, but how relevant it is to your audience.</blockquote>
+  <p><strong>Execution example:</strong> A split-screen video or side-by-side photos, with an honest caption about the process (not just an instant result).</p>
+  <h2>4. Myth vs Fact</h2>
+  <p>Every industry has misconceptions people commonly believe. Content that busts these myths tends to have high retention because people are curious to know what comes next.</p>
+  <p><strong>Execution example:</strong> "3 Myths About [Your Industry] That Are Actually Wrong" — this format is also great for positioning your brand as an expert in your field.</p>
+  <h2>5. User Generated Content (UGC) Repost</h2>
+  <p>If a customer posts about your product, repost it with their permission. This is "free" content that often performs better than brand-made content, because it feels more authentic.</p>
+  <p><strong>Execution example:</strong> Collect reviews/testimonials into a story highlight, or a monthly UGC compilation reel.</p>
+  <h2>Conclusion</h2>
+  <p>You don't need complicated ideas or a big production budget to create content that works. What matters more is consistency and a sharp eye for the content material that's already right in front of you — from everyday business processes to customer interactions.</p>
+  <p>If you need help building a more structured content strategy, our team is ready to help, from research all the way to execution.</p>
 ---
 
 Salah satu keluhan paling umum dari pemilik UMKM yang kita temui: "bingung mau posting apa lagi." Padahal, kebanyakan bisnis sebenarnya punya banyak bahan konten — cuma belum tahu cara mengemasnya jadi sesuatu yang menarik ditonton.

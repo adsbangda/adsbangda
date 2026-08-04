@@ -31,7 +31,7 @@ posts.reverse();
         return (
           <a href={`/artikel-${post.id}.html`} class="blog-card reveal" style="text-decoration:none;color:inherit;">
             <div class="blog-thumb" style={`background:${post.data.thumbGradient};`}>
-              <span style={`color:${post.data.thumbTextColor};`}>{post.data.thumbText}</span>
+              <span style={`color:${post.data.thumbTextColor};`} data-i18n={hasEn ? `${slugKey}_lthumb` : undefined}>{post.data.thumbText}</span>
             </div>
             <div class="blog-body">
               <div class="blog-cat" data-i18n={hasEn ? `${slugKey}_lcat` : undefined}>{post.data.category}</div>
@@ -57,6 +57,7 @@ posts.reverse();
         titleKey: `${slugKey}_ltitle`, title: p.data.title, titleEn: p.data.title_en,
         descKey: `${slugKey}_ldesc`, desc: p.data.description, descEn: p.data.description_en,
         catKey: `${slugKey}_lcat`, cat: p.data.category, catEn: p.data.category_en,
+        thumbKey: `${slugKey}_lthumb`, thumb: p.data.thumbText, thumbEn: p.data.thumbText_en,
       };
     }),
   }}>
@@ -65,6 +66,7 @@ posts.reverse();
       window.translations[e.titleKey] = { id: e.title, en: e.titleEn };
       window.translations[e.descKey] = { id: e.desc, en: e.descEn };
       window.translations[e.catKey] = { id: e.cat, en: e.catEn };
+      window.translations[e.thumbKey] = { id: e.thumb, en: e.thumbEn };
     });
     var translations = window.translations;
   </script>
