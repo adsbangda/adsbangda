@@ -159,7 +159,7 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
 }
 
 .testi-grid{
-  display:flex;gap:18px;overflow-x:auto;padding-bottom:8px;
+  display:flex;gap:18px;overflow-x:auto;padding-bottom:8px;align-items:flex-start;
   scrollbar-width:none;-ms-overflow-style:none;scroll-behavior:auto;
 }
 
@@ -1101,7 +1101,18 @@ const testiGrid = document.getElementById('testiGrid');
 const testiOriginalCards = Array.from(testiGrid.children);
 const testiOriginalCount = testiOriginalCards.length;
 
-function testiCloneSet(){ return testiOriginalCards.map(el => el.cloneNode(true)); }
+// The site-wide scroll-reveal observer only ever looks at the elements that
+// existed when it first ran, so these cards (and every clone we're about to
+// make for the infinite loop) need '.in' added directly -- otherwise clones
+// stay stuck at opacity:0 forever (they render, but invisible == "blank").
+testiOriginalCards.forEach(el => el.classList.add('in'));
+function testiCloneSet(){
+  return testiOriginalCards.map(el => {
+    const clone = el.cloneNode(true);
+    clone.classList.add('in');
+    return clone;
+  });
+}
 
 let testiPrependCount = 0;
 function addTestiPrependSet(){
@@ -1110,15 +1121,19 @@ function addTestiPrependSet(){
   testiGrid.insertBefore(frag, testiGrid.firstChild);
   testiPrependCount++;
 }
-addTestiPrependSet();
-while(testiGrid.scrollWidth < window.innerWidth * 2.2){
-  addTestiPrependSet();
-}
+let testiAppendCount = 0;
 function addTestiAppendSet(){
   testiCloneSet().forEach(el => testiGrid.appendChild(el));
+  testiAppendCount++;
 }
-addTestiAppendSet();
-while(testiGrid.scrollWidth < window.innerWidth * 2.2){
+// Always keep at least 2 full duplicate sets buffered on each side (regardless
+// of viewport width), on top of a width-based check for very wide monitors --
+// this guarantees auto-slide + manual dragging never runs out of cards to
+// reveal before the seamless wrap-around correction has a chance to fire.
+while(testiPrependCount < 2 || testiGrid.scrollWidth < window.innerWidth * 3){
+  addTestiPrependSet();
+}
+while(testiAppendCount < 2 || testiGrid.scrollWidth < window.innerWidth * 3){
   addTestiAppendSet();
 }
 
