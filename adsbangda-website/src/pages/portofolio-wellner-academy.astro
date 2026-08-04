@@ -18,18 +18,6 @@ const description = 'Portofolio Wellner Academy: strategi Social Media Managemen
 
 .project-block .mp-thumb img{width:100%;display:block;}
 
-.mp-thumb img,.modal-project .mp-thumb img{cursor:zoom-in;}
-
-.img-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,16,14,.92);align-items:center;justify-content:center;padding:32px;cursor:zoom-out;}
-
-.img-lightbox.active{display:flex;}
-
-.img-lightbox img{max-width:min(1100px,92vw);max-height:90vh;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
-
-.img-lightbox-close{position:absolute;top:20px;right:28px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;cursor:pointer;}
-
-.img-lightbox-close:hover{background:rgba(255,255,255,.22);}
-
 /* ---- case study: tools & software ---- */
 .tools-grid{display:flex;flex-wrap:wrap;align-items:flex-start;gap:40px 64px;margin-top:0;}
 
@@ -241,35 +229,6 @@ const translations = {
   impact_p2: {id:'Konsistensi publikasi, kualitas visual, dan penyampaian materi edukasi membantu memperkuat kredibilitas brand, meningkatkan interaksi dengan audiens, serta membangun fondasi komunikasi digital yang dapat terus dikembangkan seiring pertumbuhan Wellner Academy.', en:'Consistent publishing, strong visual quality, and clear delivery of educational material have helped strengthen brand credibility, boost audience interaction, and build a digital communication foundation that can keep growing alongside Wellner Academy.'},
 };
 
-</script>
-
-<div class="img-lightbox" id="imgLightbox">
-  <div class="img-lightbox-close" id="imgLightboxClose">&times;</div>
-  <img id="imgLightboxImg" src="" alt="" loading="lazy">
-</div>
-<script is:inline>
-(function(){
-  var lb = document.getElementById('imgLightbox');
-  var lbImg = document.getElementById('imgLightboxImg');
-  var lbClose = document.getElementById('imgLightboxClose');
-  function openLightbox(src, alt){
-    lbImg.src = src;
-    lbImg.alt = alt || '';
-    lb.classList.add('active');
-  }
-  function closeLightbox(){
-    lb.classList.remove('active');
-    lbImg.src = '';
-  }
-  document.addEventListener('click', function(e){
-    var img = e.target.closest('.mp-thumb img');
-    if (img) { openLightbox(img.src, img.alt); return; }
-    if (e.target === lb || e.target === lbClose) { closeLightbox(); }
-  });
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape') closeLightbox();
-  });
-})();
 </script>
 </Fragment>
 </Layout>

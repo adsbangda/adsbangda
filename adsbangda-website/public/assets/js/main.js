@@ -92,3 +92,27 @@ if(langToggleEl) langToggleEl.addEventListener('click', toggleSharedLang);
 if(langToggleMobileEl) langToggleMobileEl.addEventListener('click', toggleSharedLang);
 applySharedLang(currentLang);
 document.documentElement.style.visibility='visible';
+
+// ---- lightbox (klik gambar project untuk preview/zoom) -- global, semua halaman ----
+const lightboxOverlay = document.getElementById('lightboxOverlay');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxClose = document.getElementById('lightboxClose');
+if(lightboxOverlay && lightboxImg && lightboxClose){
+  function openLightbox(src, alt){
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || '';
+    lightboxOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox(){
+    lightboxOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('click', (e)=>{
+    const img = e.target.closest('.project-block .mp-thumb img, .modal-project .mp-thumb img');
+    if(img) openLightbox(img.currentSrc || img.src, img.alt);
+  });
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightboxOverlay.addEventListener('click', (e)=>{ if(e.target === lightboxOverlay) closeLightbox(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeLightbox(); });
+}
