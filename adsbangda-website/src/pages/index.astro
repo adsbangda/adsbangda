@@ -158,7 +158,7 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
   scroll-behavior:auto;
 }
 
-.testi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+.testi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;}
 
 .bubble-open{
   background:transparent;border:1.5px dashed var(--teal);border-radius:20px;border-bottom-left-radius:4px;
@@ -189,6 +189,7 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
   .mobile-nav-group{display:flex;}
   .services-grid{grid-template-columns:1fr 1fr;}
   .mini-stats{margin-top:40px;}
+  .testi-grid{grid-template-columns:1fr 1fr;}
 }
 
 @media (max-width:600px){
@@ -486,7 +487,7 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
           <div class="bubble-avatar" style="background:#FF4A3D"></div>
           <div><b>Luthfi</b><span data-i18n="testi2_role">Owner, Amati Coffee</span></div>
         </div>
-        <p data-i18n="testi2_q">Timnya cepat tanggap, kreatornya dipilihin yang beneran cocok. Hasil produksinya juga rapi tapi tetap kerasa raw.</p>
+        <p data-i18n="testi2_q">Terima kasih, Mas. Sejauh ini, AdsBangda adalah tim eksternal yang paling nyaman diajak bekerja sama.</p>
         <div class="meta" data-i18n="testi2_meta">✓✓ dibaca · 14:12</div>
       </div>
       <div class="bubble reveal">
@@ -497,11 +498,19 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
         <p data-i18n="testi3_q">Reporting-nya jujur, nggak cuma pamer angka bagus doang. Enak diajak diskusi strategi bareng.</p>
         <div class="meta" data-i18n="testi3_meta">✓✓ dibaca · 20:03</div>
       </div>
+      <div class="bubble reveal">
+        <div class="bubble-head">
+          <div class="bubble-avatar" style="background:#2563EB"></div>
+          <div><b>Putri</b><span data-i18n="testi4_role">Owner, Batam Dental Center</span></div>
+        </div>
+        <p data-i18n="testi4_q">Alhamdulillah, Bang. Sekarang pasiennya ramai, sampai saya pusing ngatur jadwalnya. 😄 Terima kasih AdsBangda sudah bantu mengelola social media dan Meta Ads kami. Semoga makin sukses!</p>
+        <div class="meta" data-i18n="testi4_meta">✓✓ dibaca · 11:27</div>
+      </div>
       <div class="bubble-open reveal">
-        <span class="open-badge" data-i18n="testi4_badge">SLOT TERBUKA</span>
-        <b data-i18n="testi4_h">Cerita website kamu bisa jadi yang berikutnya</b>
-        <p data-i18n="testi4_p">Kami baru mulai menerima klien internasional untuk Website & Landing Page — testimoni dari mereka akan tampil di sini begitu proyek pertama selesai.</p>
-        <a href="#kontak" data-i18n="testi4_cta">Jadi klien internasional pertama kami →</a>
+        <span class="open-badge" data-i18n="testi5_badge">SLOT TERBUKA</span>
+        <b data-i18n="testi5_h">Cerita bisnis kamu bisa jadi yang berikutnya</b>
+        <p data-i18n="testi5_p">Dari social media, Meta Ads, sampai website & branding — kami baru mulai menerima klien internasional untuk semua layanan kami, testimoni dari mereka akan tampil di sini begitu proyek pertama selesai.</p>
+        <a href="#kontak" data-i18n="testi5_cta">Jadi klien internasional pertama kami →</a>
       </div>
     </div>
   </div>
@@ -1147,15 +1156,18 @@ const translations = {
   testi1_q: {id:'Baru sebulan kerja bareng adsbangda, engagement rate kita naik hampir 3x. Kontennya kerasa kayak temen yang cerita, bukan iklan.', en:'Just one month working with adsbangda, our engagement rate nearly tripled. The content feels like a friend telling a story, not an ad.'},
   testi1_meta: {id:'✓✓ dibaca · 09:41', en:'✓✓ read · 09:41'},
   testi2_role: {id:'Owner, Amati Coffee', en:'Owner, Amati Coffee'},
-  testi2_q: {id:'Timnya cepat tanggap, kreatornya dipilihin yang beneran cocok. Hasil produksinya juga rapi tapi tetap kerasa raw.', en:'The team is quick to respond, and the creators chosen genuinely fit. The production is clean but still feels raw and real.'},
+  testi2_q: {id:'Terima kasih, Mas. Sejauh ini, AdsBangda adalah tim eksternal yang paling nyaman diajak bekerja sama.', en:'Thank you! So far, AdsBangda has been the external team that\'s been the easiest and most comfortable to work with.'},
   testi2_meta: {id:'✓✓ dibaca · 14:12', en:'✓✓ read · 14:12'},
   testi3_role: {id:'Sales Manager, Johanes Toyota Batam', en:'Sales Manager, Johanes Toyota Batam'},
   testi3_q: {id:'Reporting-nya jujur, nggak cuma pamer angka bagus doang. Enak diajak diskusi strategi bareng.', en:'The reporting is honest, not just showing off good numbers. Great to discuss strategy with.'},
   testi3_meta: {id:'✓✓ dibaca · 20:03', en:'✓✓ read · 20:03'},
-  testi4_badge: {id:'SLOT TERBUKA', en:'OPEN SLOT'},
-  testi4_h: {id:'Cerita website kamu bisa jadi yang berikutnya', en:'Your website story could be next'},
-  testi4_p: {id:'Kami baru mulai menerima klien internasional untuk Website & Landing Page — testimoni dari mereka akan tampil di sini begitu proyek pertama selesai.', en:'We\'ve just started taking on international clients for Website & Landing Page projects — testimonials from them will show up here once the first project wraps.'},
-  testi4_cta: {id:'Jadi klien internasional pertama kami →', en:'Be our first international client →'},
+  testi4_role: {id:'Owner, Batam Dental Center', en:'Owner, Batam Dental Center'},
+  testi4_q: {id:'Alhamdulillah, Bang. Sekarang pasiennya ramai, sampai saya pusing ngatur jadwalnya. 😄 Terima kasih AdsBangda sudah bantu mengelola social media dan Meta Ads kami. Semoga makin sukses!', en:'Alhamdulillah! Our patients have really picked up — I\'m almost overwhelmed just managing the schedule now. 😄 Thanks, AdsBangda, for helping manage our social media and Meta Ads. Wishing you guys even more success!'},
+  testi4_meta: {id:'✓✓ dibaca · 11:27', en:'✓✓ read · 11:27'},
+  testi5_badge: {id:'SLOT TERBUKA', en:'OPEN SLOT'},
+  testi5_h: {id:'Cerita bisnis kamu bisa jadi yang berikutnya', en:'Your business story could be next'},
+  testi5_p: {id:'Dari social media, Meta Ads, sampai website & branding — kami baru mulai menerima klien internasional untuk semua layanan kami, testimoni dari mereka akan tampil di sini begitu proyek pertama selesai.', en:'From social media and Meta Ads to websites & branding — we\'ve just started taking on international clients across all our services, and their testimonials will show up here once the first project wraps.'},
+  testi5_cta: {id:'Jadi klien internasional pertama kami →', en:'Be our first international client →'},
   cta_h2: {id:'Yuk, Ceritain Kebutuhan Brand Kamu!', en:'Let\'s Talk About Your Brand\'s Needs!'},
   cta_p: {id:'Nggak perlu bingung harus mulai dari mana. Yuk ngobrol dulu, siapa tahu strategi yang tepat bisa jadi langkah awal buat bisnis kamu berkembang lebih jauh.', en:'No need to worry about where to start. Let\'s chat first — the right strategy could be the first step for your business to grow even further.'},
   foot_tagline: {id:'Partner digital marketing yang bantu brand dan UMKM tumbuh lewat strategi konten, iklan, dan branding yang terukur.', en:'A digital marketing partner helping brands and SMEs grow through measurable content, ads, and branding strategies.'},
