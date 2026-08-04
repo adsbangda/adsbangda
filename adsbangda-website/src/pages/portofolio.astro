@@ -313,6 +313,25 @@ clients.forEach(client=>{
   cardRefs.push({client, el});
 });
 const originalCardCount = cardRefs.length;
+// Prepend a duplicate set BEFORE the originals too, so the track has real
+// content to reveal when the user drags/swipes backward from the very first
+// card -- without this, there's nothing before position 0 and the browser
+// just clamps the scroll there (looks like "can't swipe left").
+let prependSetCount = 0;
+function addPrependCardSet(){
+  const frag = document.createDocumentFragment();
+  clients.forEach(client=>{
+    const el = buildCard(client, true);
+    frag.appendChild(el);
+    cardRefs.push({client, el});
+  });
+  portfolioGrid.insertBefore(frag, portfolioGrid.firstChild);
+  prependSetCount++;
+}
+addPrependCardSet();
+while(portfolioGrid.scrollWidth < window.innerWidth * 2.2){
+  addPrependCardSet();
+}
 // Duplicate set(s) appended right after, so the track can scroll forward endlessly and wrap invisibly.
 // Keep adding full duplicate sets until the track is comfortably wider than the viewport,
 // so ultra-wide monitors never run out of content before the wrap point.
@@ -346,7 +365,7 @@ for(let i=0;i<originalCardCount;i++){
   const dot = document.createElement('span');
   if(i === 0) dot.classList.add('active');
   dot.addEventListener('click', ()=>{
-    portfolioGrid.scrollTo({left: i * cachedCardStep, behavior:'smooth'});
+    portfolioGrid.scrollTo({left: setWidth() * prependSetCount + i * cachedCardStep, behavior:'smooth'});
     pauseAutoSlide();
   });
   sliderDots.appendChild(dot);
@@ -364,12 +383,21 @@ recomputeCardStep();
 
 function setWidth(){ return cachedCardStep * originalCardCount; }
 
+// Start the visible scroll position right after the prepended set(s), so the
+// page loads showing the "real" first card -- same as before -- but there's
+// now real duplicate content sitting behind it to scroll into when swiping left.
+portfolioGrid.scrollLeft = setWidth() * prependSetCount;
+
 function wrapCheck(){
   const sw = setWidth();
-  if(portfolioGrid.scrollLeft >= sw){
-    portfolioGrid.scrollLeft -= sw;
-  } else if(portfolioGrid.scrollLeft < 0){
+  const maxScroll = portfolioGrid.scrollWidth - portfolioGrid.clientWidth;
+  // Only correct when actually near either end of the whole track (within
+  // half a set's width of the edge) -- everything in between is free to
+  // scroll through normally without being yanked back mid-swipe.
+  if(portfolioGrid.scrollLeft < sw * 0.5){
     portfolioGrid.scrollLeft += sw;
+  } else if(portfolioGrid.scrollLeft > maxScroll - sw * 0.5){
+    portfolioGrid.scrollLeft -= sw;
   }
 }
 function updateSliderState(){
@@ -383,9 +411,6 @@ portfolioGrid.addEventListener('scroll', ()=>{
   scrollDebounce = setTimeout(wrapCheck, 150);
 });
 sliderPrev.addEventListener('click', ()=>{
-  if(portfolioGrid.scrollLeft < cachedCardStep){
-    portfolioGrid.scrollLeft += setWidth();
-  }
   portfolioGrid.scrollBy({left: -cachedCardStep, behavior:'smooth'});
   pauseAutoSlide();
 });
@@ -420,12 +445,12 @@ if(supportsHover){
   portfolioGrid.addEventListener('mouseenter', ()=>{ isAutoScrolling = false; clearInterval(autoSlideTimer); });
   portfolioGrid.addEventListener('mouseleave', startAutoSlide);
 }
-// Note: we deliberately do NOT pause on touchstart/touchend anymore.
-// On touch devices, simply scrolling the page vertically past this section
-// often touches down inside the slider bounding box, which was killing
-// the auto-slide permanently on iPad/mobile even without any real interaction
-// with the slider itself. Manual swipes on the track still work natively;
-// the interval loop just keeps nudging it forward afterward, which is harmless.
+// Touch devices (iPad, phones): pause the instant a finger touches the slider
+// so it doesn't fight the user's own swipe, and resume right when the finger
+// lifts -- no fixed delay, matches the hover behavior above.
+portfolioGrid.addEventListener('touchstart', ()=>{ isAutoScrolling = false; clearInterval(autoSlideTimer); clearTimeout(window._autoSlideResume); }, {passive:true});
+portfolioGrid.addEventListener('touchend', startAutoSlide, {passive:true});
+portfolioGrid.addEventListener('touchcancel', startAutoSlide, {passive:true});
 sliderDots.addEventListener('click', pauseAutoSlide);
 
 // Only run the auto-slide while the portfolio section is actually visible on screen,
