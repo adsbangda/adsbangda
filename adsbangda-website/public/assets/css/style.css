@@ -456,6 +456,22 @@ nav{
 
 .slider-dots span.active{background:var(--yellow);width:20px;border-radius:100px;}
 
+.slider-btn-dark{
+  width:42px;height:42px;border-radius:50%;border:1px solid rgba(21,23,27,.18);
+  background:transparent;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .2s ease,border-color .2s ease;
+}
+
+.slider-btn-dark:hover{background:rgba(21,23,27,.06);border-color:rgba(21,23,27,.35);}
+
+.slider-btn-dark:disabled{opacity:.3;cursor:default;}
+
+.slider-dots-dark{display:flex;gap:7px;justify-content:center;margin-top:22px;}
+
+.slider-dots-dark span{width:7px;height:7px;border-radius:50%;background:rgba(21,23,27,.18);cursor:pointer;transition:background .2s ease,width .2s ease;}
+
+.slider-dots-dark span.active{background:var(--yellow);width:20px;border-radius:100px;}
+
 /* ---------- WHATSAPP FLOAT ---------- */
 .wa-float{
   position:fixed;right:22px;bottom:22px;z-index:900;

@@ -158,7 +158,14 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
   scroll-behavior:auto;
 }
 
-.testi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;}
+.testi-grid{
+  display:flex;gap:18px;overflow-x:auto;padding-bottom:8px;
+  scrollbar-width:none;-ms-overflow-style:none;scroll-behavior:auto;
+}
+
+.testi-grid::-webkit-scrollbar{display:none;}
+
+.bubble,.bubble-open{flex:0 0 auto;width:300px;}
 
 .bubble-open{
   background:transparent;border:1.5px dashed var(--teal);border-radius:20px;border-bottom-left-radius:4px;
@@ -189,7 +196,6 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
   .mobile-nav-group{display:flex;}
   .services-grid{grid-template-columns:1fr 1fr;}
   .mini-stats{margin-top:40px;}
-  .testi-grid{grid-template-columns:1fr 1fr;}
 }
 
 @media (max-width:600px){
@@ -198,7 +204,7 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
   .hero h1{font-size:clamp(32px,9vw,44px);}
   .hero p.lede{font-size:16px;}
   .services-grid{grid-template-columns:1fr;}
-  .testi-grid{grid-template-columns:1fr;}
+  .bubble,.bubble-open{width:calc(100vw - 72px);}
   .process-row{grid-template-columns:1fr;gap:30px;}
   .process-row::before{display:none;}
   .mini-stats{gap:0;margin-top:34px;flex-wrap:nowrap;justify-content:space-between;}
@@ -473,7 +479,15 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
     <div class="section-head reveal">
       <h2 data-i18n="testi_h2">Kata mereka yang udah adsbangda bareng kita</h2>
     </div>
-    <div class="testi-grid">
+    <div class="slider-controls">
+      <button class="slider-btn-dark" id="testiSliderPrev" aria-label="Sebelumnya">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="slider-btn-dark" id="testiSliderNext" aria-label="Selanjutnya">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="testi-grid" id="testiGrid">
       <div class="bubble reveal">
         <div class="bubble-head">
           <div class="bubble-avatar" style="background:#F4E409"></div>
@@ -513,6 +527,7 @@ const description = 'Tingkatkan penjualan & brand awareness bisnis kamu bersama 
         <a href="#kontak" data-i18n="testi5_cta">Jadi klien internasional pertama kami →</a>
       </div>
     </div>
+    <div class="slider-dots-dark" id="testiSliderDots"></div>
   </div>
 </section>
 
@@ -1080,6 +1095,130 @@ const portfolioVisibility = new IntersectionObserver((entries)=>{
   });
 }, {threshold: 0.15});
 portfolioVisibility.observe(portfolioSection);
+
+// ---- testimonial slider (same seamless infinite-loop pattern as the portfolio slider above) ----
+const testiGrid = document.getElementById('testiGrid');
+const testiOriginalCards = Array.from(testiGrid.children);
+const testiOriginalCount = testiOriginalCards.length;
+
+function testiCloneSet(){ return testiOriginalCards.map(el => el.cloneNode(true)); }
+
+let testiPrependCount = 0;
+function addTestiPrependSet(){
+  const frag = document.createDocumentFragment();
+  testiCloneSet().forEach(el => frag.appendChild(el));
+  testiGrid.insertBefore(frag, testiGrid.firstChild);
+  testiPrependCount++;
+}
+addTestiPrependSet();
+while(testiGrid.scrollWidth < window.innerWidth * 2.2){
+  addTestiPrependSet();
+}
+function addTestiAppendSet(){
+  testiCloneSet().forEach(el => testiGrid.appendChild(el));
+}
+addTestiAppendSet();
+while(testiGrid.scrollWidth < window.innerWidth * 2.2){
+  addTestiAppendSet();
+}
+
+const testiSliderPrev = document.getElementById('testiSliderPrev');
+const testiSliderNext = document.getElementById('testiSliderNext');
+const testiSliderDots = document.getElementById('testiSliderDots');
+
+for(let i=0;i<testiOriginalCount;i++){
+  const dot = document.createElement('span');
+  if(i === 0) dot.classList.add('active');
+  dot.addEventListener('click', ()=>{
+    testiGrid.scrollTo({left: testiSetWidth() * testiPrependCount + i * testiCachedStep, behavior:'smooth'});
+    pauseTestiAutoSlide();
+  });
+  testiSliderDots.appendChild(dot);
+}
+const testiDotEls = Array.from(testiSliderDots.children);
+
+let testiCachedStep = 318;
+function recomputeTestiStep(){
+  const card = testiGrid.children[0];
+  const style = getComputedStyle(testiGrid);
+  const gap = parseFloat(style.columnGap || style.gap || 18);
+  testiCachedStep = card.getBoundingClientRect().width + gap;
+}
+recomputeTestiStep();
+
+function testiSetWidth(){ return testiCachedStep * testiOriginalCount; }
+
+testiGrid.scrollLeft = testiSetWidth() * testiPrependCount;
+
+function testiWrapCheck(){
+  const sw = testiSetWidth();
+  const maxScroll = testiGrid.scrollWidth - testiGrid.clientWidth;
+  if(testiGrid.scrollLeft < sw * 0.5){
+    testiGrid.scrollLeft += sw;
+  } else if(testiGrid.scrollLeft > maxScroll - sw * 0.5){
+    testiGrid.scrollLeft -= sw;
+  }
+}
+function updateTestiSliderState(){
+  const idx = Math.round(testiGrid.scrollLeft / testiCachedStep) % testiOriginalCount;
+  testiDotEls.forEach((d,i)=> d.classList.toggle('active', i === idx));
+}
+let testiScrollDebounce = null;
+testiGrid.addEventListener('scroll', ()=>{
+  updateTestiSliderState();
+  clearTimeout(testiScrollDebounce);
+  testiScrollDebounce = setTimeout(testiWrapCheck, 150);
+});
+testiSliderPrev.addEventListener('click', ()=>{
+  testiGrid.scrollBy({left: -testiCachedStep, behavior:'smooth'});
+  pauseTestiAutoSlide();
+});
+testiSliderNext.addEventListener('click', ()=>{
+  testiGrid.scrollBy({left: testiCachedStep, behavior:'smooth'});
+  pauseTestiAutoSlide();
+});
+window.addEventListener('resize', ()=>{ recomputeTestiStep(); updateTestiSliderState(); });
+updateTestiSliderState();
+
+let testiAutoScrolling = false;
+let testiAutoSlideTimer = null;
+function testiAutoSlideTick(){
+  testiGrid.scrollBy({left: testiCachedStep, behavior:'smooth'});
+}
+function startTestiAutoSlide(){
+  if(reduceMotion) return;
+  if(testiAutoScrolling) return;
+  testiAutoScrolling = true;
+  testiAutoSlideTimer = setInterval(testiAutoSlideTick, 3200);
+}
+function pauseTestiAutoSlide(){
+  testiAutoScrolling = false;
+  clearInterval(testiAutoSlideTimer);
+  clearTimeout(window._testiAutoResume);
+  window._testiAutoResume = setTimeout(startTestiAutoSlide, 4500);
+}
+const testiSupportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+if(testiSupportsHover){
+  testiGrid.addEventListener('mouseenter', ()=>{ testiAutoScrolling = false; clearInterval(testiAutoSlideTimer); });
+  testiGrid.addEventListener('mouseleave', startTestiAutoSlide);
+}
+testiGrid.addEventListener('touchstart', ()=>{ testiAutoScrolling = false; clearInterval(testiAutoSlideTimer); clearTimeout(window._testiAutoResume); }, {passive:true});
+testiGrid.addEventListener('touchend', startTestiAutoSlide, {passive:true});
+testiGrid.addEventListener('touchcancel', startTestiAutoSlide, {passive:true});
+testiSliderDots.addEventListener('click', pauseTestiAutoSlide);
+
+const testiVisibility = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      startTestiAutoSlide();
+    } else {
+      testiAutoScrolling = false;
+      clearInterval(testiAutoSlideTimer);
+      clearTimeout(window._testiAutoResume);
+    }
+  });
+}, {threshold: 0.15});
+testiVisibility.observe(document.getElementById('testimoni'));
 
 
 // ---- language toggle ----
