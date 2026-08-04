@@ -674,9 +674,13 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   .step{padding-right:24px;margin-bottom:0;}
   .case-card{width:300px;}
   .modal-box{max-width:640px;}
+}
 
-  /* Footer: one row like desktop (brand + link columns side-by-side),
-     not stacked brand-on-top-then-links-below */
+/* Footer-only: one row like desktop (brand + link columns side-by-side),
+   not stacked brand-on-top-then-links-below. Starts at 660px (not 601px)
+   because real tablets start at 744px (iPad Mini) — no device is actually
+   601-659px wide, so we don't need to squeeze the layout for it. */
+@media (min-width:660px) and (max-width:900px){
   .footer-top{flex-direction:row;flex-wrap:nowrap;align-items:flex-start;gap:24px;}
   .foot-brand{max-width:140px;flex:0 0 140px;}
   .foot-links{display:flex;flex-wrap:nowrap;gap:16px;width:auto;flex:1 1 auto;justify-content:space-between;}
@@ -684,7 +688,8 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   .foot-col-layanan{flex:0 0 auto;}
   .foot-col-kontak{white-space:nowrap;}
   .foot-col-kontak a{white-space:nowrap;}
-  .foot-layanan-list{display:block;}
+  .foot-layanan-list{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,auto);grid-auto-flow:column;column-gap:14px;}
+  .foot-col-layanan{max-width:200px;}
   .foot-col a{font-size:12px;white-space:normal;}
   .foot-col h3{font-size:10.5px;}
   .foot-tagline{font-size:12.5px;}
@@ -701,8 +706,10 @@ footer{background:var(--ink);color:var(--paper);padding:60px 0 26px;}
   .foot-col-layanan{flex:0 0 auto;}
   .foot-col-kontak{white-space:nowrap;}
   .foot-col-kontak a{white-space:nowrap;}
-  .foot-layanan-list{display:block;}
-  .foot-col a{font-size:13px;white-space:nowrap;}
+  .foot-layanan-list{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,auto);grid-auto-flow:column;column-gap:20px;}
+  .foot-col-layanan{max-width:280px;}
+  .foot-col a{font-size:13px;white-space:normal;}
+  .foot-col-kontak a{white-space:nowrap;}
 }
 
 @media (max-width:600px){
