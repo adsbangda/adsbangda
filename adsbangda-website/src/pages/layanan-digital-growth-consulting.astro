@@ -1,9 +1,31 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const title = 'Adsbangda - Digital Growth Consulting';
-const description = 'Konsultasi strategis buat bisnis yang mau tumbuh lebih terarah di dunia digital. Kami bantu audit kondisi digital kamu sekarang, dan susun roadmap per';
+const title = 'Jasa Digital Growth Consulting | Adsbangda';
+const description = 'Konsultasi strategis untuk bisnis yang mau tumbuh lebih terarah di dunia digital -- audit kondisi saat ini, lalu susun roadmap berbasis data.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-digital-growth-consulting.html#service",
+  name: "Digital Growth Consulting",
+  serviceType: "Digital Marketing Consulting",
+  description: "Jasa konsultasi strategi pertumbuhan digital -- audit kehadiran digital, analisis kompetitor, hingga roadmap pertumbuhan berbasis data.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-digital-growth-consulting.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Digital Growth Consulting",
+    itemListElement: [
+      "Audit menyeluruh kehadiran digital bisnis saat ini",
+      "Analisis kompetitor & peluang pasar",
+      "Roadmap pertumbuhan digital jangka pendek & panjang",
+      "Rekomendasi prioritas channel & budget",
+      "Sesi konsultasi berkala untuk evaluasi progres",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
 ---
-<Layout title={title} description={description} path="layanan-digital-growth-consulting.html" portfolioCss={false}>
+<Layout title={title} description={description} path="layanan-digital-growth-consulting.html" portfolioCss={false} extraSchema={serviceSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 
 

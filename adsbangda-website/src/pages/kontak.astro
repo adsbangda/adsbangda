@@ -1,9 +1,43 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const title = 'Adsbangda - Kontak';
-const description = 'Hubungi adsbangda untuk konsultasi gratis kebutuhan social media management, Meta Ads, dan digital marketing bisnis kamu. Respon cepat lewat WhatsApp.';
+const title = 'Kontak Kami | Adsbangda';
+const description = 'Hubungi Adsbangda untuk konsultasi gratis kebutuhan social media management, Meta Ads, dan digital marketing bisnis kamu. Respon cepat lewat WhatsApp.';
+
+const faqSchema = {
+  "@type": "FAQPage",
+  "@id": "https://www.adsbangda.com/kontak.html#faq",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "Berapa lama proses balasan setelah saya hubungi?",
+      acceptedAnswer: { "@type": "Answer", text: "Biasanya kami balas dalam 1x24 jam kerja, seringnya lebih cepat lewat WhatsApp. Setelah itu kami jadwalkan online meeting buat kenalan lebih jauh soal bisnis dan kebutuhan kamu." },
+    },
+    {
+      "@type": "Question",
+      name: "Apakah ada minimal durasi kerja sama?",
+      acceptedAnswer: { "@type": "Answer", text: "Tergantung layanan yang diambil. Untuk social media management dan Meta Ads, kami sarankan minimal 3 bulan biar strategi punya waktu cukup buat menunjukkan hasil yang terukur." },
+    },
+    {
+      "@type": "Question",
+      name: "Apakah bisa kerja sama untuk bisnis di luar Jakarta?",
+      acceptedAnswer: { "@type": "Answer", text: "Bisa banget. Sebagian besar proses kerja kami memang dilakukan remote/online, jadi lokasi bisnis kamu nggak jadi masalah." },
+    },
+    {
+      "@type": "Question",
+      name: "Bagaimana cara mengukur hasil kerja sama kita?",
+      acceptedAnswer: { "@type": "Answer", text: "Setiap campaign kami sertakan laporan performa berkala (mingguan/bulanan tergantung layanan), lengkap dengan insight dan rekomendasi optimasi ke depannya." },
+    },
+  ],
+};
+// CATATAN (revisi audit): per 7 Mei 2026 Google menghapus TOTAL rich result FAQ
+// untuk semua situs (sebelumnya sejak Agustus 2023 sudah dibatasi ke situs
+// goverment/health saja). Jadi schema ini TIDAK LAGI memunculkan dropdown FAQ
+// di hasil pencarian Google. Tetap dipertahankan karena: 4 Q&A di atas memang
+// konten asli yang tampil ke pengguna (bukan dekorasi/spam), tetap valid
+// Schema.org, dan Google menyatakan tidak ada kerugian membiarkannya. Kalau
+// prioritasnya murni "skor Google rich result", schema ini boleh dihapus.
 ---
-<Layout title={title} description={description} path="kontak.html" portfolioCss={false}>
+<Layout title={title} description={description} path="kontak.html" portfolioCss={false} extraSchema={faqSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 <Fragment slot="head-style">
 <style>

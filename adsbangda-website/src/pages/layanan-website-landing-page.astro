@@ -1,9 +1,31 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const title = 'Adsbangda - Website & Landing Page';
-const description = 'Bikin website atau landing page yang bukan cuma bagus dilihat, tapi juga dirancang buat mengonversi pengunjung jadi leads atau pelanggan. Cepat, respo';
+const title = 'Jasa Website & Landing Page | Adsbangda';
+const description = 'Website atau landing page yang bukan cuma bagus dilihat, tapi dirancang untuk mengonversi pengunjung jadi leads. Cepat, responsif, mudah di-update.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-website-landing-page.html#service",
+  name: "Website & Landing Page",
+  serviceType: "Web Design & Development",
+  description: "Jasa pembuatan website dan landing page yang fokus konversi -- konsultasi struktur halaman, desain, copywriting, pengembangan responsif, hingga integrasi tracking.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-website-landing-page.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Website & Landing Page",
+    itemListElement: [
+      "Konsultasi kebutuhan & struktur halaman",
+      "Desain & copywriting yang fokus ke konversi",
+      "Pengembangan website/landing page responsif",
+      "Integrasi WhatsApp, form, atau tracking (Pixel, Analytics)",
+      "Revisi sampai hasil sesuai ekspektasi",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
 ---
-<Layout title={title} description={description} path="layanan-website-landing-page.html" portfolioCss={false}>
+<Layout title={title} description={description} path="layanan-website-landing-page.html" portfolioCss={false} extraSchema={serviceSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 
 

@@ -1,9 +1,31 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const title = 'Adsbangda - Branding & Visual Identity';
-const description = 'Bangun identitas visual brand yang konsisten dan gampang dikenali — dari logo, palet warna, tipografi, sampai panduan penggunaannya. Biar brand kamu k';
+const title = 'Jasa Branding & Visual Identity | Adsbangda';
+const description = 'Bangun identitas visual brand yang konsisten dan gampang dikenali — logo, palet warna, tipografi, sampai brand guideline lengkap. Konsultasi gratis.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-branding-visual-identity.html#service",
+  name: "Branding & Visual Identity",
+  serviceType: "Branding & Visual Identity Design",
+  description: "Jasa pembuatan dan penyempurnaan identitas visual brand -- logo, palet warna, tipografi, hingga brand guideline lengkap -- supaya brand tampil profesional dan konsisten di semua touchpoint.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-branding-visual-identity.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Branding & Visual Identity",
+    itemListElement: [
+      "Riset & konsultasi arah visual brand",
+      "Desain/penyempurnaan logo",
+      "Penentuan palet warna & tipografi brand",
+      "Brand guideline lengkap",
+      "Template visual dasar untuk konten & materi promosi",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
 ---
-<Layout title={title} description={description} path="layanan-branding-visual-identity.html" portfolioCss={false}>
+<Layout title={title} description={description} path="layanan-branding-visual-identity.html" portfolioCss={false} extraSchema={serviceSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 
 

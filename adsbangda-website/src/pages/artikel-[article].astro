@@ -21,6 +21,7 @@ const relatedPosts = allPosts.filter((p) => p.id !== post.id).slice(0, 3);
 ---
 <BlogPost
   title={post.data.title}
+  metaTitle={post.data.metaTitle}
   description={post.data.description}
   category={post.data.category}
   date={post.data.date}

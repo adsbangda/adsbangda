@@ -1,5 +1,6 @@
 ---
 title: "5 Kesalahan Umum UMKM dalam Mengelola Media Sosial (dan Cara Memperbaikinya)"
+metaTitle: "5 Kesalahan Umum UMKM di Media Sosial"
 description: "Banyak UMKM rajin posting tapi hasilnya stuck. Ini 5 kesalahan umum dalam mengelola media sosial bisnis dan cara memperbaikinya."
 category: "SOSIAL MEDIA"
 date: "19 Juli 2026"

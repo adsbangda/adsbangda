@@ -1,6 +1,7 @@
 ---
 title: "Judul Artikel Kamu Di Sini"
-description: "Ringkasan singkat 1-2 kalimat. Ini muncul di kartu blog & meta description Google, usahakan di bawah 160 karakter."
+metaTitle: "Versi Pendek Judul (opsional, isi kalau judul di atas lebih dari ~55 karakter)"
+description: "Ringkasan singkat 1-2 kalimat. Ini muncul di kartu blog & meta description Google, usahakan 120-160 karakter."
 category: "SOSIAL MEDIA"
 date: "1 Agustus 2026"
 readTime: "5 menit baca"

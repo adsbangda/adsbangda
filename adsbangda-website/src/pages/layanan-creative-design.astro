@@ -1,9 +1,30 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const title = 'Adsbangda - Creative Design';
-const description = 'Desain grafis buat segala kebutuhan promosi bisnis kamu — dari materi sosial media, banner, brosur, sampai aset iklan. Konsisten sama identitas brand,';
+const title = 'Jasa Creative Design | Adsbangda';
+const description = 'Desain grafis untuk segala kebutuhan promosi bisnis -- materi sosial media, banner, brosur, sampai aset iklan. Konsisten dengan identitas brand.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-creative-design.html#service",
+  name: "Creative Design",
+  serviceType: "Graphic & Creative Design",
+  description: "Jasa desain grafis untuk kebutuhan promosi bisnis -- materi sosial media, banner, brosur, hingga creative untuk kebutuhan Meta Ads.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-creative-design.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Creative Design",
+    itemListElement: [
+      "Desain materi promosi (banner, brosur, katalog)",
+      "Desain creative untuk kebutuhan Meta Ads",
+      "Desain aset sosial media di luar konten reguler",
+      "Revisi sampai hasil sesuai kebutuhan",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
 ---
-<Layout title={title} description={description} path="layanan-creative-design.html" portfolioCss={false}>
+<Layout title={title} description={description} path="layanan-creative-design.html" portfolioCss={false} extraSchema={serviceSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 
 

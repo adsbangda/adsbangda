@@ -1,9 +1,31 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const title = 'Adsbangda - Content Strategy';
-const description = 'Riset tren, kalender konten, dan hook 3 detik pertama yang bikin orang berhenti scroll. Kami bantu bisnis kamu punya arah konten yang jelas — bukan cu';
+const title = 'Jasa Content Strategy | Adsbangda';
+const description = 'Riset tren, kalender konten, dan hook 3 detik pertama yang bikin orang berhenti scroll. Bangun arah konten yang jelas untuk bisnis kamu.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-content-strategy.html#service",
+  name: "Content Strategy",
+  serviceType: "Content Strategy",
+  description: "Jasa penyusunan strategi konten -- riset kompetitor, content pillar, kalender editorial, hingga panduan hook & storytelling per platform.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-content-strategy.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Content Strategy",
+    itemListElement: [
+      "Riset kompetitor & positioning brand",
+      "Penentuan content pillar sesuai tujuan bisnis",
+      "Kalender editorial bulanan/kuartalan",
+      "Panduan hook & storytelling per platform",
+      "Evaluasi & penyesuaian strategi berkala",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
 ---
-<Layout title={title} description={description} path="layanan-content-strategy.html" portfolioCss={false}>
+<Layout title={title} description={description} path="layanan-content-strategy.html" portfolioCss={false} extraSchema={serviceSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 
 

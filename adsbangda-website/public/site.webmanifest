@@ -1,19 +1,32 @@
 {
-  "name": "adsbangda",
-  "short_name": "adsbangda",
+  "name": "Adsbangda - Digital Marketing Agency",
+  "short_name": "Adsbangda",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "lang": "id",
+  "description": "Digital Marketing Agency untuk Brand & UMKM di Indonesia — Social Media, Meta Ads, Branding, Website.",
   "icons": [
     {
-      "src": "assets/img/android-chrome-192x192.png",
+      "src": "/assets/img/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "assets/img/android-chrome-512x512.png",
+      "src": "/assets/img/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "theme_color": "#F0ECE2",
-  "background_color": "#F0ECE2",
-  "display": "standalone"
+  "theme_color": "#101216",
+  "background_color": "#FAFAFA"
 }

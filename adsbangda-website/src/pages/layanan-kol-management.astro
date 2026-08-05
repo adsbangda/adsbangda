@@ -1,9 +1,31 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const title = 'Adsbangda - KOL & Influencer Management';
-const description = 'Matchmaking brand dengan key opinion leader dan influencer yang suaranya emang cocok sama audiens kamu. Kami handle mulai dari seleksi kreator, negosi';
+const title = 'Jasa KOL & Influencer Management | Adsbangda';
+const description = 'Matchmaking brand dengan KOL & influencer yang cocok dengan audiens kamu -- dari seleksi kreator, negosiasi, brief, sampai monitoring hasil kolaborasi.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-kol-management.html#service",
+  name: "KOL & Influencer Management",
+  serviceType: "Influencer Marketing",
+  description: "Jasa matchmaking brand dengan key opinion leader dan influencer yang relevan -- seleksi kreator, negosiasi, brief konten, hingga monitoring hasil kolaborasi.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-kol-management.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "KOL & Influencer Management",
+    itemListElement: [
+      "Seleksi KOL & influencer sesuai niche & target audiens",
+      "Negosiasi rate & term kerja sama",
+      "Brief konten yang jelas tapi tetap kasih ruang kreatif",
+      "Monitoring jadwal posting & kualitas konten",
+      "Laporan hasil (views, engagement, konversi)",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
 ---
-<Layout title={title} description={description} path="layanan-kol-management.html" portfolioCss={false}>
+<Layout title={title} description={description} path="layanan-kol-management.html" portfolioCss={false} extraSchema={serviceSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 
 

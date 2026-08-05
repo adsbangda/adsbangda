@@ -5,6 +5,8 @@ const blog = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/blog" }),
   schema: z.object({
     title: z.string(),          // judul artikel (ID), tampil sebagai <h1>
+    metaTitle: z.string().optional(), // versi lebih pendek buat <title> tag (opsional, max ~55 karakter).
+                                       // Kalau judul artikel panjang, isi ini biar title tag di hasil Google nggak terpotong.
     description: z.string(),    // ringkasan (ID), buat meta description & excerpt listing
     category: z.string(),       // contoh: "SOSIAL MEDIA", "META ADS"
     date: z.string(),           // contoh: "19 Juli 2026" (format tampilan, bebas)

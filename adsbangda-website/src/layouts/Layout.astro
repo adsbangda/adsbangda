@@ -1,27 +1,109 @@
 ---
 // src/layouts/Layout.astro
-// Layout bersama untuk SEMUA halaman: head, nav, footer, script inti.
-// Ini menggantikan kode nav/footer yang tadinya di-copy-paste di 25 file HTML.
+// Layout bersama untuk SEMUA halaman: head (SEO lengkap + JSON-LD), nav, footer, script inti.
+// Ini satu-satunya tempat yang mengatur meta tag & structured data -- jadi setiap perubahan
+// di sini otomatis berlaku ke seluruh halaman, dan setiap halaman WAJIB tetap unik lewat
+// props title/description/path yang dikirim masing-masing.
+//
+// ============================================================================
+// CATATAN AUDIT SEO v2 (revisi setelah verifikasi ulang ke dokumentasi resmi
+// Google Search Central, Schema.org, Open Graph, dan X Cards -- lihat pesan
+// audit lanjutan untuk detail & sumber lengkap):
+// 1. Brand name "Adsbangda" konsisten di og:site_name, application-name,
+//    apple-mobile-web-app-title, JSON-LD Organization/WebSite. Ini sesuai
+//    https://developers.google.com/search/docs/appearance/site-names --
+//    WebSite structured data adalah sinyal PALING KUAT untuk site name.
+// 2. Canonical homepage: selalu "/" (bukan "/index.html").
+// 3. og:image SELALU absolute URL, 1200x630 (wajib per spec Open Graph
+//    ogp.me -- og:image harus absolute URL, dan 1200x630 adalah ukuran
+//    yang direkomendasikan Facebook/LinkedIn agar tidak di-crop).
+// 4. JSON-LD digabung jadi SATU @graph per halaman (Organization + WebSite +
+//    WebPage + Breadcrumb + schema tambahan per halaman lewat prop
+//    `extraSchema`). Semua node saling terhubung lewat @id murni (bukan
+//    duplikasi type+name), sesuai pola linked-data yang direkomendasikan
+//    Schema.org (https://schema.org/docs/gs.html#schemaorg_expected --
+//    "reuse an @id reference instead of repeating a node").
+// 5. Tidak ada <meta name="keywords"> -- diabaikan Google sejak 2009.
+// 6. Tidak ada hreflang palsu -- versi EN masih toggle client-side di URL
+//    yang sama.
+// 7. SearchAction TETAP dipertahankan di WebSite schema, TAPI dengan alasan
+//    yang sudah dikoreksi: fitur "Sitelinks Search Box" yang dulu ditenagai
+//    SearchAction sudah di-deprecate Google per 21 November 2024
+//    (https://developers.google.com/search/blog/2024/10/sitelinks-search-box
+//    -- diarsipkan). Jadi SearchAction TIDAK LAGI memberi rich result apa pun
+//    di Google Search. Markup ini dipertahankan hanya karena: (a) valid
+//    secara Schema.org & tidak error di manapun (dikonfirmasi resmi oleh
+//    Google), (b) /cari.html adalah search engine internal yang BENERAN
+//    berfungsi (bukan halaman kosong yang dibuat cuma buat skema), dan
+//    (c) berguna sebagai sinyal kemampuan situs untuk AI agent/LLM yang
+//    membaca schema.org (bukan klaim resmi Google Search Central).
+// 8. FAQPage schema TETAP dipertahankan di kontak.html, TAPI dengan koreksi:
+//    per 7 Mei 2026 Google MENGHAPUS TOTAL rich result FAQ untuk SEMUA
+//    situs (sebelumnya sejak Agustus 2023 sudah dibatasi hanya situs
+//    goverment/health, sekarang dihapus sepenuhnya -- lihat dokumentasi
+//    resmi FAQPage di Google Search Central, catatan per Mei 2026). Jadi
+//    FAQPage TIDAK LAGI memunculkan rich result dropdown di Google Search.
+//    Dipertahankan karena kontennya genuine (4 Q&A asli yang memang tampil
+//    ke pengguna, bukan dekorasi), tetap valid Schema.org, dan Google sendiri
+//    menyatakan tidak perlu dihapus proaktif -- hanya tidak lagi bikin rich
+//    result. Kalau prioritasnya murni "skor Google Search Central", schema
+//    ini boleh dihapus tanpa kerugian apa pun.
+// ============================================================================
+
 
 interface Props {
   title: string;
   description: string;
-  path: string;            // contoh: "kontak.html" -> dipakai untuk canonical & active nav
-  ogImage?: string;
-  portfolioCss?: boolean;   // true kalau halaman ini butuh assets/css/portofolio-detail.css
-  includeMainJs?: boolean;  // false khusus index.html (sudah punya script sendiri, hindari bentrok)
+  path: string;            // contoh: "kontak.html" -> dipakai untuk canonical, OG url & active nav
+  ogImage?: string;        // path relatif ke /public, contoh: "assets/img/foo.jpg"
+  ogImageAlt?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
+  portfolioCss?: boolean;  // true kalau halaman ini butuh assets/css/portofolio-detail.css
+  includeMainJs?: boolean; // false khusus index.html (sudah punya script sendiri, hindari bentrok)
+  type?: "website" | "article"; // dipakai untuk og:type & penanda konteks JSON-LD
+  noindex?: boolean;       // true untuk halaman utility (mis. hasil pencarian internal)
+  datePublished?: string;  // ISO 8601, dipakai WebPage schema kalau ada (artikel blog)
+  dateModified?: string;   // ISO 8601
+  extraSchema?: object | object[]; // node JSON-LD tambahan (Service/Article/FAQPage/ItemList)
+                                    // digabung ke DALAM @graph yang sama (bukan <script> terpisah),
+                                    // supaya referensi @id (mis. provider -> #organization) valid
+                                    // dan tidak mengandalkan asumsi merge lintas-<script>.
 }
 
 const {
   title,
   description,
   path,
-  ogImage = "assets/img/img-5992d64c5aae.png",
+  ogImage = "assets/img/og-cover-default.jpg",
+  ogImageAlt = "Adsbangda - Digital Marketing Agency untuk Brand & UMKM",
+  ogImageWidth = 1200,
+  ogImageHeight = 630,
   portfolioCss = false,
   includeMainJs = true,
+  type = "website",
+  noindex = false,
+  datePublished,
+  dateModified,
+  extraSchema,
 } = Astro.props;
 
-const canonical = `https://www.adsbangda.com/${path}`;
+// ---------------------------------------------------------------------------
+// URL & konstanta brand -- SATU sumber kebenaran, diturunkan dari astro.config.mjs
+// (site: "https://www.adsbangda.com"). Jangan hardcode domain di file lain.
+// ---------------------------------------------------------------------------
+const SITE_NAME = "Adsbangda";
+const SITE_URL_OBJ = Astro.site ?? new URL("https://www.adsbangda.com/");
+const SITE_URL = SITE_URL_OBJ.href.replace(/\/$/, ""); // tanpa trailing slash, contoh: https://www.adsbangda.com
+
+// PENTING: homepage harus canonical ke "/" -- BUKAN "/index.html".
+// Bug ini sebelumnya menyebabkan duplicate-content signal ke Google (dua URL
+// berbeda dianggap merujuk halaman yang sama tanpa canonical yang benar).
+const canonicalPath = path === "index.html" ? "" : path;
+const canonicalURL = new URL(canonicalPath, SITE_URL_OBJ);
+const canonical = canonicalURL.href;
+
+const ogImageURL = new URL(ogImage, SITE_URL_OBJ).href;
 
 // dipakai untuk kasih class="active" ke menu yang sesuai
 const navKey = path === "index.html" ? "home"
@@ -31,6 +113,155 @@ const navKey = path === "index.html" ? "home"
   : path === "tentang.html" ? "tentang"
   : path === "kontak.html" ? "kontak"
   : "";
+
+// ---------------------------------------------------------------------------
+// JSON-LD: Organization + WebSite + WebPage + BreadcrumbList
+// Digabung dalam satu @graph (best practice 2026 -- satu script, node saling
+// terhubung lewat @id, bukan berkali-kali script terpisah yang isinya tumpang tindih).
+// ---------------------------------------------------------------------------
+const ORG_ID = `${SITE_URL}/#organization`;
+const WEBSITE_ID = `${SITE_URL}/#website`;
+const LOGO_URL = `${SITE_URL}/assets/img/android-chrome-512x512.png`;
+
+function stripBrand(t: string): string {
+  return t.replace(/\s*\|\s*Adsbangda\s*$/i, "").replace(/^Adsbangda\s*[-—]\s*/i, "").trim();
+}
+
+interface Crumb { name: string; url: string }
+
+function buildBreadcrumb(p: string, pageTitle: string): Crumb[] {
+  const home: Crumb = { name: "Home", url: `${SITE_URL}/` };
+  const self: Crumb = { name: stripBrand(pageTitle), url: canonical };
+
+  if (p === "index.html") return [];
+  if (p === "layanan.html") return [home, { name: "Layanan", url: `${SITE_URL}/layanan.html` }];
+  if (p.startsWith("layanan-")) return [home, { name: "Layanan", url: `${SITE_URL}/layanan.html` }, self];
+  if (p === "portofolio.html") return [home, { name: "Portofolio", url: `${SITE_URL}/portofolio.html` }];
+  if (p.startsWith("portofolio-")) return [home, { name: "Portofolio", url: `${SITE_URL}/portofolio.html` }, self];
+  if (p === "blog.html") return [home, { name: "Blog", url: `${SITE_URL}/blog.html` }];
+  if (p.startsWith("artikel-")) return [home, { name: "Blog", url: `${SITE_URL}/blog.html` }, self];
+  if (p === "tentang.html") return [home, { name: "Tentang", url: canonical }];
+  if (p === "kontak.html") return [home, { name: "Kontak", url: canonical }];
+  if (p === "cari.html") return [home, { name: "Pencarian", url: canonical }];
+  return [home, self];
+}
+
+const breadcrumbList = buildBreadcrumb(path, title);
+
+const organizationSchema = {
+  "@type": "Organization",
+  "@id": ORG_ID,
+  name: SITE_NAME,
+  legalName: SITE_NAME,
+  url: `${SITE_URL}/`,
+  logo: {
+    "@type": "ImageObject",
+    "@id": `${SITE_URL}/#logo`,
+    url: LOGO_URL,
+    contentUrl: LOGO_URL,
+    width: 512,
+    height: 512,
+    caption: SITE_NAME,
+  },
+  image: { "@id": `${SITE_URL}/#logo` },
+  description: "Adsbangda adalah digital marketing agency yang membantu brand dan UMKM di Indonesia tumbuh lewat strategi konten, Meta Ads, KOL management, dan branding yang terukur.",
+  email: "info@adsbangda.com",
+  telephone: "+62-822-8934-8724",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Jakarta",
+    addressRegion: "DKI Jakarta",
+    addressCountry: "ID",
+  },
+  areaServed: "ID",
+  sameAs: [
+    "https://www.instagram.com/adsbangda/",
+    "https://www.linkedin.com/company/adsbangda/",
+  ],
+};
+
+const websiteSchema = {
+  "@type": "WebSite",
+  "@id": WEBSITE_ID,
+  url: `${SITE_URL}/`,
+  name: SITE_NAME,
+  description: "Digital Marketing Agency untuk Brand & UMKM di Indonesia.",
+  inLanguage: "id-ID",
+  publisher: { "@id": ORG_ID },
+  // SearchAction: TIDAK LAGI menghasilkan rich result apa pun di Google Search
+  // (Sitelinks Search Box resmi di-deprecate Google per 21 Nov 2024).
+  // Dipertahankan karena /cari.html adalah mesin pencari internal yang BENERAN
+  // berfungsi -- bukan halaman kosong yang sengaja dibuat demi validitas skema.
+  // Markup ini valid Schema.org, tidak pernah error, dan sebagian praktisi
+  // structured data (mis. dokumentasi Schema App, 2026) mencatat potensi
+  // kegunaannya sebagai sinyal kapabilitas situs untuk AI agent -- tapi ini
+  // BUKAN klaim atau rekomendasi resmi Google Search Central.
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${SITE_URL}/cari.html?q={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
+const webPageSchema = {
+  "@type": type === "article" ? "WebPage" : "WebPage",
+  "@id": `${canonical}#webpage`,
+  url: canonical,
+  name: title,
+  description,
+  inLanguage: "id-ID",
+  isPartOf: { "@id": WEBSITE_ID },
+  about: { "@id": ORG_ID },
+  primaryImageOfPage: { "@id": `${canonical}#primaryimage` },
+  ...(breadcrumbList.length > 1 ? { breadcrumb: { "@id": `${canonical}#breadcrumb` } } : {}),
+  ...(datePublished ? { datePublished } : {}),
+  ...(dateModified ? { dateModified } : {}),
+};
+
+const primaryImageSchema = {
+  "@type": "ImageObject",
+  "@id": `${canonical}#primaryimage`,
+  url: ogImageURL,
+  contentUrl: ogImageURL,
+  width: ogImageWidth,
+  height: ogImageHeight,
+};
+
+const breadcrumbSchema = breadcrumbList.length > 1 ? {
+  "@type": "BreadcrumbList",
+  "@id": `${canonical}#breadcrumb`,
+  itemListElement: breadcrumbList.map((c, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: c.name,
+    item: c.url,
+  })),
+} : null;
+
+const graph = [
+  organizationSchema,
+  websiteSchema,
+  webPageSchema,
+  primaryImageSchema,
+  breadcrumbSchema,
+  // node tambahan spesifik halaman (Service/Article/FAQPage/ItemList) digabung
+  // ke @graph YANG SAMA -- bukan <script> terpisah -- supaya referensi @id
+  // seperti provider/publisher -> "#organization" pasti valid dan tidak
+  // bergantung pada asumsi bahwa parser menggabungkan beberapa <script>
+  // application/ld+json> yang berbeda di satu halaman.
+  ...(extraSchema ? (Array.isArray(extraSchema) ? extraSchema : [extraSchema]) : []),
+].filter(Boolean);
+const jsonLd = { "@context": "https://schema.org", "@graph": graph };
+
+// robots meta -- default sesuai rekomendasi Google Search Central (index penuh,
+// snippet & preview gambar/video tanpa batas). noindex hanya dipakai untuk halaman
+// utility seperti hasil pencarian internal (lihat src/pages/cari.astro).
+const robotsContent = noindex
+  ? "noindex, nofollow"
+  : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
 ---
 <!DOCTYPE html>
 <html lang="id">
@@ -38,20 +269,61 @@ const navKey = path === "index.html" ? "home"
 <script is:inline>try{if(localStorage.getItem('adsbangda_lang')==='en'){document.documentElement.style.visibility='hidden';}}catch(e){}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>{title}</title>
-<meta name="description" content={description}>
 <link rel="canonical" href={canonical}>
+<meta name="robots" content={robotsContent}>
+<meta name="description" content={description}>
+
+<meta name="author" content={SITE_NAME}>
+<meta name="publisher" content={SITE_NAME}>
+<meta name="language" content="Indonesian">
+<meta http-equiv="content-language" content="id">
+
+<!-- Geo (agency berbasis Jakarta, layanan remote se-Indonesia) -->
+<meta name="geo.region" content="ID-JK">
+<meta name="geo.placename" content="Jakarta">
+<meta name="ICBM" content="-6.2088,106.8456">
+
+<!-- Brand & app identity -- konsisten "Adsbangda" di semua platform -->
+<meta name="application-name" content={SITE_NAME}>
+<meta name="apple-mobile-web-app-title" content={SITE_NAME}>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- Favicon & ikon -- standar Google (multi-ukuran + manifest) -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/android-chrome-192x192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/assets/img/android-chrome-512x512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png">
-<meta property="og:site_name" content="adsbangda">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAFAFA">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#101216">
+
+<!-- Open Graph -- lengkap untuk Facebook, LinkedIn & WhatsApp -->
+<meta property="og:site_name" content={SITE_NAME}>
+<meta property="og:type" content={type === "article" ? "article" : "website"}>
+<meta property="og:url" content={canonical}>
 <meta property="og:title" content={title}>
 <meta property="og:description" content={description}>
-<meta property="og:image" content={`/${ogImage}`}>
-<meta name="theme-color" content="#15171B">
+<meta property="og:image" content={ogImageURL}>
+<meta property="og:image:secure_url" content={ogImageURL}>
+<meta property="og:image:width" content={String(ogImageWidth)}>
+<meta property="og:image:height" content={String(ogImageHeight)}>
+<meta property="og:image:alt" content={ogImageAlt}>
+<meta property="og:locale" content="id_ID">
+<meta property="og:locale:alternate" content="en_US">
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content={title}>
+<meta name="twitter:description" content={description}>
+<meta name="twitter:image" content={ogImageURL}>
+<meta name="twitter:image:alt" content={ogImageAlt}>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,6 +332,10 @@ const navKey = path === "index.html" ? "home"
 <link rel="stylesheet" href="/assets/css/style.css?v=24">
 {portfolioCss && <link rel="stylesheet" href="/assets/css/portofolio-detail.css?v=2">}
 <slot name="head-style" />
+
+<!-- JSON-LD: satu @graph gabungan (Organization + WebSite + WebPage + Breadcrumb
+     + node tambahan dari prop `extraSchema` bila halaman ini mengirimkannya) -->
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
 <!-- Google tag (gtag.js) - loaded on first user interaction or when browser is idle, never during initial page load -->
 <script is:inline>
@@ -113,7 +389,7 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
 
 <nav>
   <div class="nav-inner">
-    <a href="/" class="logo"><img src="/assets/img/logo-header.png" alt="adsbangda" width="133" height="26" loading="lazy"></a>
+    <a href="/" class="logo"><img src="/assets/img/logo-header.png" alt="Adsbangda" width="133" height="26" loading="lazy"></a>
     <div class="nav-links">
       <a href="/" data-i18n-nav="home" class={navKey==="home" ? "active" : ""}>Home</a>
       <a href="/tentang.html" data-i18n-nav="tentang" class={navKey==="tentang" ? "active" : ""}>Tentang</a>
@@ -172,7 +448,7 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
   <div class="wrap">
     <div class="footer-top">
       <div class="foot-brand">
-          <a href="/" class="logo"><img src="/assets/img/logo-header.png" alt="adsbangda" width="133" height="26"></a>
+          <a href="/" class="logo"><img src="/assets/img/logo-header.png" alt="Adsbangda" width="133" height="26"></a>
           <p class="foot-tagline" data-i18n-nav="foot_tagline">Partner digital marketing yang bantu brand dan UMKM tumbuh lewat strategi konten, iklan, dan branding yang terukur.</p>
         <div class="foot-social">
           <a href="https://www.instagram.com/adsbangda/" target="_blank" rel="noopener" aria-label="Instagram adsbangda"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1"/></svg></a>

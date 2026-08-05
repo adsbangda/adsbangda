@@ -3,7 +3,17 @@
 // Halaman statis di-list manual di bawah (jarang berubah),
 // tapi daftar artikel blog diambil OTOMATIS dari src/content/blog/
 // jadi setiap kamu nambah artikel baru, otomatis muncul di sitemap juga.
+//
+// CATATAN AUDIT SEO:
+// - "cari.html" (hasil pencarian internal) SENGAJA tidak dimasukkan ke sitemap --
+//   halaman ini juga diberi noindex di src/pages/cari.astro. Rekomendasi resmi
+//   Google Search Central: jangan submit/index halaman hasil pencarian internal.
+// - lastmod artikel sekarang pakai tanggal asli dari frontmatter (dikonversi ke
+//   ISO 8601), bukan tanggal build hari ini -- supaya sinyal freshness ke Google akurat.
 import { getCollection } from "astro:content";
+import { parseIndoDateToISO } from "../lib/date";
+
+const SITE_URL = "https://www.adsbangda.com";
 
 export async function GET() {
   const staticPages = [
@@ -32,17 +42,26 @@ export async function GET() {
     "kontak.html",
   ];
 
-  const posts = await getCollection("blog");
-  const articlePages = posts.map((p) => `artikel-${p.id}.html`);
-
-  const allPages = [...staticPages, ...articlePages];
   const today = new Date().toISOString().split("T")[0];
+  const posts = await getCollection("blog");
 
-  const urls = allPages
+  const staticEntries = staticPages.map((page) => ({
+    loc: `${SITE_URL}/${page}`,
+    lastmod: today,
+  }));
+
+  const articleEntries = posts.map((p) => ({
+    loc: `${SITE_URL}/artikel-${p.id}.html`,
+    lastmod: parseIndoDateToISO(p.data.date) ?? today,
+  }));
+
+  const allEntries = [...staticEntries, ...articleEntries];
+
+  const urls = allEntries
     .map(
-      (page) => `  <url>
-    <loc>https://www.adsbangda.com/${page}</loc>
-    <lastmod>${today}</lastmod>
+      (e) => `  <url>
+    <loc>${e.loc}</loc>
+    <lastmod>${e.lastmod}</lastmod>
   </url>`
     )
     .join("\n");

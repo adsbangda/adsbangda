@@ -1,5 +1,6 @@
 ---
 title: "5 Ide Konten yang Selalu Works Buat UMKM (Tinggal Contek)"
+metaTitle: "5 Ide Konten yang Selalu Works Buat UMKM"
 description: "Kehabisan ide konten? Ini 5 format konten yang konsisten menghasilkan engagement tinggi buat bisnis kecil-menengah, lengkap dengan contoh eksekusinya."
 category: "CONTENT STRATEGY"
 date: "2 Agustus 2026"

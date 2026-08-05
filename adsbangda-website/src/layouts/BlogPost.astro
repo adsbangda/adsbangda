@@ -3,6 +3,7 @@
 // Membungkus konten markdown dengan header artikel (judul, tanggal, breadcrumb)
 // dan CTA di bagian bawah, lalu memakai Layout.astro utama untuk nav/footer.
 import Layout from "./Layout.astro";
+import { parseIndoDateToISO } from "../lib/date";
 
 interface Heading {
   depth: number;
@@ -17,6 +18,7 @@ interface RelatedPost {
 
 interface Props {
   title: string;
+  metaTitle?: string; // versi pendek buat <title> tag, fallback ke `title` kalau tidak diisi
   description: string;
   category: string;
   date: string;
@@ -31,16 +33,47 @@ interface Props {
 }
 
 const {
-  title, description, category, date, readTime, path,
+  title, metaTitle, description, category, date, readTime, path,
   headings = [], relatedPosts = [],
   titleEn, categoryEn, readTimeEn, bodyEn,
 } = Astro.props;
+const pageTitle = metaTitle || title;
 const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 const hasEn = !!bodyEn; // artikel ini punya versi Inggris atau nggak
 // key unik per artikel biar nggak bentrok sama translations object halaman lain
 const slugKey = path.replace(/[^a-zA-Z0-9]/g, "_");
+
+const SITE_URL = "https://www.adsbangda.com";
+const articleURL = `${SITE_URL}/${path}`;
+const isoDate = parseIndoDateToISO(date); // "19 Juli 2026" -> "2026-07-19" (null kalau gagal parse)
+
+// Article/BlogPosting schema -- pakai mainEntityOfPage merujuk ke WebPage yang
+// sudah dibuat di Layout.astro, dan image merujuk ke ImageObject yang sama
+// (link lewat @id murni, bukan duplikat data -- digabung ke @graph yang sama
+// lewat prop `extraSchema`, bukan <script> terpisah).
+const articleSchema = {
+  "@type": "BlogPosting",
+  "@id": `${articleURL}#article`,
+  mainEntityOfPage: { "@id": `${articleURL}#webpage` },
+  headline: title, // headline schema tetap pakai judul lengkap (bukan versi pendek title tag)
+  description,
+  articleSection: category,
+  inLanguage: "id-ID",
+  ...(isoDate ? { datePublished: isoDate, dateModified: isoDate } : {}),
+  image: { "@id": `${articleURL}#primaryimage` },
+  author: { "@id": `${SITE_URL}/#organization` },
+  publisher: { "@id": `${SITE_URL}/#organization` },
+};
 ---
-<Layout title={`Adsbangda - ${title}`} description={description} path={path}>
+<Layout
+  title={`${pageTitle} | Adsbangda`}
+  description={description}
+  path={path}
+  type="article"
+  datePublished={isoDate ?? undefined}
+  dateModified={isoDate ?? undefined}
+  extraSchema={articleSchema}
+>
 <section class="article-header">
   <div class="wrap">
     <div class="breadcrumb"><a href="/blog.html" data-i18n-nav="blog">Blog</a> / <span data-i18n={hasEn ? `${slugKey}_cat` : undefined}>{category}</span></div>

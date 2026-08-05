@@ -1,9 +1,31 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const title = 'Adsbangda - Social Media Management';
-const description = 'Produksi konten harian/mingguan — dari naskah, syuting, sampai desain feed yang konsisten sama brand voice kamu. Kami kelola akun Instagram, TikTok, d';
+const title = 'Jasa Social Media Management | Adsbangda';
+const description = 'Produksi konten harian/mingguan yang konsisten dengan brand voice kamu -- kelola akun Instagram, TikTok & Facebook dari perencanaan sampai eksekusi.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-sosial-media-management.html#service",
+  name: "Social Media Management",
+  serviceType: "Social Media Management",
+  description: "Jasa pengelolaan akun sosial media -- riset tren, produksi konten foto/video/carousel, copywriting, publikasi terjadwal, hingga laporan performa bulanan.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-sosial-media-management.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Social Media Management",
+    itemListElement: [
+      "Riset tren & kalender konten bulanan",
+      "Produksi konten foto, video, dan carousel",
+      "Copywriting caption yang sesuai brand voice",
+      "Publikasi terjadwal & konsisten",
+      "Laporan performa bulanan (engagement, reach, growth)",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
 ---
-<Layout title={title} description={description} path="layanan-sosial-media-management.html" portfolioCss={false}>
+<Layout title={title} description={description} path="layanan-sosial-media-management.html" portfolioCss={false} extraSchema={serviceSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 
 

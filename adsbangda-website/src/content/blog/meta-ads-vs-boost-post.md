@@ -1,5 +1,6 @@
 ---
 title: "Meta Ads vs Boost Post: Mana yang Lebih Efektif untuk Bisnis Kamu?"
+metaTitle: "Meta Ads vs Boost Post: Mana Lebih Efektif?"
 description: "Sering pencet tombol boost doang buat naikin postingan? Ternyata ada cara yang jauh lebih efektif buat budget yang sama."
 category: "META ADS"
 date: "19 Juli 2026"

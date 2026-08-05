@@ -1,9 +1,31 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const title = 'Adsbangda - Meta Ads Performance';
-const description = 'Naikin konten organic terbaik jadi campaign ads yang terarah dan performing di Instagram & Facebook. Kami rancang funnel dari awareness sampai konvers';
+const title = 'Jasa Meta Ads Performance | Adsbangda';
+const description = 'Ubah konten organic terbaik jadi campaign Meta Ads yang performing di Instagram & Facebook -- funnel dari awareness sampai konversi, targeting presisi.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-meta-ads.html#service",
+  name: "Meta Ads Performance",
+  serviceType: "Paid Social Media Advertising",
+  description: "Jasa pengelolaan campaign Meta Ads (Facebook & Instagram) -- riset audiens, creative ads, setup campaign, A/B testing, hingga laporan performa rutin.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-meta-ads.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Meta Ads Performance",
+    itemListElement: [
+      "Riset audiens & strategi targeting",
+      "Pembuatan creative ads (gambar, video, copy)",
+      "Setup campaign & optimasi budget harian",
+      "A/B testing untuk cari kombinasi terbaik",
+      "Laporan performa & rekomendasi optimasi rutin",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
 ---
-<Layout title={title} description={description} path="layanan-meta-ads.html" portfolioCss={false}>
+<Layout title={title} description={description} path="layanan-meta-ads.html" portfolioCss={false} extraSchema={serviceSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 
 

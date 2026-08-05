@@ -1,0 +1,115 @@
+---
+// src/pages/cari.astro
+// Halaman pencarian internal -- inilah target nyata dari SearchAction di
+// WebSite JSON-LD (lihat Layout.astro: urlTemplate ".../cari.html?q={search_term_string}").
+// Tanpa halaman ini, SearchAction di structured data cuma "skema kosong" yang
+// akan gagal saat Google/Rich Results Test mencoba mensimulasikan pencarian.
+//
+// CATATAN SEO PENTING: halaman hasil pencarian internal SENGAJA di-set noindex.
+// Ini sesuai rekomendasi resmi Google Search Central -- halaman hasil pencarian
+// internal sebaiknya tidak diindex karena kontennya duplikatif/tipis dan bisa
+// dianggap "doorway page" kalau dibiarkan terindeks massal.
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+import { searchIndex } from "../data/search-index";
+
+const posts = await getCollection("blog");
+const blogEntries = posts.map((p) => ({
+  title: p.data.title,
+  description: p.data.description,
+  url: `/artikel-${p.id}.html`,
+  category: "Blog",
+}));
+
+const fullIndex = [...searchIndex, ...blogEntries];
+
+const title = "Pencarian | Adsbangda";
+const description = "Cari halaman, layanan, portofolio, dan artikel blog di situs Adsbangda.";
+---
+<Layout title={title} description={description} path="cari.html" noindex={true}>
+<Fragment slot="head-style">
+<style>
+.search-wrap{max-width:720px;margin:0 auto;}
+.search-box{display:flex;gap:10px;margin-top:28px;}
+.search-box input{flex:1;padding:14px 18px;border-radius:12px;border:1.5px solid rgba(21,23,27,.15);font-size:16px;font-family:inherit;}
+.search-box button{padding:14px 22px;border-radius:12px;border:none;background:var(--ink);color:#fff;font-weight:600;cursor:pointer;}
+.search-results{margin-top:36px;display:flex;flex-direction:column;gap:6px;}
+.search-result-item{display:block;padding:18px 20px;border-radius:14px;text-decoration:none;color:inherit;border:1px solid rgba(21,23,27,.08);transition:border-color .15s ease,background .15s ease;}
+.search-result-item:hover{border-color:rgba(21,23,27,.25);background:rgba(21,23,27,.02);}
+.search-result-cat{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--coral-text,#1D4ED8);margin-bottom:4px;}
+.search-result-title{font-size:17px;font-weight:700;margin-bottom:4px;}
+.search-result-desc{font-size:14px;color:#3b3d3a;line-height:1.5;}
+.search-empty{margin-top:36px;color:#6F6B5E;font-size:15px;}
+</style>
+</Fragment>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="search-wrap">
+      <h1>Cari di Adsbangda</h1>
+      <p style="margin-top:12px;color:#3b3d3a;">Ketik kata kunci untuk mencari halaman, layanan, portofolio, atau artikel blog.</p>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Contoh: Meta Ads, branding, portofolio..." autocomplete="off">
+        <button id="searchBtn" type="button">Cari</button>
+      </div>
+      <div id="searchResults" class="search-results"></div>
+      <p id="searchEmpty" class="search-empty" style="display:none;">Tidak ada hasil yang cocok. Coba kata kunci lain, atau lihat <a href="/layanan.html">Layanan</a> dan <a href="/portofolio.html">Portofolio</a> kami.</p>
+    </div>
+  </div>
+</section>
+
+<Fragment slot="page-scripts">
+<script is:inline define:vars={{ fullIndex }}>
+  (function () {
+    var input = document.getElementById("searchInput");
+    var results = document.getElementById("searchResults");
+    var empty = document.getElementById("searchEmpty");
+
+    function render(query) {
+      var q = query.trim().toLowerCase();
+      results.innerHTML = "";
+      if (!q) { empty.style.display = "none"; return; }
+
+      var matches = fullIndex.filter(function (item) {
+        return (
+          item.title.toLowerCase().indexOf(q) !== -1 ||
+          item.description.toLowerCase().indexOf(q) !== -1 ||
+          item.category.toLowerCase().indexOf(q) !== -1
+        );
+      }).slice(0, 20);
+
+      if (matches.length === 0) {
+        empty.style.display = "block";
+        return;
+      }
+      empty.style.display = "none";
+
+      matches.forEach(function (item) {
+        var a = document.createElement("a");
+        a.className = "search-result-item";
+        a.href = item.url;
+        a.innerHTML =
+          '<div class="search-result-cat">' + item.category + '</div>' +
+          '<div class="search-result-title">' + item.title + '</div>' +
+          '<div class="search-result-desc">' + item.description + '</div>';
+        results.appendChild(a);
+      });
+    }
+
+    // Ambil query dari URL (?q=...) -- ini yang dipakai SearchAction/Google.
+    var params = new URLSearchParams(window.location.search);
+    var initialQuery = params.get("q") || "";
+    if (initialQuery) {
+      input.value = initialQuery;
+      render(initialQuery);
+    }
+
+    input.addEventListener("input", function () { render(input.value); });
+    document.getElementById("searchBtn").addEventListener("click", function () { render(input.value); });
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") render(input.value);
+    });
+  })();
+</script>
+</Fragment>
+</Layout>
