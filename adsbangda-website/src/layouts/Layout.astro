@@ -329,67 +329,73 @@ const robotsContent = noindex
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/css/style.css?v=24">
-{portfolioCss && <link rel="stylesheet" href="/assets/css/portofolio-detail.css?v=2">}
+<link rel="stylesheet" href="/assets/css/style.css?v=25">
+{portfolioCss && <link rel="stylesheet" href="/assets/css/portofolio-detail.css?v=3">}
 <slot name="head-style" />
 
 <!-- JSON-LD: satu @graph gabungan (Organization + WebSite + WebPage + Breadcrumb
      + node tambahan dari prop `extraSchema` bila halaman ini mengirimkannya) -->
 <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
-<!-- Google tag (gtag.js) - loaded on first user interaction or when browser is idle, never during initial page load -->
+<!-- Third-party trackers (Google tag + Meta Pixel) -- SATU trigger yang sama
+     (interaksi pertama / browser idle / timeout fallback), supaya kedua tracker
+     ditunda sampai setelah first paint dan tidak bersaing dengan resource kritis
+     saat initial render. Tracking tetap akurat (gtag config + fbq init/PageView
+     tetap terkirim), cuma waktu eksekusinya ditunda beberapa detik. -->
 <script is:inline>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-PZJXS7ZGKX');
+
   (function(){
-    let gtagLoaded = false;
-    function loadGtagScript(){
-      if(gtagLoaded) return;
-      gtagLoaded = true;
+    let fired = false;
+    function loadTrackers(){
+      if(fired) return;
+      fired = true;
+
+      // Google tag (gtag.js)
       const gtagScript = document.createElement('script');
       gtagScript.async = true;
       gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-PZJXS7ZGKX';
       document.head.appendChild(gtagScript);
+
+      // Meta Pixel
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '906543718460297');
+      fbq('track', 'PageView');
+
       ['scroll','mousemove','touchstart','keydown','click'].forEach(evt=>{
-        window.removeEventListener(evt, loadGtagScript, {passive:true});
+        window.removeEventListener(evt, loadTrackers, {passive:true});
       });
     }
     ['scroll','mousemove','touchstart','keydown','click'].forEach(evt=>{
-      window.addEventListener(evt, loadGtagScript, {passive:true, once:true});
+      window.addEventListener(evt, loadTrackers, {passive:true, once:true});
     });
     if('requestIdleCallback' in window){
-      requestIdleCallback(loadGtagScript, {timeout:8000});
+      requestIdleCallback(loadTrackers, {timeout:8000});
     } else {
-      setTimeout(loadGtagScript, 6000);
+      setTimeout(loadTrackers, 6000);
     }
   })();
-</script>
-
-<!-- Meta Pixel Code -->
-<script is:inline>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '906543718460297');
-fbq('track', 'PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
 /></noscript>
-<!-- End Meta Pixel Code -->
+<!-- End third-party trackers -->
 </head>
 <body>
 
 <nav>
   <div class="nav-inner">
-    <a href="/" class="logo"><img src="/assets/img/logo-header.png" alt="Adsbangda" width="133" height="26" loading="lazy"></a>
+    <a href="/" class="logo"><img src="/assets/img/logo-header.png" alt="Adsbangda" width="133" height="26" fetchpriority="high"></a>
     <div class="nav-links">
       <a href="/" data-i18n-nav="home" class={navKey==="home" ? "active" : ""}>Home</a>
       <a href="/tentang.html" data-i18n-nav="tentang" class={navKey==="tentang" ? "active" : ""}>Tentang</a>
@@ -506,6 +512,6 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
   <img id="lightboxImg" src="" alt="" loading="lazy">
 </div>
 
-{includeMainJs && <script src="/assets/js/main.js?v=4" is:inline></script>}
+{includeMainJs && <script src="/assets/js/main.js?v=5" is:inline></script>}
 </body>
 </html>
