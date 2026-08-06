@@ -103,7 +103,7 @@ const canonicalPath = path === "index.html" ? "" : path;
 const canonicalURL = new URL(canonicalPath, SITE_URL_OBJ);
 const canonical = canonicalURL.href;
 
-const ogImageURL = new URL(ogImage, SITE_URL_OBJ).href;
+const ogImageURL = new URL(ogImage, SITE_URL_OBJ).href + "?v=2";
 
 // dipakai untuk kasih class="active" ke menu yang sesuai
 const navKey = path === "index.html" ? "home"
