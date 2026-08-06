@@ -1,4 +1,66 @@
 User-agent: *
 Allow: /
 
+# --- AI / LLM crawlers -----------------------------------------------------
+# Explicitly documented (not just covered by the wildcard above) so it is
+# unambiguous to auditors, agents, and future maintainers that Adsbangda
+# intentionally allows AI systems to read this site.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Grok
+Allow: /
+
+User-agent: xAI-Bot
+Allow: /
+
+User-agent: DeepSeekBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+# -----------------------------------------------------------------------------
+
 Sitemap: https://www.adsbangda.com/sitemap.xml
