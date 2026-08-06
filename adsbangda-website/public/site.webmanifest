@@ -1,12 +1,12 @@
 {
-  "name": "Adsbangda - Digital Marketing Agency",
+  "name": "Adsbangda - Branding, Website & Digital Marketing Agency",
   "short_name": "Adsbangda",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "lang": "id",
-  "description": "Digital Marketing Agency untuk Brand & UMKM di Indonesia — Social Media, Meta Ads, Branding, Website.",
+  "description": "Branding, Website & Digital Marketing Agency di Indonesia — Branding, Website, Social Media, Meta Ads.",
   "icons": [
     {
       "src": "/assets/img/android-chrome-192x192.png",

@@ -14,12 +14,12 @@ export interface SearchEntry {
 }
 
 export const searchIndex: SearchEntry[] = [
-  { title: "Home", description: "Digital marketing agency untuk brand & UMKM -- Social Media, Meta Ads, KOL Management.", url: "/", category: "Halaman" },
+  { title: "Home", description: "Branding, Website & Digital Marketing Agency -- Branding, Website, Social Media, Meta Ads, KOL Management.", url: "/", category: "Halaman" },
   { title: "Tentang Adsbangda", description: "Kenalan lebih jauh dengan tim dan pendekatan kerja Adsbangda.", url: "/tentang.html", category: "Halaman" },
   { title: "Kontak", description: "Hubungi Adsbangda untuk konsultasi gratis kebutuhan digital marketing kamu.", url: "/kontak.html", category: "Halaman" },
   { title: "Blog", description: "Insight, tips, dan strategi digital marketing praktis dari tim Adsbangda.", url: "/blog.html", category: "Halaman" },
 
-  { title: "Semua Layanan", description: "8 layanan digital marketing Adsbangda untuk brand & UMKM.", url: "/layanan.html", category: "Layanan" },
+  { title: "Semua Layanan", description: "8 layanan Adsbangda: Branding, Website, Social Media, Meta Ads, KOL Management, dan digital marketing.", url: "/layanan.html", category: "Layanan" },
   { title: "Social Media Management", description: "Kelola akun Instagram, TikTok & Facebook bisnis kamu dari perencanaan sampai eksekusi.", url: "/layanan-sosial-media-management.html", category: "Layanan" },
   { title: "Content Strategy", description: "Riset tren, kalender konten, dan hook yang bikin orang berhenti scroll.", url: "/layanan-content-strategy.html", category: "Layanan" },
   { title: "Meta Ads Performance", description: "Campaign ads yang terarah dan performing di Instagram & Facebook.", url: "/layanan-meta-ads.html", category: "Layanan" },
