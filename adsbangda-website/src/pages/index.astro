@@ -231,11 +231,11 @@ const description = 'Bangun brand yang lebih kuat lewat branding, pengembangan w
       <a href="portofolio.html" class="btn-secondary" data-i18n="hero_cta2">Lihat Portofolio</a>
     </div>
     <div class="mini-stats">
-      <div class="mini-stat"><b data-count="20"><span class="counter">0</span>+</b><span data-i18n="stat1">Brand Partner Aktif</span></div>
+      <div class="mini-stat"><b data-count="20"><span class="counter">20</span>+</b><span data-i18n="stat1">Brand Partner Aktif</span></div>
       <span class="mini-divider" id="miniDiv1"></span>
-      <div class="mini-stat"><b data-count="99"><span class="counter">0</span>%</b><span data-i18n="stat2">Klien Puas</span></div>
+      <div class="mini-stat"><b data-count="99"><span class="counter">99</span>%</b><span data-i18n="stat2">Klien Puas</span></div>
       <span class="mini-divider" id="miniDiv2"></span>
-      <div class="mini-stat"><b data-count="10"><span class="counter">0</span>M+</b><span data-i18n="stat3">Views Konten Viral</span></div>
+      <div class="mini-stat"><b data-count="10"><span class="counter">10</span>M+</b><span data-i18n="stat3">Views Konten Viral</span></div>
     </div>
   </div>
 
@@ -640,6 +640,7 @@ function animateStatItem(item){
   const counterEl = item.querySelector('.counter');
   if(!counterEl || item.dataset.animating === '1') return;
   item.dataset.animating = '1';
+  counterEl.textContent = '0'; // static markup shows the real value for crawlers/no-JS; animation resets to 0 here before counting up
   const duration = 1200;
   const start = performance.now();
   function tick(now){

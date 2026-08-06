@@ -2,8 +2,32 @@
 import Layout from "../layouts/Layout.astro";
 const title = 'Portofolio Klien Kami | Adsbangda';
 const description = 'Lihat portofolio dan hasil kerja adsbangda bersama berbagai klien di bidang F&B, properti, edukasi, dan lainnya.';
+
+const SITE_URL = "https://www.adsbangda.com";
+const portfolioItems = [
+  { name: "Amati Coffee", slug: "portofolio-amati-coffee.html" },
+  { name: "Batam Dental Center", slug: "portofolio-batam-dental-center.html" },
+  { name: "InsideRuma", slug: "portofolio-insideruma.html" },
+  { name: "Johanes Toyota Batam", slug: "portofolio-johanes-toyota-batam.html" },
+  { name: "Primaroof ID", slug: "portofolio-primaroof-id.html" },
+  { name: "Resa Living ID", slug: "portofolio-resa-living-id.html" },
+  { name: "Umroh Rekivatour", slug: "portofolio-umroh-rekivatour.html" },
+  { name: "Wellner Academy", slug: "portofolio-wellner-academy.html" },
+  { name: "Wellner Consulting", slug: "portofolio-wellner-consulting.html" },
+];
+const portfolioListSchema = {
+  "@type": "ItemList",
+  "@id": `${SITE_URL}/portofolio.html#itemlist`,
+  name: "Portofolio Klien Adsbangda",
+  itemListElement: portfolioItems.map((p, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: p.name,
+    url: `${SITE_URL}/${p.slug}`,
+  })),
+};
 ---
-<Layout title={title} description={description} path="portofolio.html" portfolioCss={false}>
+<Layout title={title} description={description} path="portofolio.html" portfolioCss={false} extraSchema={portfolioListSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 <Fragment slot="head-style">
 <style>
