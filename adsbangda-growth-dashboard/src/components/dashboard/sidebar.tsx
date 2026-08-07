@@ -31,7 +31,7 @@ export function Sidebar({ clientName }: { clientName: string }) {
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-white/10 bg-[#18181B] text-paper selection:bg-accent selection:text-white">
       {/* Brand Header */}
-      <div className="flex flex-col gap-3 px-5 py-5 border-b border-white/10 bg-white/[0.02]">
+      <div className="flex flex-col gap-3.5 px-5 py-5 border-b border-white/10 bg-white/[0.02]">
         <div className="flex items-center gap-3">
           <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] font-display text-base font-extrabold text-white shadow-md shadow-accent/20">
             <span>A</span>
@@ -41,24 +41,24 @@ export function Sidebar({ clientName }: { clientName: string }) {
             </span>
           </div>
           <div className="min-w-0">
-            <div className="font-display text-base font-bold leading-none tracking-tight text-white flex items-center gap-1.5">
-              <span>AdsBangda</span>
+            <div className="font-display text-base font-bold leading-none tracking-tight text-white">
+              AdsBangda
             </div>
             <div className="mt-1 text-[11px] font-medium leading-none text-muted-on-dark">
               Growth Dashboard
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between pt-0.5">
-          <span className="inline-flex items-center gap-1 rounded-md bg-accent-soft/10 px-2 py-0.5 font-data text-[9px] font-bold tracking-widest text-accent border border-accent/20 uppercase">
-            <Sparkles className="h-2.5 w-2.5" />
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-2.5 py-1 font-data text-[9px] font-bold tracking-widest text-white/90 border border-white/10 uppercase">
+            <Sparkles className="h-2.5 w-2.5 text-blue-400" />
             CLIENT PORTAL
           </span>
         </div>
       </div>
 
       {/* Main Navigation Menu */}
-      <div className="flex-1 overflow-y-auto py-4 space-y-6 px-3 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto py-4 space-y-6 px-3">
         <nav className="space-y-1">
           <div className="px-3 pb-1.5 font-data text-[10px] font-semibold uppercase tracking-wider text-muted-on-dark/70">
             Menu Utama
