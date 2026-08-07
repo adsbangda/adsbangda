@@ -1,0 +1,338 @@
+---
+import Layout from "../layouts/Layout.astro";
+const title = 'Portofolio Wellner Consulting | Adsbangda';
+const description = 'Portofolio Wellner Consulting: Konten perpajakan, campaign Meta Ads buat generate leads, sampai desain company profile.';
+---
+<Layout title={title} description={description} path="portofolio-wellner-consulting.html" portfolioCss={true} ogImageAlt="Portofolio Wellner Consulting oleh Adsbangda" ogImage="assets/img/img-js-d80bc8af087e.webp" ogImageWidth={700} ogImageHeight={481}>
+{ /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
+<Fragment slot="head-style">
+<style>
+/* ---------- CTA ---------- */
+.cta{
+  background:var(--yellow);padding:90px 0;text-align:center;
+}
+
+/* ---- shared inner-page additions ---- */
+.page-hero{padding:150px 0 90px;}
+
+.cd-summary{font-size:16px;line-height:1.75;color:#3b3d3a;margin:28px 0 50px;text-align:justify;}
+
+/* generic tag row (used elsewhere on the site) */
+.tag-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+.tag-row span{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--paper-deep);padding:6px 12px;border-radius:100px;color:var(--ink);}
+
+/* ---- case study: project overview ---- */
+.project-block:last-child{padding-bottom:0;}
+
+.project-block .mp-thumb img{width:100%;display:block;cursor:zoom-in;transition:opacity .2s ease;}
+
+.project-block .mp-thumb img:hover{opacity:.92;}
+
+/* ---- case study: tools & software ---- */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:40px 32px;margin-top:0;}
+
+.tools-icon-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px;}
+
+.tool-item{display:flex;flex-direction:column;align-items:flex-start;gap:8px;width:100%;text-align:left;min-width:0;}
+</style>
+</Fragment>
+
+
+
+<section class="page-hero">
+  <div class="wrap">
+    <a href="portofolio.html" class="back-link reveal" data-i18n="back_link" style="margin-bottom:22px;display:inline-flex;">&larr; Kembali ke Portofolio</a>
+    <h1>Wellner Consulting</h1>
+    <p data-i18n="hero_h2" style="font-size:20px;font-weight:700;margin-top:18px;line-height:1.5;">Bangun Kehadiran Digital Firma Konsultan Pajak yang Profesional dan Terpercaya</p>
+    <p class="cd-summary" data-i18n="hero_lede1" style="margin:20px 0 0;">Adsbangda membantu Wellner Consulting mengembangkan kehadiran digital melalui strategi yang terintegrasi, mulai dari pengelolaan media sosial, kampanye Meta Ads, hingga pengembangan materi branding perusahaan.</p>
+    <p class="cd-summary" data-i18n="hero_lede2" style="margin:14px 0 0;">Selama kerja sama berlangsung, kami berfokus pada peningkatan kredibilitas brand, memperluas jangkauan audiens, serta membangun fondasi pemasaran digital yang konsisten untuk mendukung pertumbuhan bisnis Wellner Consulting.</p>
+
+    <div class="hero-meta reveal">
+      <div class="hero-meta-item">
+        <div class="overview-icon" style="background:rgba(244,228,9,.25);">
+          <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3.5l8 4.3-8 4.3-8-4.3 8-4.3z" stroke="#8a7c00" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 12.2l8 4.3 8-4.3" stroke="#8a7c00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16.5l8 4.3 8-4.3" stroke="#8a7c00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="ov-text">
+          <span data-i18n="ov_k3">Layanan</span>
+          <b data-i18n="ov_v3">Social Media Management, Meta Ads, Website Development, Company Profile Design</b>
+        </div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="overview-icon" style="background:rgba(255,74,61,.12);">
+          <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6" stroke="#FF4A3D" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6" stroke="#FF4A3D" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6" stroke="#FF4A3D" stroke-width="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6" stroke="#FF4A3D" stroke-width="1.8"/></svg>
+        </div>
+        <div class="ov-text">
+          <span data-i18n="ov_k4">Platform</span>
+          <b data-i18n="ov_v4">Instagram, Tiktok, Facebook, X, Threads</b>
+        </div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="overview-icon" style="background:rgba(27,75,67,.12);">
+          <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20.5 13.2L13 20.7a1.6 1.6 0 0 1-2.3 0l-7.2-7.2V4.3h9.2l7.2 7.2a1.6 1.6 0 0 1 .6 1.7z" stroke="#1B4B43" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.3" cy="8.3" r="1.4" fill="#1B4B43"/></svg>
+        </div>
+        <div class="ov-text">
+          <span data-i18n="ov_k5">Kategori</span>
+          <b data-i18n="ov_v5">Digital Marketing, Website Development &amp; Branding</b>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tint" style="padding:90px 0;">
+  <div class="wrap">
+    <div class="cd-wrap">
+      <div class="section-head reveal" style="margin-bottom:24px;">
+        <h2 data-i18n="about_label">Tentang Proyek</h2>
+      </div>
+      <p class="cd-summary reveal" data-i18n="about_p1" style="margin:0 0 20px;">Wellner Consulting merupakan firma konsultan pajak yang melayani perusahaan, UMKM, maupun individu dalam berbagai kebutuhan perpajakan dan kepatuhan bisnis.</p>
+      <p class="cd-summary reveal" data-i18n="about_p2" style="margin:0 0 20px;">Untuk memperkuat kehadiran digitalnya, Adsbangda dipercaya sebagai partner kreatif yang menangani berbagai kebutuhan pemasaran digital secara menyeluruh. Mulai dari produksi konten edukasi perpajakan, pengelolaan kampanye Meta Ads, hingga pengembangan materi branding perusahaan.</p>
+      <p class="cd-summary reveal" data-i18n="about_p3" style="margin:0;">Pendekatan ini membantu Wellner Consulting membangun citra profesional sekaligus meningkatkan konsistensi komunikasi di berbagai platform digital.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding:90px 0;">
+  <div class="wrap">
+    <div class="cd-wrap">
+
+      <div class="project-block reveal">
+        <h3 data-i18n="p1_h2">Membangun Kredibilitas Melalui Konten Edukasi</h3>
+        <div class="mp-thumb"><img role="button" tabindex="0" src="assets/img/img-js-a825defdf3ce.webp" alt="Sosial Media Content — Wellner Consulting" loading="lazy"></div>
+        <p data-i18n="p1_desc">Kami mengelola produksi konten media sosial Wellner Consulting dengan fokus pada penyampaian informasi perpajakan yang mudah dipahami, relevan, dan selalu mengikuti perkembangan regulasi terbaru.</p>
+        <p data-i18n="p1_desc2">Setiap konten dirancang untuk membantu meningkatkan awareness, membangun kepercayaan audiens, serta memperkuat positioning Wellner Consulting sebagai firma konsultan pajak yang aktif memberikan edukasi kepada masyarakat maupun pelaku usaha.</p>
+        <div class="highlight-grid">
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12"/><path d="M5 1.5v3M11 1.5v3"/></svg></div><span data-i18n="p1_hl1">1–2 Konten Baru Setiap Hari</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l4-4 3 3 5-6"/><path d="M11 5h3v3"/></svg></div><span data-i18n="p1_hl2">Engagement Rate &plusmn;5%</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8a5 5 0 1 1-1.5-3.6"/><path d="M13 2.5V6h-3.5"/></svg></div><span data-i18n="p1_hl3">Konten Selalu Mengikuti Update Regulasi Terbaru</span></div>
+        </div>
+      </div>
+
+      <div class="project-block reveal">
+        <h3 data-i18n="p2_h2">Menjangkau Audiens yang Tepat Melalui Strategi Iklan Digital</h3>
+        <div class="mp-thumb"><img role="button" tabindex="0" src="assets/img/img-f5c7f4d240ec.webp" alt="Meta Ads — Wellner Consulting" loading="lazy"></div>
+        <p data-i18n="p2_desc">Selain membangun awareness secara organik, kami juga mengelola kampanye Meta Ads untuk membantu Wellner Consulting menjangkau calon klien yang lebih relevan.</p>
+        <p data-i18n="p2_desc2">Mulai dari penyusunan strategi, pembuatan materi iklan, pengujian berbagai creative, hingga optimasi campaign dilakukan secara berkelanjutan agar anggaran iklan dapat menghasilkan performa yang maksimal.</p>
+        <div class="highlight-grid">
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5v3h2l4 3V3.5l-4 3H2z"/><path d="M10.5 5.3a3 3 0 0 1 0 5.4"/></svg></div><span data-i18n="p2_hl1">196+ Campaign</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-4.5 7-4.5S15 8 15 8s-2.5 4.5-7 4.5S1 8 1 8z"/><circle cx="8" cy="8" r="2"/></svg></div><span data-i18n="p2_hl2">530.000+ Impressions</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7.8" r="2.4"/><circle cx="11.2" cy="6" r="1.8"/><path d="M1.8 14c0-2.2 1.9-3.9 4.2-3.9s4.2 1.7 4.2 3.9"/><path d="M9.6 10.3c1.7.3 3 1.7 3 3.7"/></svg></div><span data-i18n="p2_hl4">319.000+ Reach</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.3 3.3l1.4 1.4M11.3 11.3l1.4 1.4M12.7 3.3l-1.4 1.4M4.7 11.3l-1.4 1.4"/></svg></div><span data-i18n="p2_hl3">Optimasi Rutin Berdasarkan Performa Campaign</span></div>
+        </div>
+      </div>
+
+      <div class="project-block reveal">
+        <h3 data-i18n="p3_h2">Memperkuat Identitas Visual Perusahaan</h3>
+        <div class="mp-thumb"><img role="button" tabindex="0" src="assets/img/img-655f0c08e285.webp" alt="Company Profile Design — Wellner Consulting" loading="lazy"></div>
+        <p data-i18n="p3_desc">Kami merancang company profile yang merepresentasikan identitas Wellner Consulting sebagai firma konsultan pajak yang profesional, modern, dan terpercaya.</p>
+        <p data-i18n="p3_desc2">Seluruh desain disusun mengikuti brand guideline sehingga tampilan visual tetap konsisten di berbagai media, baik untuk kebutuhan presentasi digital maupun dokumen cetak.</p>
+        <div class="highlight-grid">
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2.5" width="12" height="8" rx="1.2"/><path d="M5.5 13.5h5M8 10.5v3"/></svg></div><span data-i18n="p3_hl1">Company Profile Digital</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6V2.5h7V6"/><rect x="2" y="6" width="12" height="5.5" rx="1"/><rect x="4.5" y="9.5" width="7" height="4" rx="0.5"/></svg></div><span data-i18n="p3_hl2">Company Profile Cetak</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6"/><circle cx="5.5" cy="6.3" r="1" fill="currentColor" stroke="none"/><circle cx="8" cy="4.3" r="1" fill="currentColor" stroke="none"/><circle cx="10.5" cy="6.3" r="1" fill="currentColor" stroke="none"/><circle cx="9.6" cy="10" r="1" fill="currentColor" stroke="none"/></svg></div><span data-i18n="p3_hl3">Konsisten dengan Brand Guideline</span></div>
+        </div>
+      </div>
+
+      <div class="project-block reveal">
+        <h3 data-i18n="p4_h2">Membangun Website yang Profesional, Cepat, dan Berorientasi Konversi</h3>
+        <div class="mp-thumb"><img role="button" tabindex="0" src="assets/img/img-07f59128e7ff.webp" alt="Website Development — Wellner Consulting" loading="lazy"></div>
+        <p data-i18n="p4_desc">Kami merancang dan mengembangkan website Wellner Consulting sebagai pusat kehadiran digital perusahaan sekaligus media utama untuk memperkenalkan layanan kepada calon klien. Website dibangun dengan mengutamakan pengalaman pengguna (user experience), tampilan yang profesional, serta struktur informasi yang jelas agar pengunjung dapat menemukan informasi yang dibutuhkan dengan mudah.</p>
+        <p data-i18n="p4_desc2">Selain mengedepankan desain yang modern dan responsif di berbagai perangkat, website juga dioptimalkan dari sisi performa, kecepatan, dan SEO dasar sehingga siap mendukung strategi pemasaran digital serta meningkatkan peluang konversi dari setiap kunjungan.</p>
+        <div class="highlight-grid">
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1" y="2.5" width="9" height="6.5" rx="1"/><path d="M3.5 11.5h4"/><rect x="11.5" y="6" width="3.5" height="8" rx="0.8"/></svg></div><span data-i18n="p4_hl1">Responsive di Desktop, Tablet &amp; Mobile</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="6.5" cy="6.5" r="4"/><path d="M9.5 9.5L14 14"/></svg></div><span data-i18n="p4_hl2">SEO-Friendly Structure</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8.5 1.2L3 9.2h4L6 14.8 13 6.8H9l-0.5-5.6z" fill="currentColor"/></svg></div><span data-i18n="p4_hl3">Fast Loading Performance</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="3"/><circle cx="8" cy="8" r="0.9" fill="currentColor" stroke="none"/></svg></div><span data-i18n="p4_hl4">Conversion-Oriented Landing Pages</span></div>
+          <div class="highlight-chip"><div class="hc-icon"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 14l1-3.5L10.5 3l2.5 2.5L5.5 13 2 14z"/><path d="M9 4.5l2.5 2.5"/></svg></div><span data-i18n="p4_hl5">Mudah Dikelola dan Dikembangkan</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="section section-tint" style="padding:90px 0;">
+  <div class="wrap">
+    <div class="section-head reveal" style="margin-bottom:28px;">
+      <h2 data-i18n="wf_label">Workflow Project</h2>
+      <p data-i18n="wf_desc">Kami menerapkan proses kerja yang terstruktur untuk memastikan setiap aktivitas pemasaran digital berjalan efektif dan menghasilkan output yang konsisten.</p>
+    </div>
+    <div class="wf-track reveal">
+      <svg aria-hidden="true" focusable="false" class="wf-connector" viewBox="0 0 1200 320" fill="none" preserveAspectRatio="none">
+        <path d="M70,35 L600,35 L1130,35 C1200,35 1200,160 1130,160 L600,160 L70,160 C0,160 0,285 70,285 L600,285 L1130,285" stroke="rgba(21,23,27,.4)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 11" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <div class="wf-grid">
+        <div class="wf-node"><span class="num">01</span><h3 data-i18n="wf_1">Discovery</h3></div>
+        <div class="wf-node"><span class="num">02</span><h3 data-i18n="wf_2">Research</h3></div>
+        <div class="wf-node"><span class="num">03</span><h3 data-i18n="wf_3">Content Planning</h3></div>
+        <div class="wf-node"><span class="num">04</span><h3 data-i18n="wf_4">Design</h3></div>
+        <div class="wf-node"><span class="num">05</span><h3 data-i18n="wf_5">Campaign Setup</h3></div>
+        <div class="wf-node"><span class="num">06</span><h3 data-i18n="wf_6">Publishing</h3></div>
+        <div class="wf-node"><span class="num">07</span><h3 data-i18n="wf_7">Monitoring</h3></div>
+        <div class="wf-node"><span class="num">08</span><h3 data-i18n="wf_8">Optimization</h3></div>
+        <div class="wf-node"><span class="num">09</span><h3 data-i18n="wf_9">Reporting</h3></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding:90px 0;">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2 data-i18n="tools_label">Tools &amp; Software</h2>
+      <p data-i18n="tools_desc">Dalam proyek Wellner Consulting, kami menggunakan berbagai software profesional untuk mendukung proses produksi konten, pengembangan website, pengelolaan kampanye, hingga proses kerja berbasis AI secara menyeluruh.</p>
+    </div>
+    <div class="tools-grid reveal">
+      <div class="tools-cat">
+        <h3 data-i18n="tools_cat1">Creative &amp; Design</h3>
+        <div class="tools-icon-row">
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-24ae85c4ad59.png" alt="Adobe Photoshop" loading="lazy"></div><span>Photoshop</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-31d06b608bbc.png" alt="Adobe Illustrator" loading="lazy"></div><span>Illustrator</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-c8b74368a17e.png" alt="Adobe Premiere Pro" loading="lazy"></div><span>Premiere Pro</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-4e3ff4c32574.png" alt="Adobe After Effects" loading="lazy"></div><span>After Effects</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-3d6909954fce.png" alt="CapCut" loading="lazy"></div><span>CapCut</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-f2725ecd67be.png" alt="Figma" loading="lazy"></div><span>Figma</span></div>
+        </div>
+      </div>
+      <div class="tools-cat">
+        <h3 data-i18n="tools_cat2">Website Development</h3>
+        <div class="tools-icon-row">
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-b36714c19c08.png" alt="Hostinger" loading="lazy"></div><span>Hostinger</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-aeee84293d93.png" alt="WordPress" loading="lazy"></div><span>WordPress</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-8fd515b16c19.png" alt="Elementor" loading="lazy"></div><span>Elementor</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-eca488a6cc75.png" alt="Google Analytics 4" loading="lazy"></div><span>Analytics 4</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-055fed13042c.png" alt="Google Tag Manager" loading="lazy"></div><span>Tag Manager</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-b32a0e36fdab.png" alt="Google Search Console" loading="lazy"></div><span>Search Console</span></div>
+        </div>
+      </div>
+      <div class="tools-cat">
+        <h3 data-i18n="tools_cat4">AI &amp; Productivity</h3>
+        <div class="tools-icon-row">
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-bc4935657e86.png" alt="Claude AI" loading="lazy"></div><span>Claude AI</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-a077fd0cc438.png" alt="ChatGPT" loading="lazy"></div><span>ChatGPT</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-38a2ce323997.png" alt="Gemini" loading="lazy"></div><span>Gemini</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-d9168d6f790c.png" alt="Magnific AI" loading="lazy"></div><span>Magnific AI</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-fee42bc9b96c.png" alt="Envato Elements" loading="lazy"></div><span>Envato Elements</span></div>
+        </div>
+      </div>
+      <div class="tools-cat">
+        <h3 data-i18n="tools_cat3">Digital Advertising</h3>
+        <div class="tools-icon-row">
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-cd47ca03b973.png" alt="Meta Ads Manager" loading="lazy"></div><span>Ads Manager</span></div>
+          <div class="tool-item"><div class="tool-logo"><img src="assets/img/img-5a1608d58abf.png" alt="WhatsApp Business" loading="lazy"></div><span>WhatsApp Business</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tint" style="padding:90px 0;">
+  <div class="wrap">
+    <div class="cd-wrap">
+      <div class="section-head reveal" style="margin-bottom:24px;">
+        <h2 data-i18n="impact_label">Project Impact</h2>
+      </div>
+      <p class="cd-summary reveal" data-i18n="impact_p1" style="margin:0 0 20px;">Melalui kombinasi strategi konten, iklan digital, dan branding visual, Wellner Consulting kini memiliki kehadiran digital yang lebih konsisten dan profesional.</p>
+      <p class="cd-summary reveal" data-i18n="impact_p2" style="margin:0;">Pendekatan ini membantu perusahaan menjangkau audiens yang lebih luas, memperkuat kredibilitas brand, serta membangun fondasi pemasaran digital yang dapat terus dikembangkan seiring pertumbuhan bisnis.</p>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <h2 data-i18n="cta_h2">Mau Hasil Serupa untuk Bisnis Kamu?</h2>
+    <p data-i18n="cta_p">Yuk diskusiin strategi digital marketing yang pas buat brand kamu &mdash; konsultasi awal gratis.</p>
+    <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Mulai Proyek &rarr;</a>
+  </div>
+</section>
+
+<Fragment slot="page-scripts">
+<script is:inline>
+
+// ---- shared nav/footer translation (site-wide, all pages) ----
+const translations = {
+  back_link: {id:'&larr; Kembali ke Portofolio', en:'&larr; Back to Portfolio'},
+
+  hero_h2: {id:'Bangun Kehadiran Digital Firma Konsultan Pajak yang Profesional dan Terpercaya', en:'Building a Professional and Trustworthy Digital Presence for a Tax Consulting Firm'},
+  hero_lede1: {id:'Adsbangda membantu Wellner Consulting mengembangkan kehadiran digital melalui strategi yang terintegrasi, mulai dari pengelolaan media sosial, kampanye Meta Ads, hingga pengembangan materi branding perusahaan.', en:'Adsbangda helped Wellner Consulting grow its digital presence through an integrated strategy — from social media management and Meta Ads campaigns to the development of the company\'s branding materials.'},
+  hero_lede2: {id:'Selama kerja sama berlangsung, kami berfokus pada peningkatan kredibilitas brand, memperluas jangkauan audiens, serta membangun fondasi pemasaran digital yang konsisten untuk mendukung pertumbuhan bisnis Wellner Consulting.', en:'Throughout the collaboration, we focused on strengthening brand credibility, expanding audience reach, and building a consistent digital marketing foundation to support Wellner Consulting\'s business growth.'},
+  scope_1: {id:'Social Media Management', en:'Social Media Management'},
+  scope_2: {id:'Meta Ads', en:'Meta Ads'},
+  scope_3: {id:'Company Profile Design', en:'Company Profile Design'},
+
+  ov_k3: {id:'Layanan', en:'Services'},
+  ov_v3: {id:'Social Media Management, Meta Ads, Website Development, Company Profile Design', en:'Social Media Management, Meta Ads, Website Development, Company Profile Design'},
+  ov_k4: {id:'Platform', en:'Platform'},
+  ov_v4: {id:'Instagram, Tiktok, Facebook, X, Threads', en:'Instagram, Tiktok, Facebook, X, Threads'},
+  ov_k5: {id:'Kategori', en:'Category'},
+  ov_v5: {id:'Digital Marketing, Website Development &amp; Branding', en:'Digital Marketing, Website Development &amp; Branding'},
+
+  about_label: {id:'Tentang Proyek', en:'About The Project'},
+  about_p1: {id:'Wellner Consulting merupakan firma konsultan pajak yang melayani perusahaan, UMKM, maupun individu dalam berbagai kebutuhan perpajakan dan kepatuhan bisnis.', en:'Wellner Consulting is a tax consulting firm serving companies, SMEs, and individuals with a wide range of tax and business compliance needs.'},
+  about_p2: {id:'Untuk memperkuat kehadiran digitalnya, Adsbangda dipercaya sebagai partner kreatif yang menangani berbagai kebutuhan pemasaran digital secara menyeluruh. Mulai dari produksi konten edukasi perpajakan, pengelolaan kampanye Meta Ads, hingga pengembangan materi branding perusahaan.', en:'To strengthen its digital presence, Adsbangda was trusted as the creative partner handling its digital marketing needs end-to-end — from producing tax-education content and managing Meta Ads campaigns, to developing the company\'s branding materials.'},
+  about_p3: {id:'Pendekatan ini membantu Wellner Consulting membangun citra profesional sekaligus meningkatkan konsistensi komunikasi di berbagai platform digital.', en:'This approach helped Wellner Consulting build a professional image while improving communication consistency across its digital platforms.'},
+
+
+  p1_h2: {id:'Membangun Kredibilitas Melalui Konten Edukasi', en:'Building Credibility Through Educational Content'},
+  p1_desc: {id:'Kami mengelola produksi konten media sosial Wellner Consulting dengan fokus pada penyampaian informasi perpajakan yang mudah dipahami, relevan, dan selalu mengikuti perkembangan regulasi terbaru.', en:'We manage Wellner Consulting\'s social media content production, focused on delivering tax information that\'s easy to understand, relevant, and always up to date with the latest regulations.'},
+  p1_desc2: {id:'Setiap konten dirancang untuk membantu meningkatkan awareness, membangun kepercayaan audiens, serta memperkuat positioning Wellner Consulting sebagai firma konsultan pajak yang aktif memberikan edukasi kepada masyarakat maupun pelaku usaha.', en:'Every piece of content is designed to increase awareness, build audience trust, and strengthen Wellner Consulting\'s positioning as a tax consulting firm that actively educates the public and business owners.'},
+  p1_hl1: {id:'1–2 Konten Baru Setiap Hari', en:'1–2 New Pieces of Content Daily'},
+  p1_hl2: {id:'Engagement Rate &plusmn;5%', en:'&plusmn;5% Engagement Rate'},
+  p1_hl3: {id:'Konten Selalu Mengikuti Update Regulasi Terbaru', en:'Content Always Follows the Latest Regulation Updates'},
+
+  p2_h2: {id:'Menjangkau Audiens yang Tepat Melalui Strategi Iklan Digital', en:'Reaching the Right Audience Through Digital Advertising Strategy'},
+  p2_desc: {id:'Selain membangun awareness secara organik, kami juga mengelola kampanye Meta Ads untuk membantu Wellner Consulting menjangkau calon klien yang lebih relevan.', en:'Beyond building organic awareness, we also manage Meta Ads campaigns to help Wellner Consulting reach more relevant prospective clients.'},
+  p2_desc2: {id:'Mulai dari penyusunan strategi, pembuatan materi iklan, pengujian berbagai creative, hingga optimasi campaign dilakukan secara berkelanjutan agar anggaran iklan dapat menghasilkan performa yang maksimal.', en:'From strategy planning and ad material production to creative testing, campaign optimization is carried out continuously so the ad budget delivers maximum performance.'},
+  p2_hl1: {id:'196+ Campaign', en:'196+ Campaigns'},
+  p2_hl2: {id:'530.000+ Impressions', en:'530,000+ Impressions'},
+  p2_hl4: {id:'319.000+ Reach', en:'319,000+ Reach'},
+  p2_hl3: {id:'Optimasi Rutin Berdasarkan Performa Campaign', en:'Routine Optimization Based on Campaign Performance'},
+
+  p3_h2: {id:'Memperkuat Identitas Visual Perusahaan', en:'Strengthening the Company\'s Visual Identity'},
+  p3_desc: {id:'Kami merancang company profile yang merepresentasikan identitas Wellner Consulting sebagai firma konsultan pajak yang profesional, modern, dan terpercaya.', en:'We designed a company profile that represents Wellner Consulting\'s identity as a professional, modern, and trustworthy tax consulting firm.'},
+  p3_desc2: {id:'Seluruh desain disusun mengikuti brand guideline sehingga tampilan visual tetap konsisten di berbagai media, baik untuk kebutuhan presentasi digital maupun dokumen cetak.', en:'Every design follows the brand guideline so the visual appearance stays consistent across media — for both digital presentations and printed documents.'},
+  p3_hl1: {id:'Company Profile Digital', en:'Digital Company Profile'},
+  p3_hl2: {id:'Company Profile Cetak', en:'Printed Company Profile'},
+  p3_hl3: {id:'Konsisten dengan Brand Guideline', en:'Consistent With Brand Guideline'},
+
+  p4_h2: {id:'Membangun Website yang Profesional, Cepat, dan Berorientasi Konversi', en:'Building a Professional, Fast, and Conversion-Oriented Website'},
+  p4_desc: {id:'Kami merancang dan mengembangkan website Wellner Consulting sebagai pusat kehadiran digital perusahaan sekaligus media utama untuk memperkenalkan layanan kepada calon klien. Website dibangun dengan mengutamakan pengalaman pengguna (user experience), tampilan yang profesional, serta struktur informasi yang jelas agar pengunjung dapat menemukan informasi yang dibutuhkan dengan mudah.', en:'We designed and developed Wellner Consulting\'s website as the hub of the company\'s digital presence and the primary channel for introducing its services to prospective clients. The site was built with a strong focus on user experience, a professional look, and a clear information structure so visitors can easily find what they need.'},
+  p4_desc2: {id:'Selain mengedepankan desain yang modern dan responsif di berbagai perangkat, website juga dioptimalkan dari sisi performa, kecepatan, dan SEO dasar sehingga siap mendukung strategi pemasaran digital serta meningkatkan peluang konversi dari setiap kunjungan.', en:'Beyond a modern, responsive design across devices, the website is also optimized for performance, speed, and basic SEO — ready to support the digital marketing strategy and improve conversion opportunities from every visit.'},
+  p4_hl1: {id:'Responsive di Desktop, Tablet &amp; Mobile', en:'Responsive on Desktop, Tablet &amp; Mobile'},
+  p4_hl2: {id:'SEO-Friendly Structure', en:'SEO-Friendly Structure'},
+  p4_hl3: {id:'Fast Loading Performance', en:'Fast Loading Performance'},
+  p4_hl4: {id:'Conversion-Oriented Landing Pages', en:'Conversion-Oriented Landing Pages'},
+  p4_hl5: {id:'Mudah Dikelola dan Dikembangkan', en:'Easy to Manage and Scale'},
+
+  wf_label: {id:'Workflow Project', en:'Project Workflow'},
+  wf_desc: {id:'Kami menerapkan proses kerja yang terstruktur untuk memastikan setiap aktivitas pemasaran digital berjalan efektif dan menghasilkan output yang konsisten.', en:'We apply a structured workflow to make sure every digital marketing activity runs effectively and delivers consistent output.'},
+  wf_1: {id:'Discovery', en:'Discovery'},
+  wf_2: {id:'Research', en:'Research'},
+  wf_3: {id:'Content Planning', en:'Content Planning'},
+  wf_4: {id:'Design', en:'Design'},
+  wf_5: {id:'Campaign Setup', en:'Campaign Setup'},
+  wf_6: {id:'Publishing', en:'Publishing'},
+  wf_7: {id:'Monitoring', en:'Monitoring'},
+  wf_8: {id:'Optimization', en:'Optimization'},
+  wf_9: {id:'Reporting', en:'Reporting'},
+
+  tools_label: {id:'Tools &amp; Software', en:'Tools &amp; Software'},
+  tools_desc: {id:'Dalam proyek Wellner Consulting, kami menggunakan berbagai software profesional untuk mendukung proses produksi konten, pengembangan website, pengelolaan kampanye, hingga proses kerja berbasis AI secara menyeluruh.', en:'For the Wellner Consulting project, we use a range of professional software to support content production, website development, campaign management, and AI-assisted workflows end-to-end.'},
+  tools_cat1: {id:'Creative &amp; Design', en:'Creative &amp; Design'},
+  tools_cat2: {id:'Website Development', en:'Website Development'},
+  tools_cat3: {id:'Digital Advertising', en:'Digital Advertising'},
+  tools_cat4: {id:'AI &amp; Productivity', en:'AI &amp; Productivity'},
+
+  impact_label: {id:'Project Impact', en:'Project Impact'},
+  impact_p1: {id:'Melalui kombinasi strategi konten, iklan digital, dan branding visual, Wellner Consulting kini memiliki kehadiran digital yang lebih konsisten dan profesional.', en:'Through a combination of content strategy, digital advertising, and visual branding, Wellner Consulting now has a more consistent and professional digital presence.'},
+  impact_p2: {id:'Pendekatan ini membantu perusahaan menjangkau audiens yang lebih luas, memperkuat kredibilitas brand, serta membangun fondasi pemasaran digital yang dapat terus dikembangkan seiring pertumbuhan bisnis.', en:'This approach helps the company reach a wider audience, strengthen brand credibility, and build a digital marketing foundation that can keep growing alongside the business.'},
+
+  cta_h2: {id:'Mau Hasil Serupa untuk Bisnis Kamu?', en:'Want Similar Results for Your Business?'},
+  cta_p: {id:'Yuk diskusiin strategi digital marketing yang pas buat brand kamu &mdash; konsultasi awal gratis.', en:'Let\'s discuss the digital marketing strategy that fits your brand &mdash; free initial consultation.'},
+  cta_btn: {id:'Mulai Proyek &rarr;', en:'Start a Project &rarr;'},
+};
+
+</script>
+</Fragment>
+</Layout>

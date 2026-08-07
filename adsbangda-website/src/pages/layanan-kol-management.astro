@@ -1,0 +1,121 @@
+---
+import Layout from "../layouts/Layout.astro";
+const title = 'Jasa KOL & Influencer Management | Adsbangda';
+const description = 'Matchmaking brand dengan KOL & influencer yang cocok dengan audiens kamu -- dari seleksi kreator, negosiasi, brief, sampai monitoring hasil kolaborasi.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-kol-management.html#service",
+  name: "KOL & Influencer Management",
+  serviceType: "Influencer Marketing",
+  description: "Jasa matchmaking brand dengan key opinion leader dan influencer yang relevan -- seleksi kreator, negosiasi, brief konten, hingga monitoring hasil kolaborasi.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-kol-management.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "KOL & Influencer Management",
+    itemListElement: [
+      "Seleksi KOL & influencer sesuai niche & target audiens",
+      "Negosiasi rate & term kerja sama",
+      "Brief konten yang jelas tapi tetap kasih ruang kreatif",
+      "Monitoring jadwal posting & kualitas konten",
+      "Laporan hasil (views, engagement, konversi)",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
+---
+<Layout title={title} description={description} path="layanan-kol-management.html" portfolioCss={false} extraSchema={serviceSchema}>
+{ /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
+
+
+
+<section class="service-page-hero">
+  <div class="wrap">
+    <div class="breadcrumb"><a href="layanan.html" data-i18n-nav="layanan">Layanan</a> / <span data-i18n="svc_name">KOL & Influencer Management</span></div>
+    <div class="service-icon"><svg aria-hidden="true" focusable="false" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.5 2.5-6 5.5-6s5.5 2.5 5.5 6"/><circle cx="17.5" cy="9" r="2.3"/><path d="M15.5 20c0-2.8 1.6-5 3.8-5"/></svg></div>
+    <h1 data-i18n="hero_h1">KOL & Influencer Management</h1>
+    <p class="lede" data-i18n="hero_p">Matchmaking brand dengan key opinion leader dan influencer yang suaranya emang cocok sama audiens kamu. Kami handle mulai dari seleksi kreator, negosiasi, brief, sampai monitoring hasil kolaborasi.</p>
+    <div class="tag-row"><span data-i18n="tag1">Creator Sourcing</span><span data-i18n="tag2">Negotiation</span><span data-i18n="tag3">Campaign Brief</span><span data-i18n="tag4">Performance Tracking</span></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="wrap">
+    <div class="service-detail-grid">
+      <div class="reveal">
+        <h2 style="font-size:22px;margin-bottom:14px;" data-i18n="cocok_h">Cocok Buat Siapa?</h2>
+        <p style="font-size:15px;line-height:1.75;color:#3b3d3a;text-align:justify;" data-i18n="cocok_p">Cocok buat brand yang mau bangun awareness lewat suara pihak ketiga yang lebih dipercaya audiens dibanding iklan brand sendiri.</p>
+      </div>
+      <div class="reveal">
+        <h2 style="font-size:22px;margin-bottom:16px;" data-i18n="dapat_h">Yang Kamu Dapat</h2>
+        <ul class="include-list">
+          <li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc1">Seleksi KOL &amp; influencer sesuai niche &amp; target audiens</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc2">Negosiasi rate &amp; term kerja sama</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc3">Brief konten yang jelas tapi tetap kasih ruang kreatif</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc4">Monitoring jadwal posting &amp; kualitas konten</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc5">Laporan hasil (views, engagement, konversi)</span></li>
+        </ul>
+        <div class="service-cta-row">
+          <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Konsultasi Layanan Ini &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tint">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2 style="font-size:24px;" data-i18n="other_h2">Butuh yang lain juga?</h2>
+    </div>
+    <div class="service-simple-grid">
+      <a href="layanan-sosial-media-management.html" class="service-simple-card reveal">
+        <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M17 10l4-2v8l-4-2"/></svg></div>
+        <h3>Social Media Management</h3>
+        <p data-i18n="other1_p">Produksi konten harian/mingguan — dari naskah, syuting, sampai desain feed yang konsisten ...</p>
+        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+      </a><a href="layanan-content-strategy.html" class="service-simple-card reveal">
+        <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><path d="M4 19V10M12 19V5M20 19v-7"/></svg></div>
+        <h3>Content Strategy</h3>
+        <p data-i18n="other2_p">Riset tren, kalender konten, dan hook 3 detik pertama yang bikin orang berhenti scroll. Ka...</p>
+        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+      </a><a href="layanan-meta-ads.html" class="service-simple-card reveal">
+        <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6" fill="#15171B"/></svg></div>
+        <h3>Meta Ads Performance</h3>
+        <p data-i18n="other3_p">Naikin konten organic terbaik jadi campaign ads yang terarah dan performing di Instagram &...</p>
+        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<Fragment slot="page-scripts">
+<script is:inline>
+
+
+// ---- shared nav/footer translation (site-wide, all pages) ----
+const translations = {
+  svc_name: {id:'KOL & Influencer Management', en:'KOL & Influencer Management'},
+  hero_h1: {id:'KOL & Influencer Management', en:'KOL & Influencer Management'},
+  hero_p: {id:'Matchmaking brand dengan key opinion leader dan influencer yang suaranya emang cocok sama audiens kamu. Kami handle mulai dari seleksi kreator, negosiasi, brief, sampai monitoring hasil kolaborasi.', en:'Matching brands with key opinion leaders and influencers whose voice actually fits your audience. We handle everything from creator selection and negotiation to briefing and monitoring collaboration results.'},
+  tag1: {id:'Creator Sourcing', en:'Creator Sourcing'},
+  tag2: {id:'Negotiation', en:'Negotiation'},
+  tag3: {id:'Campaign Brief', en:'Campaign Brief'},
+  tag4: {id:'Performance Tracking', en:'Performance Tracking'},
+  cocok_h: {id:'Cocok Buat Siapa?', en:'Who Is This For?'},
+  cocok_p: {id:'Cocok buat brand yang mau bangun awareness lewat suara pihak ketiga yang lebih dipercaya audiens dibanding iklan brand sendiri.', en:'A great fit for brands that want to build awareness through third-party voices that audiences trust more than a brand\'s own ads.'},
+  dapat_h: {id:'Yang Kamu Dapat', en:'What You Get'},
+  inc1: {id:'Seleksi KOL &amp; influencer sesuai niche &amp; target audiens', en:'KOL &amp; influencer selection matched to your niche &amp; target audience'},
+  inc2: {id:'Negosiasi rate &amp; term kerja sama', en:'Rate negotiation &amp; collaboration terms'},
+  inc3: {id:'Brief konten yang jelas tapi tetap kasih ruang kreatif', en:'Clear content briefs that still leave room for creativity'},
+  inc4: {id:'Monitoring jadwal posting &amp; kualitas konten', en:'Monitoring posting schedules &amp; content quality'},
+  inc5: {id:'Laporan hasil (views, engagement, konversi)', en:'Results reports (views, engagement, conversions)'},
+  cta_btn: {id:'Konsultasi Layanan Ini &rarr;', en:'Consult About This Service &rarr;'},
+  other_h2: {id:'Butuh yang lain juga?', en:'Need Something Else Too?'},
+  other1_p: {id:'Produksi konten harian/mingguan — dari naskah, syuting, sampai desain feed yang konsisten ...', en:'Daily/weekly content production — from scripting and filming to consistent feed design ...'},
+  other2_p: {id:'Riset tren, kalender konten, dan hook 3 detik pertama yang bikin orang berhenti scroll. Ka...', en:'Trend research, content calendars, and 3-second hooks that stop people from scrolling. We...'},
+  other3_p: {id:'Naikin konten organic terbaik jadi campaign ads yang terarah dan performing di Instagram &...', en:'Turn your best organic content into targeted, high-performing ad campaigns on Instagram &...'},
+  link_more: {id:'Lihat Detail &rarr;', en:'See Details &rarr;'},
+};
+
+</script>
+</Fragment>
+</Layout>

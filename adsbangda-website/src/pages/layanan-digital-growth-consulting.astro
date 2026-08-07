@@ -1,0 +1,121 @@
+---
+import Layout from "../layouts/Layout.astro";
+const title = 'Jasa Digital Growth Consulting | Adsbangda';
+const description = 'Konsultasi strategis untuk bisnis yang mau tumbuh lebih terarah di dunia digital -- audit kondisi saat ini, lalu susun roadmap berbasis data.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-digital-growth-consulting.html#service",
+  name: "Digital Growth Consulting",
+  serviceType: "Digital Marketing Consulting",
+  description: "Jasa konsultasi strategi pertumbuhan digital -- audit kehadiran digital, analisis kompetitor, hingga roadmap pertumbuhan berbasis data.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-digital-growth-consulting.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Digital Growth Consulting",
+    itemListElement: [
+      "Audit menyeluruh kehadiran digital bisnis saat ini",
+      "Analisis kompetitor & peluang pasar",
+      "Roadmap pertumbuhan digital jangka pendek & panjang",
+      "Rekomendasi prioritas channel & budget",
+      "Sesi konsultasi berkala untuk evaluasi progres",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
+---
+<Layout title={title} description={description} path="layanan-digital-growth-consulting.html" portfolioCss={false} extraSchema={serviceSchema}>
+{ /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
+
+
+
+<section class="service-page-hero">
+  <div class="wrap">
+    <div class="breadcrumb"><a href="layanan.html" data-i18n-nav="layanan">Layanan</a> / <span data-i18n="svc_name">Digital Growth Consulting</span></div>
+    <div class="service-icon"><svg aria-hidden="true" focusable="false" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
+    <h1 data-i18n="hero_h1">Digital Growth Consulting</h1>
+    <p class="lede" data-i18n="hero_p">Konsultasi strategis buat bisnis yang mau tumbuh lebih terarah di dunia digital. Kami bantu audit kondisi digital kamu sekarang, dan susun roadmap pertumbuhan berdasarkan data, bukan tebak-tebakan.</p>
+    <div class="tag-row"><span data-i18n="tag1">Digital Audit</span><span data-i18n="tag2">Growth Roadmap</span><span data-i18n="tag3">Data-Driven Strategy</span><span data-i18n="tag4">Cross-Channel</span></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="wrap">
+    <div class="service-detail-grid">
+      <div class="reveal">
+        <h2 style="font-size:22px;margin-bottom:14px;" data-i18n="cocok_h">Cocok Buat Siapa?</h2>
+        <p style="font-size:15px;line-height:1.75;color:#3b3d3a;text-align:justify;" data-i18n="cocok_p">Cocok buat bisnis yang udah jalanin beberapa upaya digital marketing tapi belum punya arah strategis yang jelas dan terukur.</p>
+      </div>
+      <div class="reveal">
+        <h2 style="font-size:22px;margin-bottom:16px;" data-i18n="dapat_h">Yang Kamu Dapat</h2>
+        <ul class="include-list">
+          <li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc1">Audit menyeluruh kehadiran digital bisnis kamu saat ini</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc2">Analisis kompetitor &amp; peluang pasar</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc3">Roadmap pertumbuhan digital jangka pendek &amp; panjang</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc4">Rekomendasi prioritas channel &amp; budget</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc5">Sesi konsultasi berkala buat evaluasi progres</span></li>
+        </ul>
+        <div class="service-cta-row">
+          <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Konsultasi Layanan Ini &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tint">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2 style="font-size:24px;" data-i18n="other_h2">Butuh yang lain juga?</h2>
+    </div>
+    <div class="service-simple-grid">
+      <a href="layanan-sosial-media-management.html" class="service-simple-card reveal">
+        <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M17 10l4-2v8l-4-2"/></svg></div>
+        <h3>Social Media Management</h3>
+        <p data-i18n="other1_p">Produksi konten harian/mingguan — dari naskah, syuting, sampai desain feed yang konsisten ...</p>
+        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+      </a><a href="layanan-content-strategy.html" class="service-simple-card reveal">
+        <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><path d="M4 19V10M12 19V5M20 19v-7"/></svg></div>
+        <h3>Content Strategy</h3>
+        <p data-i18n="other2_p">Riset tren, kalender konten, dan hook 3 detik pertama yang bikin orang berhenti scroll. Ka...</p>
+        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+      </a><a href="layanan-meta-ads.html" class="service-simple-card reveal">
+        <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6" fill="#15171B"/></svg></div>
+        <h3>Meta Ads Performance</h3>
+        <p data-i18n="other3_p">Naikin konten organic terbaik jadi campaign ads yang terarah dan performing di Instagram &...</p>
+        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<Fragment slot="page-scripts">
+<script is:inline>
+
+
+// ---- shared nav/footer translation (site-wide, all pages) ----
+const translations = {
+  svc_name: {id:'Digital Growth Consulting', en:'Digital Growth Consulting'},
+  hero_h1: {id:'Digital Growth Consulting', en:'Digital Growth Consulting'},
+  hero_p: {id:'Konsultasi strategis buat bisnis yang mau tumbuh lebih terarah di dunia digital. Kami bantu audit kondisi digital kamu sekarang, dan susun roadmap pertumbuhan berdasarkan data, bukan tebak-tebakan.', en:'Strategic consulting for businesses that want more focused growth in the digital world. We help audit your current digital condition and build a growth roadmap based on data, not guesswork.'},
+  tag1: {id:'Digital Audit', en:'Digital Audit'},
+  tag2: {id:'Growth Roadmap', en:'Growth Roadmap'},
+  tag3: {id:'Data-Driven Strategy', en:'Data-Driven Strategy'},
+  tag4: {id:'Cross-Channel', en:'Cross-Channel'},
+  cocok_h: {id:'Cocok Buat Siapa?', en:'Who Is This For?'},
+  cocok_p: {id:'Cocok buat bisnis yang udah jalanin beberapa upaya digital marketing tapi belum punya arah strategis yang jelas dan terukur.', en:'A great fit for businesses that have already run some digital marketing efforts but don\'t yet have a clear, measurable strategic direction.'},
+  dapat_h: {id:'Yang Kamu Dapat', en:'What You Get'},
+  inc1: {id:'Audit menyeluruh kehadiran digital bisnis kamu saat ini', en:'A thorough audit of your business\'s current digital presence'},
+  inc2: {id:'Analisis kompetitor &amp; peluang pasar', en:'Competitor analysis &amp; market opportunities'},
+  inc3: {id:'Roadmap pertumbuhan digital jangka pendek &amp; panjang', en:'Short- and long-term digital growth roadmap'},
+  inc4: {id:'Rekomendasi prioritas channel &amp; budget', en:'Channel &amp; budget priority recommendations'},
+  inc5: {id:'Sesi konsultasi berkala buat evaluasi progres', en:'Regular consultation sessions to evaluate progress'},
+  cta_btn: {id:'Konsultasi Layanan Ini &rarr;', en:'Consult About This Service &rarr;'},
+  other_h2: {id:'Butuh yang lain juga?', en:'Need Something Else Too?'},
+  other1_p: {id:'Produksi konten harian/mingguan — dari naskah, syuting, sampai desain feed yang konsisten ...', en:'Daily/weekly content production — from scripting and filming to consistent feed design ...'},
+  other2_p: {id:'Riset tren, kalender konten, dan hook 3 detik pertama yang bikin orang berhenti scroll. Ka...', en:'Trend research, content calendars, and 3-second hooks that stop people from scrolling. We...'},
+  other3_p: {id:'Naikin konten organic terbaik jadi campaign ads yang terarah dan performing di Instagram &...', en:'Turn your best organic content into targeted, high-performing ad campaigns on Instagram &...'},
+  link_more: {id:'Lihat Detail &rarr;', en:'See Details &rarr;'},
+};
+
+</script>
+</Fragment>
+</Layout>

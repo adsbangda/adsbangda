@@ -1,0 +1,69 @@
+---
+title: "Judul Artikel Kamu Di Sini"
+metaTitle: "Versi Pendek Judul (opsional, isi kalau judul di atas lebih dari ~55 karakter)"
+description: "Ringkasan singkat 1-2 kalimat. Ini muncul di kartu blog & meta description Google, usahakan 120-160 karakter."
+category: "SOSIAL MEDIA"
+date: "1 Agustus 2026"
+readTime: "5 menit baca"
+thumbGradient: "linear-gradient(155deg,var(--coral),#2a1410)"
+thumbText: "Teks pendek yang muncul di kartu thumbnail"
+thumbTextColor: "inherit"
+---
+
+Paragraf pembuka artikel kamu di sini. Tulis seperti biasa, nggak perlu
+kode HTML sama sekali -- cukup teks biasa.
+
+## Ini judul sub-bagian (H2)
+
+Paragraf lagi di sini. Baris kosong di antara paragraf itu wajib supaya
+sistem tahu ini paragraf baru.
+
+Kamu bisa bikin teks **tebal** atau *miring* dengan tanda bintang.
+
+## Sub-bagian lain
+
+- Bisa juga bikin list kayak gini
+- Poin kedua
+- Poin ketiga
+
+> Ini untuk kutipan/quote yang mau ditonjolkan (blockquote).
+
+## Kesimpulan
+
+Paragraf penutup.
+
+<!--
+CARA PAKAI TEMPLATE INI:
+1. Copy file ini, rename jadi nama-artikel-kamu.md (huruf kecil, pakai strip, tanpa spasi)
+   -> nama file INI yang jadi URL: nama-artikel-kamu.md akan menghasilkan
+      halaman di /artikel-nama-artikel-kamu.html
+2. Ganti semua isi di antara --- --- (frontmatter) di atas sesuai artikel kamu
+3. Hapus contoh isi di bawah ini, ganti dengan tulisan kamu sendiri (format Markdown biasa)
+4. Simpan file di folder src/content/blog/
+5. Jalankan `npm run build` (atau langsung push ke GitHub kalau sudah yakin)
+6. SELESAI -- halaman artikel + kartu di /blog.html + sitemap.xml
+   otomatis muncul sendiri, kamu TIDAK perlu edit file lain sama sekali.
+
+CARA DAPAT VERSI BAHASA INGGRIS OTOMATIS IKUT TOGGLE ID/EN:
+Tambahkan field-field ini di frontmatter (semuanya opsional -- kalau
+dikosongin, artikel itu tetap tampil normal, cuma nggak ikut translate
+pas tombol EN dipencet):
+
+  title_en: "English version of the title"
+  description_en: "English version of the description"
+  category_en: "SOCIAL MEDIA"
+  readTime_en: "5 min read"
+  thumbText_en: "Short thumbnail text in English"
+  body_en: |
+    <p>Paragraf pertama versi Inggris, ditulis sebagai HTML (bukan Markdown).</p>
+    <h2>Sub judul versi Inggris</h2>
+    <p>Paragraf lagi...</p>
+
+PALING GAMPANG: tulis dulu artikel ID-nya lengkap pakai Markdown biasa
+kayak contoh di atas, terus minta tolong Claude buat translate + isiin
+field-field _en itu sekalian (termasuk body_en dalam bentuk HTML).
+
+Kalau mau gambar di dalam artikel:
+1. Taruh file gambarnya di public/assets/img/nama-gambar.jpg
+2. Panggil dengan: ![Teks alt gambar](/assets/img/nama-gambar.jpg)
+-->

@@ -1,81 +1,118 @@
-# Adsbangda Growth Dashboard
+# Website adsbangda.com (versi Astro)
 
-Platform terpisah untuk client Adsbangda memantau perkembangan marketing
-mereka — bukan pengganti website utama (`www.adsbangda.com`), tapi
-pelengkap yang jalan di subdomain sendiri (`dashboard.adsbangda.com`).
+Ini versi baru website adsbangda.com yang sudah pakai sistem blog otomatis.
+Tampilan & isi SAMA PERSIS dengan versi HTML lama -- yang beda cuma cara
+nambah artikel blog baru, sekarang jauh lebih gampang.
 
-## Status: MVP — Mode Demo
+## Cara kerja sekarang (ringkas)
 
-Project ini bisa langsung dijalankan **tanpa setup Supabase** untuk keperluan
-review desain & alur. Semua data yang tampil berasal dari
-`src/lib/mock-data.ts`, ditata ulang lewat `src/lib/data.ts`.
+- Semua halaman tetap ada di URL yang sama (`/kontak.html`, `/layanan.html`, dst)
+- Nav & footer sekarang cuma ada di **satu tempat** (`src/layouts/Layout.astro`)
+  -- ubah sekali, otomatis kepakai di semua 25 halaman
+- Artikel blog sekarang berupa file Markdown (`.md`) di `src/content/blog/`
+  -- halaman artikel, kartu di `/blog.html`, dan `sitemap.xml` **otomatis**
+  ke-generate dari file-file itu setiap kali di-build
+
+## Setup pertama kali (sekali saja)
+
+Butuh Node.js versi 18 ke atas sudah terinstall di laptop.
 
 ```bash
 npm install
+```
+
+## Menjalankan di laptop (buat lihat preview sebelum di-publish)
+
+```bash
 npm run dev
 ```
 
-Buka `http://localhost:3000` — akan langsung menampilkan Overview dashboard
-dengan data contoh client "Amati Coffee".
+Lalu buka `http://localhost:4321` di browser. Setiap kamu simpan perubahan,
+halaman otomatis refresh sendiri.
 
-## Menyalakan Mode Live (data sungguhan)
+## Cara nambah artikel blog baru (INI YANG PALING PENTING)
 
-1. Buat project baru di [supabase.com](https://supabase.com)
-2. Jalankan migration: buka **SQL Editor** di dashboard Supabase, paste isi
-   `supabase/migrations/0001_init.sql`, lalu Run
-3. Copy `.env.example` jadi `.env.local`, isi dengan URL & anon key dari
-   Settings → API
-4. Restart `npm run dev` — aplikasi otomatis pindah dari mock data ke query
-   Supabase asli (lihat `src/lib/data.ts`, tidak ada komponen UI yang perlu
-   diubah)
-5. Input data client pertama secara manual lewat SQL Editor atau bikin
-   admin tool internal sederhana (di luar scope MVP ini)
+1. Buka folder `src/content/blog/`
+2. Copy file `_TEMPLATE-cara-bikin-artikel-baru.md.txt`, rename jadi
+   misalnya `tips-content-pillar-2026.md` (huruf kecil, pakai tanda strip,
+   **harus** berakhiran `.md`, bukan `.md.txt`)
+3. Nama file ini yang menentukan URL-nya. Contoh: kalau nama filenya
+   `tips-content-pillar-2026.md`, URL artikelnya jadi
+   `adsbangda.com/artikel-tips-content-pillar-2026.html` (otomatis,
+   nggak perlu kamu atur manual)
+4. Buka file barunya, isi bagian atas (di antara `---` `---`) dengan
+   judul, ringkasan, kategori, tanggal, dll
+5. Tulis isi artikel di bawahnya pakai format teks biasa (Markdown) --
+   nggak perlu HTML sama sekali. Cara nulisnya ada dicontohkan di
+   dalam file template.
+6. Simpan, lalu `git add`, `git commit`, `git push` seperti biasa.
+   Cloudflare otomatis build & publish.
 
-## Struktur
+**Itu aja.** Nggak perlu edit `blog.html`, nggak perlu edit `sitemap.xml`,
+nggak perlu bikin file HTML manual -- semuanya otomatis nyambung sendiri.
+
+## Cara ubah teks/nav/footer yang sama di semua halaman
+
+Edit `src/layouts/Layout.astro` -- perubahan di sini otomatis kepakai
+di seluruh 25 halaman.
+
+## Cara ubah halaman tertentu (misal isi halaman Tentang)
+
+Edit file `.astro` yang sesuai di folder `src/pages/`. Nama filenya
+mengikuti nama halaman, misalnya `tentang.astro` untuk halaman Tentang.
+
+## Build untuk di-deploy
+
+```bash
+npm run build
+```
+
+Hasilnya ada di folder `dist/` -- ini yang di-upload/dideploy, bukan folder `src/`.
+
+## Setting build di Cloudflare Pages
+
+Kalau kamu bikin project BARU di Cloudflare Pages (ganti dari project lama
+yang langsung serve HTML statis), pastikan setting build-nya:
+
+| Setting | Nilai |
+|---|---|
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Root directory | `/` (kosongkan/default) |
+
+Cloudflare akan otomatis `npm install` dan jalankan build command di atas
+setiap kali ada push ke GitHub.
+
+## Struktur folder penting
 
 ```
 src/
-├── app/
-│   ├── (auth)/login/        Halaman login client
-│   └── (app)/               Shell dashboard (sidebar + halaman)
-│       ├── page.tsx             Overview
-│       ├── performance/         Marketing Performance
-│       ├── projects/            Project Progress
-│       ├── content-calendar/    Content Calendar
-│       └── reports/             Report Center
-├── components/dashboard/    StatCard, StatusBadge, ProgressBar, Sidebar, dll
-└── lib/
-    ├── data.ts              Data access layer (mock <-> Supabase, transparan)
-    ├── mock-data.ts         Data contoh mode demo
-    ├── types.ts             Tipe data, sinkron dengan skema database
-    └── supabase/            Client Supabase (browser & server)
-supabase/migrations/         Skema database + Row Level Security
+├── layouts/
+│   ├── Layout.astro       <- nav, footer, head (dipakai SEMUA halaman)
+│   └── BlogPost.astro     <- bungkus artikel blog (header artikel, CTA)
+├── pages/
+│   ├── index.astro        <- homepage
+│   ├── tentang.astro
+│   ├── kontak.astro
+│   ├── layanan*.astro     <- 8 halaman layanan
+│   ├── portofolio*.astro  <- halaman listing + 9 detail portofolio
+│   ├── blog.astro         <- listing blog (OTOMATIS dari content/blog/)
+│   ├── artikel-[article].astro  <- template halaman detail artikel (OTOMATIS)
+│   └── sitemap.xml.ts     <- sitemap (OTOMATIS)
+└── content/
+    └── blog/               <- taruh file .md artikel baru DI SINI
+public/
+└── assets/
+    ├── css/style.css       <- CSS utama (masih sama kayak sebelumnya)
+    ├── js/main.js          <- JS utama (masih sama kayak sebelumnya)
+    └── img/                <- semua gambar
 ```
 
-## Prinsip Desain
+## Catatan penting
 
-Warna, tipografi, dan radius diturunkan langsung dari
-`public/assets/css/style.css` situs utama supaya dashboard terasa satu
-identitas dengan `www.adsbangda.com`, walau repo & stack-nya sengaja
-dipisah. Lihat token di `src/app/globals.css`.
-
-- **Ink** `#18181B` — teks utama & sidebar gelap
-- **Accent** `#1D4ED8` — satu-satunya warna aksen brand
-- **Plus Jakarta Sans** — heading
-- **Instrument Sans** — body text
-- **IBM Plex Mono** — angka, label, data (dipertahankan sebagai signature
-  device dari situs utama)
-
-## Roadmap ke "Adsbangda Operating System"
-
-Skema database sengaja dibuat generik (`projects` + `project_tasks` tidak
-hardcode ke 1 use-case) supaya bisa berkembang tanpa migrasi besar:
-
-1. **Sekarang:** Client login, lihat overview, performance (manual input),
-   project progress, content calendar, report PDF
-2. **Berikutnya:** Admin tool internal untuk tim Adsbangda input data
-   (saat ini masih lewat SQL Editor manual)
-3. **Lalu:** Integrasi live Meta Marketing API & Instagram Graph API
-   (menggantikan input manual di `performance_metrics`)
-4. **Nanti:** Project management penuh, automation, AI assistant — dibangun
-   di atas tabel `projects`/`project_tasks` yang sudah ada, bukan sistem baru
+- Artikel blog yang baru (via Markdown) **tidak** punya toggle bahasa
+  ID/EN seperti halaman lain -- sengaja disederhanakan biar nulis artikel
+  baru gampang. 2 artikel lama yang sudah ada juga sudah disesuaikan
+  (versi Indonesia-nya saja).
+- Kalau butuh toggle bahasa untuk artikel blog juga, ini bisa ditambahkan
+  nanti, tapi butuh sedikit kerja ekstra di struktur datanya.

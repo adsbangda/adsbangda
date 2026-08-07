@@ -1,0 +1,121 @@
+---
+import Layout from "../layouts/Layout.astro";
+const title = 'Jasa Social Media Management | Adsbangda';
+const description = 'Produksi konten harian/mingguan yang konsisten dengan brand voice kamu -- kelola akun Instagram, TikTok & Facebook dari perencanaan sampai eksekusi.';
+
+const serviceSchema = {
+  "@type": "Service",
+  "@id": "https://www.adsbangda.com/layanan-sosial-media-management.html#service",
+  name: "Social Media Management",
+  serviceType: "Social Media Management",
+  description: "Jasa pengelolaan akun sosial media -- riset tren, produksi konten foto/video/carousel, copywriting, publikasi terjadwal, hingga laporan performa bulanan.",
+  provider: { "@id": "https://www.adsbangda.com/#organization" },
+  areaServed: "ID",
+  url: "https://www.adsbangda.com/layanan-sosial-media-management.html",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Social Media Management",
+    itemListElement: [
+      "Riset tren & kalender konten bulanan",
+      "Produksi konten foto, video, dan carousel",
+      "Copywriting caption yang sesuai brand voice",
+      "Publikasi terjadwal & konsisten",
+      "Laporan performa bulanan (engagement, reach, growth)",
+    ].map((name) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name } })),
+  },
+};
+---
+<Layout title={title} description={description} path="layanan-sosial-media-management.html" portfolioCss={false} extraSchema={serviceSchema}>
+{ /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
+
+
+
+<section class="service-page-hero">
+  <div class="wrap">
+    <div class="breadcrumb"><a href="layanan.html" data-i18n-nav="layanan">Layanan</a> / <span data-i18n="svc_name">Social Media Management</span></div>
+    <div class="service-icon"><svg aria-hidden="true" focusable="false" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M17 10l4-2v8l-4-2"/></svg></div>
+    <h1 data-i18n="hero_h1">Social Media Management</h1>
+    <p class="lede" data-i18n="hero_p">Produksi konten harian/mingguan — dari naskah, syuting, sampai desain feed yang konsisten sama brand voice kamu. Kami kelola akun Instagram, TikTok, dan Facebook bisnis kamu dari perencanaan sampai eksekusi.</p>
+    <div class="tag-row"><span data-i18n="tag1">Content Planning</span><span data-i18n="tag2">Copywriting</span><span data-i18n="tag3">Desain Feed</span><span data-i18n="tag4">Reels & Video</span></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="wrap">
+    <div class="service-detail-grid">
+      <div class="reveal">
+        <h2 style="font-size:22px;margin-bottom:14px;" data-i18n="cocok_h">Cocok Buat Siapa?</h2>
+        <p style="font-size:15px;line-height:1.75;color:#3b3d3a;text-align:justify;" data-i18n="cocok_p">Cocok buat bisnis yang butuh kehadiran sosial media yang konsisten tapi belum punya tim internal buat handle konten sehari-hari.</p>
+      </div>
+      <div class="reveal">
+        <h2 style="font-size:22px;margin-bottom:16px;" data-i18n="dapat_h">Yang Kamu Dapat</h2>
+        <ul class="include-list">
+          <li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc1">Riset tren &amp; kalender konten bulanan</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc2">Produksi konten foto, video, dan carousel</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc3">Copywriting caption yang sesuai brand voice</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc4">Publikasi terjadwal &amp; konsisten</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc5">Laporan performa bulanan (engagement, reach, growth)</span></li>
+        </ul>
+        <div class="service-cta-row">
+          <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Konsultasi Layanan Ini &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tint">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2 style="font-size:24px;" data-i18n="other_h2">Butuh yang lain juga?</h2>
+    </div>
+    <div class="service-simple-grid">
+      <a href="layanan-content-strategy.html" class="service-simple-card reveal">
+        <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><path d="M4 19V10M12 19V5M20 19v-7"/></svg></div>
+        <h3>Content Strategy</h3>
+        <p data-i18n="other1_p">Riset tren, kalender konten, dan hook 3 detik pertama yang bikin orang berhenti scroll. Ka...</p>
+        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+      </a><a href="layanan-meta-ads.html" class="service-simple-card reveal">
+        <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6" fill="#15171B"/></svg></div>
+        <h3>Meta Ads Performance</h3>
+        <p data-i18n="other2_p">Naikin konten organic terbaik jadi campaign ads yang terarah dan performing di Instagram &...</p>
+        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+      </a><a href="layanan-kol-management.html" class="service-simple-card reveal">
+        <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.5 2.5-6 5.5-6s5.5 2.5 5.5 6"/><circle cx="17.5" cy="9" r="2.3"/><path d="M15.5 20c0-2.8 1.6-5 3.8-5"/></svg></div>
+        <h3>KOL & Influencer Management</h3>
+        <p data-i18n="other3_p">Matchmaking brand dengan key opinion leader dan influencer yang suaranya emang cocok sama ...</p>
+        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<Fragment slot="page-scripts">
+<script is:inline>
+
+
+// ---- shared nav/footer translation (site-wide, all pages) ----
+const translations = {
+  svc_name: {id:'Social Media Management', en:'Social Media Management'},
+  hero_h1: {id:'Social Media Management', en:'Social Media Management'},
+  hero_p: {id:'Produksi konten harian/mingguan — dari naskah, syuting, sampai desain feed yang konsisten sama brand voice kamu. Kami kelola akun Instagram, TikTok, dan Facebook bisnis kamu dari perencanaan sampai eksekusi.', en:'Daily/weekly content production — from scripting and filming to feed design consistent with your brand voice. We manage your business\'s Instagram, TikTok, and Facebook accounts from planning to execution.'},
+  tag1: {id:'Content Planning', en:'Content Planning'},
+  tag2: {id:'Copywriting', en:'Copywriting'},
+  tag3: {id:'Desain Feed', en:'Feed Design'},
+  tag4: {id:'Reels & Video', en:'Reels & Video'},
+  cocok_h: {id:'Cocok Buat Siapa?', en:'Who Is This For?'},
+  cocok_p: {id:'Cocok buat bisnis yang butuh kehadiran sosial media yang konsisten tapi belum punya tim internal buat handle konten sehari-hari.', en:'A great fit for businesses that need a consistent social media presence but don\'t yet have an internal team to handle day-to-day content.'},
+  dapat_h: {id:'Yang Kamu Dapat', en:'What You Get'},
+  inc1: {id:'Riset tren &amp; kalender konten bulanan', en:'Trend research &amp; monthly content calendar'},
+  inc2: {id:'Produksi konten foto, video, dan carousel', en:'Photo, video, and carousel content production'},
+  inc3: {id:'Copywriting caption yang sesuai brand voice', en:'Caption copywriting that matches your brand voice'},
+  inc4: {id:'Publikasi terjadwal &amp; konsisten', en:'Scheduled &amp; consistent publishing'},
+  inc5: {id:'Laporan performa bulanan (engagement, reach, growth)', en:'Monthly performance reports (engagement, reach, growth)'},
+  cta_btn: {id:'Konsultasi Layanan Ini &rarr;', en:'Consult About This Service &rarr;'},
+  other_h2: {id:'Butuh yang lain juga?', en:'Need Something Else Too?'},
+  other1_p: {id:'Riset tren, kalender konten, dan hook 3 detik pertama yang bikin orang berhenti scroll. Ka...', en:'Trend research, content calendars, and 3-second hooks that stop people from scrolling. We...'},
+  other2_p: {id:'Naikin konten organic terbaik jadi campaign ads yang terarah dan performing di Instagram &...', en:'Turn your best organic content into targeted, high-performing ad campaigns on Instagram &...'},
+  other3_p: {id:'Matchmaking brand dengan key opinion leader dan influencer yang suaranya emang cocok sama ...', en:'Matching brands with key opinion leaders and influencers whose voice actually fits ...'},
+  link_more: {id:'Lihat Detail &rarr;', en:'See Details &rarr;'},
+};
+
+</script>
+</Fragment>
+</Layout>
