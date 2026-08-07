@@ -14,41 +14,44 @@ export default async function ReportsPage() {
   const reports = await getReports(client.id);
 
   return (
-    <>
-      <Topbar title="Report Center" subtitle="Laporan bulanan dan riwayat performance." />
+    <div className="flex-1 min-h-screen">
+      <Topbar title="Report Center" subtitle="Laporan bulanan dan riwayat performa terlampir." />
 
-      <div className="p-8">
-        <div className="divide-y divide-border overflow-hidden rounded-[var(--radius-card)] border border-border bg-paper-deep">
+      <div className="p-6 sm:p-8 pt-4">
+        <div className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border bg-paper-deep shadow-2xs">
           {reports.map((report) => (
-            <div key={report.id} className="flex items-center justify-between px-6 py-5">
+            <div
+              key={report.id}
+              className="flex flex-wrap items-center justify-between gap-4 px-6 py-5 transition-colors hover:bg-paper/50"
+            >
               <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-soft text-accent">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-soft text-accent border border-accent/20">
                   <FileText className="h-5 w-5" strokeWidth={1.75} />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-ink">
-                    Laporan {formatPeriod(report.periodMonth)}
+                  <p className="text-sm font-bold text-ink">
+                    Laporan Performa {formatPeriod(report.periodMonth)}
                   </p>
-                  <p className="font-data text-xs text-muted">
+                  <p className="font-data text-xs text-muted mt-0.5">
                     Dibuat {new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(report.generatedAt))}
                   </p>
                 </div>
               </div>
               <a
                 href={report.fileUrl}
-                className="inline-flex items-center gap-2 rounded-full border border-ink px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-ink hover:text-paper"
+                className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2.5 font-data text-xs font-bold text-paper transition-all hover:bg-accent shadow-xs"
               >
-                <Download className="h-4 w-4" strokeWidth={1.75} />
+                <Download className="h-3.5 w-3.5" strokeWidth={2} />
                 Download PDF
               </a>
             </div>
           ))}
 
           {reports.length === 0 && (
-            <div className="p-10 text-center text-sm text-muted">Belum ada laporan tersedia.</div>
+            <div className="p-12 text-center text-sm text-muted">Belum ada laporan tersedia.</div>
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -1,33 +1,34 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-     AdsBangda Growth Dashboard — Exact Main Website Color Tokens
+     AdsBangda Growth Dashboard — Design Tokens & Core Theme
    ========================================================================== */
 
 :root {
   --ink: #18181b;
-    /* Dark Ink utama */
+    /* Primary Text & Sidebar */
     --ink-soft: #23262f;
-    /* Surface gelap sekunder */
+    /* Dark Surface Secondary */
     --paper: #fafafa;
-    /* Background utama halaman */
+    /* Main App Background */
     --paper-deep: #ffffff;
-    /* Background card/surface */
+    /* Card / Surface Background */
     --accent: #1d4ed8;
-    /* AdsBangda Blue (Warna aksen utama) */
+    /* AdsBangda Primary Blue */
     --accent-soft: #eff4ff;
-    /* Accent tint / soft blue hover */
+    /* Accent Tint / Hover */
     --muted: #6f6b5e;
-    /* Teks sekunder di atas paper */
+    /* Secondary Text */
     --muted-on-dark: #8d8879;
-    --border: #e5e7eb;
+  --border: #e5e7eb;
+    /* Border Color */
     --success: #16a34a;
     --success-soft: #ecfdf3;
     --warning: #d97706;
     --warning-soft: #fffaeb;
     --danger: #dc2626;
     --danger-soft: #fef2f2;
-    --radius-card: 24px;
+  --radius-card: 20px;
   --radius-pill: 100px;
 }
 
@@ -44,7 +45,7 @@
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
-    --color-warning-soft: var(--warning-soft);
+  --color-warning-soft: var(--warning-soft);
     --color-danger: var(--danger);
     --color-danger-soft: var(--danger-soft);
 
@@ -71,6 +72,7 @@ h1, h2, h3, h4 {
   font-family: var(--font-data);
 }
 
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

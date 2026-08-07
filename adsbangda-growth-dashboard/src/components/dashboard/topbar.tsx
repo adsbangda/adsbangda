@@ -1,6 +1,8 @@
 "use client";
 
-import { Search, Settings, Moon, Bell } from "lucide-react";
+import { useState } from "react";
+import { DEMO_MODE } from "@/lib/data";
+import { Search, Bell, Sun, Moon, Command } from "lucide-react";
 
 export function Topbar({
   title,
@@ -9,51 +11,90 @@ export function Topbar({
   title: string;
   subtitle?: string;
 }) {
+  const [isDark, setIsDark] = useState(false);
+  const [hasNotification] = useState(true);
+
+  const formattedDate = new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+
   return (
-    <header className="flex flex-col gap-4 px-6 pt-6 pb-2 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-      {/* Search Input */}
-      <div className="relative w-full sm:w-80">
-        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-        <input
-          type="text"
-          readOnly
-          placeholder="Cari campaign, laporan, atau data..."
-          className="w-full rounded-2xl border border-border bg-paper-deep pl-10 pr-4 py-2 font-body text-xs text-ink placeholder:text-muted/70 shadow-xs focus:outline-none focus:ring-2 focus:ring-accent/20 cursor-pointer"
-        />
+    <header className="sticky top-0 z-20 flex flex-col gap-3 border-b border-border bg-paper-deep/80 backdrop-blur-md px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+      {/* Title & Date */}
+      <div>
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-xl font-extrabold tracking-tight text-ink">{title}</h1>
+          {DEMO_MODE && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 font-data text-[10px] font-semibold text-amber-700 border border-amber-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Demo Mode
+            </span>
+          )}
+        </div>
+        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted">
+          <span className="font-data">{formattedDate}</span>
+          {subtitle && (
+            <>
+              <span className="text-border">•</span>
+              <span>{subtitle}</span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            title="Settings"
-            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-border bg-paper-deep text-ink shadow-xs transition-colors hover:bg-paper"
-          >
-            <Settings className="h-4 w-4 text-muted" />
-          </button>
-          <button
-            type="button"
-            title="Theme"
-            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-border bg-paper-deep text-ink shadow-xs transition-colors hover:bg-paper"
-          >
-            <Moon className="h-4 w-4 text-muted" />
-          </button>
-          <button
-            type="button"
-            title="Notifikasi"
-            className="relative flex h-9 w-9 items-center justify-center rounded-2xl border border-border bg-paper-deep text-ink shadow-xs transition-colors hover:bg-paper"
-          >
-            <Bell className="h-4 w-4 text-muted" />
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-accent ring-2 ring-paper-deep" />
-          </button>
+      <div className="flex items-center gap-3">
+        {/* Search Bar Placeholder */}
+        <div className="relative hidden md:block w-64">
+          <Search className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
+          <input
+            type="text"
+            readOnly
+            placeholder="Cari data, campaign..."
+            className="w-full rounded-xl border border-border bg-paper pl-9 pr-8 py-1.5 font-body text-xs text-ink placeholder:text-muted/70 focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
+          />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 rounded border border-border bg-paper-deep px-1.5 py-0.5 font-data text-[9px] font-medium text-muted">
+            <Command className="h-2.5 w-2.5" />
+            <span>K</span>
+          </div>
         </div>
 
+        {/* Dark Mode Toggle */}
+        <button
+          type="button"
+          onClick={() => setIsDark(!isDark)}
+          aria-label="Toggle Theme"
+          title="Toggle Theme"
+          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-paper text-ink transition-colors hover:bg-paper-deep hover:border-muted/30"
+        >
+          {isDark ? (
+            <Sun className="h-4 w-4 text-amber-500" />
+          ) : (
+            <Moon className="h-4 w-4 text-muted" />
+          )}
+        </button>
+
+        {/* Notification Button */}
+        <button
+          type="button"
+          aria-label="Notifikasi"
+          title="Notifikasi"
+          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-paper text-ink transition-colors hover:bg-paper-deep hover:border-muted/30"
+        >
+          <Bell className="h-4 w-4 text-muted" />
+          {hasNotification && (
+            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-accent ring-2 ring-paper-deep" />
+          )}
+        </button>
+
         {/* User Pill Badge */}
-        <div className="flex items-center gap-2.5 rounded-2xl border border-border bg-paper-deep px-3 py-1.5 shadow-xs">
-          <span className="text-xs font-semibold text-ink">Client Admin</span>
-          <div className="h-7 w-7 rounded-full bg-[#1D4ED8] p-0.5 flex items-center justify-center text-white font-data text-[10px] font-bold">
-            CA
+        <div className="flex items-center gap-2.5 rounded-xl border border-border bg-paper px-3 py-1.5 shadow-2xs">
+          <span className="text-xs font-semibold text-ink">Client Portal</span>
+          <div className="h-6 w-6 rounded-full bg-accent p-0.5 flex items-center justify-center text-white font-data text-[10px] font-bold">
+            CP
           </div>
         </div>
       </div>

@@ -14,23 +14,30 @@ interface TrendChartProps {
   data: Array<Record<string, string | number>>;
   dataKey: string;
   xKey?: string;
-  // String discriminator, bukan function — function tidak bisa dikirim dari
-  // Server Component (halaman) ke Client Component (chart) ini.
   format?: "number" | "idr";
 }
 
 function formatValue(value: number, format?: "number" | "idr") {
   if (format === "idr") {
-    return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(value);
   }
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
-export function TrendChart({ data, dataKey, xKey = "label", format }: TrendChartProps) {
+export function TrendChart({
+  data,
+  dataKey,
+  xKey = "label",
+  format,
+}: TrendChartProps) {
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <LineChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
-        <CartesianGrid stroke="#e5e7eb" strokeDasharray="4 4" vertical={false} />
+      <LineChart data={data} margin={{ top: 12, right: 12, left: 0, bottom: 0 }}>
+        <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey={xKey}
           tick={{ fontSize: 11, fill: "#6f6b5e", fontFamily: "var(--font-plex-mono)" }}
@@ -41,17 +48,19 @@ export function TrendChart({ data, dataKey, xKey = "label", format }: TrendChart
           tick={{ fontSize: 11, fill: "#6f6b5e", fontFamily: "var(--font-plex-mono)" }}
           axisLine={false}
           tickLine={false}
-          width={48}
+          width={52}
           tickFormatter={(v) => formatValue(v, format)}
         />
         <Tooltip
           contentStyle={{
-            borderRadius: 12,
+            borderRadius: "12px",
             border: "1px solid #e5e7eb",
-            fontSize: 12,
-            fontFamily: "var(--font-instrument)",
+            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.05)",
+            fontSize: "12px",
+            fontFamily: "var(--font-plex-mono)",
+            background: "#ffffff",
           }}
-          formatter={(value) => formatValue(Number(value), format)}
+          formatter={(value) => [formatValue(Number(value), format), "Total"]}
         />
         <Line
           type="monotone"
@@ -59,7 +68,7 @@ export function TrendChart({ data, dataKey, xKey = "label", format }: TrendChart
           stroke="#1d4ed8"
           strokeWidth={2.5}
           dot={{ r: 3, fill: "#1d4ed8" }}
-          activeDot={{ r: 5 }}
+          activeDot={{ r: 6, fill: "#1d4ed8", stroke: "#ffffff", strokeWidth: 2 }}
         />
       </LineChart>
     </ResponsiveContainer>

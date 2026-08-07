@@ -8,22 +8,22 @@ export default async function ContentCalendarPage() {
   const items = await getContentCalendar(client.id);
 
   return (
-    <>
-      <Topbar title="Content Calendar" subtitle="Rencana konten dan status approval." />
+    <div className="flex-1 min-h-screen">
+      <Topbar title="Content Calendar" subtitle="Rencana konten dan status persetujuan." />
 
-      <div className="p-8">
-        <div className="overflow-hidden rounded-[var(--radius-card)] border border-border bg-paper-deep">
+      <div className="p-6 sm:p-8 pt-4">
+        <div className="overflow-hidden rounded-2xl border border-border bg-paper-deep shadow-2xs">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-border bg-black/[0.02] text-xs uppercase tracking-wide text-muted">
-                <th className="px-6 py-3 font-medium">Konten</th>
-                <th className="px-6 py-3 font-medium">Tanggal Rencana</th>
-                <th className="px-6 py-3 font-medium">Status</th>
+              <tr className="border-b border-border bg-paper text-xs uppercase tracking-wider text-muted font-data">
+                <th className="px-6 py-3.5 font-bold">Judul / Tema Konten</th>
+                <th className="px-6 py-3.5 font-bold">Tanggal Rencana</th>
+                <th className="px-6 py-3.5 font-bold">Status Approval</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-border/60">
               {items.map((item) => (
-                <tr key={item.id} className="border-b border-border last:border-0">
+                <tr key={item.id} className="transition-colors hover:bg-paper/50">
                   <td className="px-6 py-4 font-medium text-ink">{item.title}</td>
                   <td className="px-6 py-4 font-data text-xs text-muted">
                     {formatDateID(item.plannedDate)}
@@ -37,6 +37,6 @@ export default async function ContentCalendarPage() {
           </table>
         </div>
       </div>
-    </>
+    </div>
   );
 }
