@@ -11,14 +11,16 @@ import {
 import { formatDateID, formatIDR, formatNumber } from "@/lib/utils";
 import {
   Wallet,
-  Users,
   MousePointerClick,
-  CalendarClock,
-  ArrowUpRight,
-  CheckCircle2,
+  Send,
+  Download,
+  ArrowRight,
   TrendingUp,
-  Sparkles,
+  BarChart3,
+  Building2,
+  Plane,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -31,201 +33,310 @@ export default async function OverviewPage() {
   ]);
 
   const latestMeta = performance.metaAds.at(-1);
-  const previousMeta = performance.metaAds.at(-2);
-  const latestSocial = performance.social.at(-1);
-
-  const leadDelta =
-    latestMeta && previousMeta && previousMeta.leads
-      ? Math.round(((latestMeta.leads! - previousMeta.leads!) / previousMeta.leads!) * 100)
-      : null;
 
   return (
-    <>
-      <Topbar
-        title={`Ringkasan Marketing`}
-        subtitle="Selamat datang kembali di AdsBangda Growth Portal."
-      />
+    <div className="flex-1 min-h-screen">
+      <Topbar title="Overview" />
 
-      <div className="space-y-8 p-6 sm:p-8">
-        {/* Premium Hero Card */}
-        <section className="relative overflow-hidden rounded-3xl border border-blue-900/20 bg-gradient-to-r from-[#18181B] via-[#1E293B] to-[#1D4ED8] p-6 sm:p-8 text-white shadow-xl">
-          {/* Ambient Glows & Patterns */}
-          <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-accent/30 blur-3xl" />
-          <div className="pointer-events-none absolute right-1/3 -bottom-12 h-40 w-40 rounded-full bg-blue-400/20 blur-2xl" />
-          
-          <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-center">
-            <div className="max-w-xl space-y-2">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 font-data text-[10px] font-semibold uppercase tracking-wider text-blue-200 border border-white/10 backdrop-blur-md">
-                <Sparkles className="h-3 w-3 text-blue-300" />
-                <span>Marketing Health • Agustus 2026</span>
+      <div className="space-y-6 p-6 sm:p-8 pt-2">
+        {/* TOP ROW: Card Balance / Actions + Profit Chart */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Credit Card / Balance & Action Blocks (Span 7) */}
+          <div className="lg:col-span-7 flex flex-col gap-4">
+            <h2 className="text-xl font-bold text-ink tracking-tight flex items-center gap-2">
+              <span>My cards</span>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-semibold text-white transition-transform hover:scale-105"
+              >
+                <span>Add new</span>
+                <span className="font-bold">+</span>
+              </button>
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+              {/* Virtual Credit Card */}
+              <div className="sm:col-span-6 relative overflow-hidden rounded-[24px] bg-gradient-to-br from-[#10B981] via-[#059669] to-[#047857] p-5 text-white shadow-md">
+                <div className="flex items-center justify-between text-xs opacity-90 font-medium">
+                  <span>Credit Card</span>
+                  <span className="font-bold tracking-wider text-sm italic">VISA</span>
+                </div>
+                <div className="mt-8 font-data text-lg font-bold tracking-widest text-white/90">
+                  1234 5678 9101 1121
+                </div>
+                <div className="mt-6 flex items-end justify-between text-xs opacity-80">
+                  <div>
+                    <div className="text-[10px] uppercase text-emerald-100">Holder</div>
+                    <div className="font-semibold text-white">{client.name}</div>
+                  </div>
+                  <div className="font-data">06/28</div>
+                </div>
               </div>
-              <h2 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl text-white">
-                Halo, {client.name} 👋
-              </h2>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Performa campaign Meta Ads & Social Media kamu menunjukkan grafik positif minggu ini. Semua eksekusi berjalan sesuai timeline.
-              </p>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-3 shrink-0">
-              <Link
-                href="/performance"
-                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-ink shadow-md transition-all hover:bg-slate-100 hover:scale-[1.02]"
-              >
-                <span>Lihat Performance</span>
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </Link>
-              <Link
-                href="/reports"
-                className="inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/20 px-4 py-2.5 text-xs font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20"
-              >
-                <span>Unduh Laporan</span>
-              </Link>
+              {/* Card Balance & Quick Actions */}
+              <div className="sm:col-span-6 flex flex-col justify-between rounded-[24px] bg-paper-deep p-5 border border-border shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+                <div>
+                  <span className="text-xs font-medium text-muted">Card balance</span>
+                  <div className="font-data text-2xl font-bold text-ink mt-1">
+                    {latestMeta ? formatIDR(latestMeta.spend ?? 0) : "Rp 3.750.000"}
+                  </div>
+                  <Link
+                    href="/performance"
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:underline"
+                  >
+                    <span>View details</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+
+                {/* 3 Quick Action Blocks */}
+                <div className="grid grid-cols-3 gap-2 pt-4">
+                  <div className="flex flex-col items-center justify-center rounded-2xl bg-paper p-3 text-center transition-colors hover:bg-emerald-50/60 cursor-pointer">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                      <Send className="h-4 w-4" />
+                    </div>
+                    <span className="mt-2 text-[11px] font-semibold text-ink">Send</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center rounded-2xl bg-paper p-3 text-center transition-colors hover:bg-emerald-50/60 cursor-pointer">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                      <Download className="h-4 w-4" />
+                    </div>
+                    <span className="mt-2 text-[11px] font-semibold text-ink">Receive</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center rounded-2xl bg-paper p-3 text-center transition-colors hover:bg-emerald-50/60 cursor-pointer">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                      <BarChart3 className="h-4 w-4" />
+                    </div>
+                    <span className="mt-2 text-[11px] font-semibold text-ink">Withdraw</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </section>
 
-        {/* KPI Cards Grid */}
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Ad Spend Minggu Ini"
-            value={latestMeta ? formatIDR(latestMeta.spend ?? 0) : "—"}
-            icon={Wallet}
-          />
-          <StatCard
-            label="Leads Minggu Ini"
-            value={latestMeta ? formatNumber(latestMeta.leads ?? 0) : "—"}
-            delta={
-              leadDelta !== null
-                ? {
-                    value: `${Math.abs(leadDelta)}% vs minggu lalu`,
-                    direction: leadDelta >= 0 ? "up" : "down",
-                  }
-                : undefined
-            }
-            icon={MousePointerClick}
-          />
-          <StatCard
-            label="Followers Instagram"
-            value={latestSocial ? formatNumber(latestSocial.followers ?? 0) : "—"}
-            icon={Users}
-          />
-          <StatCard
-            label="Engagement Rate"
-            value={latestSocial ? `${latestSocial.engagementRate?.toFixed(1)}%` : "—"}
-            icon={CalendarClock}
-          />
-        </section>
-
-        {/* Project Progress & Tasks Grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Active Project Progress */}
-          <section className="lg:col-span-2 rounded-2xl border border-border bg-paper-deep p-6 shadow-xs">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-ink">
-                    {project?.name ?? "Belum ada project aktif"}
-                  </h2>
-                </div>
-                {project && (
-                  <p className="mt-0.5 text-xs font-medium text-muted">
-                    Periode: {formatDateID(project.startDate)} — {formatDateID(project.endDate)}
-                  </p>
-                )}
-              </div>
-              {project && <StatusBadge status={project.status} />}
+          {/* Profit Trend Chart Card (Span 5) */}
+          <div className="lg:col-span-5 flex flex-col justify-between rounded-[28px] border border-border bg-paper-deep p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-ink">Profit</h2>
+              <Link
+                href="/performance"
+                className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:underline"
+              >
+                <span>Show all</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
 
-            <div className="space-y-5">
-              {tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 rounded-xl hover:bg-paper/50 transition-colors border border-transparent hover:border-border/40"
-                >
-                  <div className="flex items-center gap-2.5 w-48 shrink-0">
-                    <CheckCircle2
-                      className={cn(
-                        "h-4 w-4 shrink-0",
-                        task.status === "done"
-                          ? "text-emerald-500"
-                          : "text-muted/40"
-                      )}
+            {/* Timeframe Toggle Pills */}
+            <div className="mt-3 flex items-center justify-end gap-1 font-data text-xs">
+              <button type="button" className="rounded-full bg-paper px-3 py-1 font-bold text-ink">
+                Week
+              </button>
+              <button type="button" className="rounded-full px-3 py-1 text-muted hover:text-ink">
+                Month
+              </button>
+              <button type="button" className="rounded-full px-3 py-1 text-muted hover:text-ink">
+                Year
+              </button>
+            </div>
+
+            {/* Main Smooth Wave Chart */}
+            <div className="relative my-4 h-28 w-full">
+              <svg viewBox="0 0 300 80" className="h-full w-full preserve-3d">
+                <defs>
+                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0,50 Q40,65 80,40 T160,50 T240,20 T300,10 L300,80 L0,80 Z"
+                  fill="url(#chartGradient)"
+                />
+                <path
+                  d="M0,50 Q40,65 80,40 T160,50 T240,20 T300,10"
+                  fill="none"
+                  stroke="#10B981"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+
+            <div className="flex justify-between font-data text-xs text-muted">
+              <span>16</span>
+              <span>17</span>
+              <span>18</span>
+              <span>19</span>
+              <span>20</span>
+              <span>21</span>
+              <span>22</span>
+            </div>
+          </div>
+        </div>
+
+        {/* MIDDLE ROW: Income + Expenses + Spendings Statistic */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Card 1: Income */}
+          <div className="lg:col-span-3">
+            <StatCard
+              label="Income"
+              value="+Rp 4.465.000"
+              delta={{ value: "+12%", direction: "up" }}
+              icon={Wallet}
+            />
+          </div>
+
+          {/* Card 2: Expenses */}
+          <div className="lg:col-span-3">
+            <StatCard
+              label="Expenses"
+              value="-Rp 2.465.000"
+              delta={{ value: "-23%", direction: "down" }}
+              icon={MousePointerClick}
+              isNegativeWave
+            />
+          </div>
+
+          {/* Card 3: Spendings Statistic Bar Chart */}
+          <div className="lg:col-span-6 rounded-[28px] border border-border bg-paper-deep p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <BarChart3 className="h-4 w-4" />
+                </div>
+                <h3 className="text-base font-bold text-ink">Spendings statistic</h3>
+              </div>
+              <span className="rounded-full bg-paper px-3 py-1 font-data text-xs font-semibold text-muted">
+                Year
+              </span>
+            </div>
+
+            {/* Rounded Bars matching screenshot */}
+            <div className="flex h-32 items-end justify-between gap-2 pt-2 px-2">
+              {[
+                { m: "Jan", h: "40%" },
+                { m: "Feb", h: "30%" },
+                { m: "Mar", h: "60%" },
+                { m: "Apr", h: "85%" },
+                { m: "May", h: "45%" },
+                { m: "June", h: "20%" },
+                { m: "July", h: "50%" },
+                { m: "Aug", h: "35%" },
+                { m: "Sep", h: "55%" },
+                { m: "Oct", h: "30%" },
+                { m: "Nov", h: "75%" },
+              ].map((bar, idx) => (
+                <div key={idx} className="flex flex-col items-center gap-2 flex-1">
+                  <div className="w-full rounded-full bg-paper h-24 overflow-hidden flex items-end">
+                    <div
+                      className="w-full rounded-full bg-amber-400 transition-all"
+                      style={{ height: bar.h }}
                     />
-                    <span className="text-sm font-semibold text-ink truncate">
-                      {task.name}
-                    </span>
                   </div>
+                  <span className="font-data text-[10px] text-muted">{bar.m}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-                  <div className="flex-1 flex items-center gap-3">
-                    <div className="flex-1">
-                      <ProgressBar value={task.progressPct} />
+        {/* BOTTOM ROW: Planning + Latest Transactions + Go Premium Banner */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Planning Section (Progress Bars) */}
+          <div className="lg:col-span-4 rounded-[28px] border border-border bg-paper-deep p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-ink">Planning</h3>
+              <button type="button" className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-semibold text-white">
+                Add new +
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-paper p-4">
+                <div className="flex items-center justify-between text-xs font-bold text-ink mb-2">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-emerald-700" />
+                    <span>House in Paris</span>
+                  </div>
+                  <span className="font-data text-muted">$265 / $10,000</span>
+                </div>
+                <ProgressBar value={26} />
+              </div>
+
+              <div className="rounded-2xl bg-paper p-4">
+                <div className="flex items-center justify-between text-xs font-bold text-ink mb-2">
+                  <div className="flex items-center gap-2">
+                    <Plane className="h-4 w-4 text-emerald-700" />
+                    <span>Trip to Brazil</span>
+                  </div>
+                  <span className="font-data text-muted">$10,456 / $14,000</span>
+                </div>
+                <ProgressBar value={74} />
+              </div>
+            </div>
+          </div>
+
+          {/* Latest Transactions */}
+          <div className="lg:col-span-5 rounded-[28px] border border-border bg-paper-deep p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-ink">Latest transactions</h3>
+              <span className="text-xs text-muted">Sort ⇅</span>
+            </div>
+
+            <div className="space-y-3">
+              {[
+                { title: "Dribbble", date: "Sep 30, 2026 • 4:38 PM", sub: "Pro upgrade", price: "-$5.78", status: "Pending", icon: "🏀" },
+                { title: "Youtube", date: "Oct 2, 2026 • 03:34 AM", sub: "Subscription", price: "-$1055.78", status: "Completed", icon: "▶️" },
+                { title: "Apple", date: "Oct 13, 2026 • 02:04 PM", sub: "Games", price: "-$345.78", status: "Completed", icon: "🍎" },
+              ].map((tx, i) => (
+                <div key={i} className="flex items-center justify-between p-2 rounded-2xl hover:bg-paper transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-paper text-lg">
+                      {tx.icon}
                     </div>
-                    <span className="w-10 text-right font-data text-xs font-semibold text-muted">
-                      {task.progressPct}%
-                    </span>
+                    <div>
+                      <h4 className="text-xs font-bold text-ink">{tx.title}</h4>
+                      <p className="text-[11px] text-muted">{tx.sub}</p>
+                    </div>
                   </div>
-
-                  <div className="w-28 shrink-0 text-right">
-                    <StatusBadge status={task.status} />
+                  <div className="text-right">
+                    <div className="font-data text-xs font-bold text-ink">{tx.price}</div>
+                    <div className="text-[10px] text-muted">{tx.status}</div>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
 
-            <div className="mt-6 pt-4 border-t border-border/60 flex justify-end">
-              <Link
-                href="/projects"
-                className="inline-flex items-center gap-1.5 font-data text-xs font-semibold text-accent hover:underline"
-              >
-                <span>Detail Project Progress</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </section>
-
-          {/* Upcoming Tasks */}
-          <section className="rounded-2xl border border-border bg-paper-deep p-6 shadow-xs flex flex-col justify-between">
+          {/* Go Premium / AdsBangda Support Banner */}
+          <div className="lg:col-span-3 rounded-[28px] border border-border bg-paper-deep p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between">
             <div>
-              <div className="mb-4 flex items-center justify-between border-b border-border/60 pb-3">
-                <h2 className="text-base font-bold text-ink">Upcoming Task</h2>
-                <span className="font-data text-[10px] font-bold text-muted bg-paper px-2 py-0.5 rounded-full border border-border">
-                  {upcomingTasks.length} Pending
-                </span>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-base font-bold text-ink">Go premium</h3>
+                <Link href="/reports" className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-800">
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
               </div>
-
-              <ul className="space-y-3.5">
-                {upcomingTasks.map((task) => (
-                  <li
-                    key={task.id}
-                    className="group flex items-start gap-3 rounded-xl p-2.5 transition-colors hover:bg-paper border border-transparent hover:border-border/40"
-                  >
-                    <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-accent group-hover:scale-125 transition-transform" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-ink leading-snug">
-                        {task.title}
-                      </p>
-                      <p className="mt-1 font-data text-[11px] text-muted">
-                        Due: {formatDateID(task.dueDate)}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <p className="text-xs text-muted leading-relaxed">
+                Explore all marketing functions with lifetime AdsBangda membership.
+              </p>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-border/60">
-              <Link
-                href="/content-calendar"
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-paper py-2 font-data text-xs font-semibold text-ink transition-colors hover:bg-paper-deep hover:border-accent/40"
-              >
-                <span>Buka Content Calendar</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Link>
+            {/* Illustration Graphic Placeholder */}
+            <div className="my-4 flex items-center justify-center rounded-2xl bg-emerald-50/80 p-4 border border-emerald-100">
+              <div className="text-center space-y-1">
+                <Sparkles className="mx-auto h-8 w-8 text-emerald-600 animate-bounce" />
+                <span className="font-data text-[11px] font-bold text-emerald-900 block">AdsBangda Pro</span>
+              </div>
             </div>
-          </section>
+
+            <button type="button" className="w-full rounded-full bg-emerald-700 py-2.5 font-data text-xs font-bold text-white transition-transform hover:scale-[1.02]">
+              Upgrade Plan
+            </button>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
