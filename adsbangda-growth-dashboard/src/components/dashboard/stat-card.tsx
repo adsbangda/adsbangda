@@ -23,26 +23,26 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[28px] border border-border bg-paper-deep p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)]",
+        "relative overflow-hidden rounded-[24px] border border-border bg-paper-deep p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-accent/30",
         className
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           {Icon && (
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-soft text-accent">
               <Icon className="h-4 w-4" strokeWidth={2} />
             </div>
           )}
-          <span className="text-sm font-bold text-ink">{label}</span>
+          <span className="text-xs font-bold text-ink">{label}</span>
         </div>
         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-paper text-muted cursor-pointer hover:bg-border/50">
           <span className="text-xs font-bold leading-none mb-1">...</span>
         </div>
       </div>
 
-      {/* Decorative Wave Line SVG */}
-      <div className="my-3 h-10 w-full opacity-80">
+      {/* Wave Line SVG in AdsBangda Blue Theme */}
+      <div className="my-2 h-9 w-full opacity-80">
         <svg viewBox="0 0 200 40" className="h-full w-full preserve-3d">
           <path
             d={
@@ -51,7 +51,7 @@ export function StatCard({
                 : "M0,30 Q40,10 80,25 T160,5 T200,15"
             }
             fill="none"
-            stroke={isNegativeWave ? "#14B8A6" : "#10B981"}
+            stroke={isNegativeWave ? "#6B7280" : "#1D4ED8"}
             strokeWidth="3"
             strokeLinecap="round"
           />
@@ -67,8 +67,8 @@ export function StatCard({
             className={cn(
               "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-data text-[11px] font-bold",
               isUp
-                ? "bg-emerald-100/70 text-emerald-800"
-                : "bg-amber-100/70 text-amber-800"
+                ? "bg-blue-50 text-accent border border-blue-200"
+                : "bg-amber-50 text-amber-700 border border-amber-200"
             )}
           >
             <span>{delta.value}</span>

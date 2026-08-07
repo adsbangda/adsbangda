@@ -1,31 +1,33 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-     AdsBangda Growth Dashboard — Soft Modern Fintech Theme (Dribbble Inspired)
+     AdsBangda Growth Dashboard — Exact Main Website Color Tokens
    ========================================================================== */
 
 :root {
   --ink: #18181b;
+    /* Dark Ink utama */
     --ink-soft: #23262f;
-    --paper: #edf3f0;
-    /* Soft mint / pale ice gray page background */
+    /* Surface gelap sekunder */
+    --paper: #fafafa;
+    /* Background utama halaman */
     --paper-deep: #ffffff;
-    /* Card background */
+    /* Background card/surface */
     --accent: #1d4ed8;
-    /* AdsBangda Blue */
-    --accent-teal: #2d7d6f;
-    /* Theme teal matching reference */
-    --accent-yellow: #f5c542;
-    /* Yellow bar chart matching reference */
-    --accent-soft: #eaf4f1;
-    --muted: #788280;
-    --muted-on-dark: #9da8a5;
-    --border: #e2e9e6;
-    --success: #10b981;
-    --success-soft: #d1fae5;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --radius-card: 28px;
+    /* AdsBangda Blue (Warna aksen utama) */
+    --accent-soft: #eff4ff;
+    /* Accent tint / soft blue hover */
+    --muted: #6f6b5e;
+    /* Teks sekunder di atas paper */
+    --muted-on-dark: #8d8879;
+    --border: #e5e7eb;
+    --success: #16a34a;
+    --success-soft: #ecfdf3;
+    --warning: #d97706;
+    --warning-soft: #fffaeb;
+    --danger: #dc2626;
+    --danger-soft: #fef2f2;
+    --radius-card: 24px;
   --radius-pill: 100px;
 }
 
@@ -35,14 +37,16 @@
   --color-paper: var(--paper);
   --color-paper-deep: var(--paper-deep);
   --color-accent: var(--accent);
-  --color-accent-teal: var(--accent-teal);
-    --color-accent-yellow: var(--accent-yellow);
   --color-accent-soft: var(--accent-soft);
   --color-muted: var(--muted);
   --color-muted-on-dark: var(--muted-on-dark);
   --color-border: var(--border);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+    --color-warning-soft: var(--warning-soft);
+    --color-danger: var(--danger);
+    --color-danger-soft: var(--danger-soft);
 
   --font-display: var(--font-plus-jakarta), sans-serif;
   --font-body: var(--font-instrument), sans-serif;
@@ -67,7 +71,6 @@ h1, h2, h3, h4 {
   font-family: var(--font-data);
 }
 
-/* Smooth custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -75,8 +78,7 @@ h1, h2, h3, h4 {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d1d5db;
   border-radius: 9999px;
 }

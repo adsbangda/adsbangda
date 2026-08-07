@@ -29,15 +29,15 @@ export function Sidebar({ clientName }: { clientName: string }) {
   const pathname = usePathname();
 
   return (
-    <aside className="my-4 ml-4 flex h-[calc(100vh-32px)] w-64 shrink-0 flex-col rounded-[32px] bg-[#18181B] text-paper shadow-xl selection:bg-accent selection:text-white">
+    <aside className="sticky top-0 h-screen w-64 shrink-0 flex flex-col border-r border-white/10 bg-[#18181B] text-paper selection:bg-accent selection:text-white z-30">
       {/* Brand Header */}
       <div className="flex flex-col gap-3 px-5 pt-6 pb-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] font-display text-base font-extrabold text-white shadow-md shadow-accent/20">
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#1D4ED8] font-display text-base font-extrabold text-white shadow-md shadow-accent/20">
             <span>A</span>
             <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-400"></span>
             </span>
           </div>
           <div className="min-w-0">
@@ -71,9 +71,9 @@ export function Sidebar({ clientName }: { clientName: string }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "group relative flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all duration-200",
+                  "group relative flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition-all duration-200",
                   active
-                    ? "bg-[#2563EB] text-white shadow-lg shadow-blue-600/30"
+                    ? "bg-[#1D4ED8] text-white shadow-lg shadow-blue-600/30"
                     : "text-muted-on-dark hover:bg-white/10 hover:text-white"
                 )}
               >
@@ -137,7 +137,7 @@ export function Sidebar({ clientName }: { clientName: string }) {
       </div>
 
       {/* Client Profile & Version Section */}
-      <div className="border-t border-white/10 p-3.5 space-y-2 bg-white/[0.02] rounded-b-[32px]">
+      <div className="border-t border-white/10 p-3.5 space-y-2 bg-white/[0.02]">
         <div className="flex items-center gap-3 rounded-2xl px-3 py-2.5 bg-white/5 border border-white/5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600/30 text-blue-300 font-data text-xs font-bold border border-blue-400/30">
             {clientName ? clientName.slice(0, 2).toUpperCase() : "CL"}
