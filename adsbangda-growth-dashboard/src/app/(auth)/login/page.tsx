@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import {
   Lock,
   Mail,
@@ -11,25 +13,53 @@ import {
   Globe,
   HelpCircle,
   KeyRound,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [role, setRole] = useState<"client" | "admin">("client");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [adminPin, setAdminPin] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
+
+    const supabase = createClient();
+
+    // Mode Demo jika Supabase belum terkonfigurasi
+    if (!supabase) {
+      setIsLoading(true);
+      setTimeout(() => {
+        setIsLoading(false);
+        router.push("/");
+        router.refresh();
+      }, 600);
+      return;
+    }
+
     setIsLoading(true);
 
-    // Placeholder autentikasi / demo redirect
-    setTimeout(() => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setErrorMessage(
+        error.message || "Gagal masuk. Periksa kembali email dan password Anda."
+      );
       setIsLoading(false);
-      window.location.href = "/";
-    }, 800);
+      return;
+    }
+
+    router.push("/");
+    router.refresh();
   };
 
   return (
@@ -120,6 +150,13 @@ export default function LoginPage() {
               </span>
             </div>
 
+            {errorMessage && (
+              <div className="flex items-start gap-2.5 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email */}
               <div className="space-y-1.5">
@@ -208,7 +245,7 @@ export default function LoginPage() {
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  "w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 font-data text-xs font-bold text-white transition-all shadow-md active:scale-[0.99] cursor-pointer",
+                  "w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 font-data text-xs font-bold text-white transition-all shadow-md active:scale-[0.99] cursor-pointer disabled:opacity-50",
                   role === "admin"
                     ? "bg-[#18181B] hover:bg-[#27272A] shadow-black/10"
                     : "bg-[#1D4ED8] hover:bg-[#1E40AF] shadow-[#1D4ED8]/25"

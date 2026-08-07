@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard,
   LineChart,
@@ -27,6 +28,16 @@ const NAV_ITEMS = [
 
 export function Sidebar({ clientName }: { clientName: string }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <aside className="sticky top-0 h-screen w-64 shrink-0 flex flex-col border-r border-[#ECECEC] bg-[#18181B] text-white z-30 selection:bg-accent selection:text-white">
@@ -151,9 +162,10 @@ export function Sidebar({ clientName }: { clientName: string }) {
           </div>
           <button
             type="button"
+            onClick={handleLogout}
             aria-label="Keluar"
             title="Keluar"
-            className="text-[#A1A1AA] transition-colors hover:text-rose-400 p-1 rounded-md hover:bg-white/5"
+            className="text-[#A1A1AA] transition-colors hover:text-rose-400 p-1 rounded-md hover:bg-white/5 cursor-pointer"
           >
             <LogOut className="h-4 w-4" strokeWidth={1.75} />
           </button>
