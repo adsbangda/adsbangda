@@ -28,8 +28,8 @@ const TONE_CLASSES: Record<string, { badge: string; dot: string }> = {
     dot: "bg-amber-500",
   },
   muted: {
-    badge: "bg-slate-100 text-slate-600 border-slate-200",
-    dot: "bg-slate-400",
+    badge: "bg-zinc-100 text-zinc-600 border-zinc-200",
+    dot: "bg-zinc-400",
   },
   accent: {
     badge: "bg-blue-50 text-blue-700 border-blue-200/80",
@@ -44,7 +44,7 @@ export function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-tight whitespace-nowrap shadow-2xs font-data",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-tight whitespace-nowrap font-data transition-all duration-200",
         styles.badge
       )}
     >

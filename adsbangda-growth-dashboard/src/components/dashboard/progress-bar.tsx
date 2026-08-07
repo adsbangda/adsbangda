@@ -12,12 +12,12 @@ export function ProgressBar({
   return (
     <div
       className={cn(
-        "h-2 w-full overflow-hidden rounded-full bg-paper border border-border/50 p-0.5",
+        "h-2 w-full overflow-hidden rounded-full bg-[#FAFAFA] border border-[#ECECEC]",
         className
       )}
     >
       <div
-        className="h-full rounded-full bg-accent transition-all duration-500 shadow-2xs"
+        className="h-full rounded-full bg-[#1D4ED8] transition-all duration-500"
         style={{ width: `${safeValue}%` }}
       />
     </div>

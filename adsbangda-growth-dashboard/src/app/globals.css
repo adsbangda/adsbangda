@@ -1,42 +1,35 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-     AdsBangda Growth Dashboard — Design Tokens & Core Theme
+     AdsBangda Growth Dashboard — Design Tokens (Linear/Stripe/Vercel Aesthetics)
    ========================================================================== */
 
 :root {
-  --ink: #18181b;
-    /* Primary Text & Sidebar */
-    --ink-soft: #23262f;
-    /* Dark Surface Secondary */
-    --paper: #fafafa;
-    /* Main App Background */
-    --paper-deep: #ffffff;
-    /* Card / Surface Background */
-    --accent: #1d4ed8;
-    /* AdsBangda Primary Blue */
-    --accent-soft: #eff4ff;
-    /* Accent Tint / Hover */
-    --muted: #6f6b5e;
-    /* Secondary Text */
-    --muted-on-dark: #8d8879;
-  --border: #e5e7eb;
-    /* Border Color */
-    --success: #16a34a;
-    --success-soft: #ecfdf3;
-    --warning: #d97706;
-    --warning-soft: #fffaeb;
-    --danger: #dc2626;
-    --danger-soft: #fef2f2;
+  --paper: #FAFAFA;
+    --paper-deep: #FFFFFF;
+    --ink: #18181B;
+    --ink-soft: #27272A;
+    --accent: #1D4ED8;
+    --accent-soft: #EFF6FF;
+    --accent-hover: #1E40AF;
+    --muted: #71717A;
+    --muted-on-dark: #A1A1AA;
+    --border: #ECECEC;
+    --success: #10B981;
+    --success-soft: #ECFDF5;
+    --warning: #F59E0B;
+    --warning-soft: #FFFBEB;
+    --danger: #EF4444;
+    --danger-soft: #FEF2F2;
   --radius-card: 20px;
-  --radius-pill: 100px;
+  --radius-pill: 9999px;
 }
 
 @theme inline {
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
   --color-paper: var(--paper);
   --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+    --color-ink-soft: var(--ink-soft);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-muted: var(--muted);
@@ -46,7 +39,7 @@
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
-    --color-danger: var(--danger);
+  --color-danger: var(--danger);
     --color-danger-soft: var(--danger-soft);
 
   --font-display: var(--font-plus-jakarta), sans-serif;
@@ -58,29 +51,43 @@
 }
 
 body {
-  background: var(--paper);
+  background-color: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
+  letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.022em;
 }
 
 .font-data {
   font-family: var(--font-data);
 }
 
+::selection {
+  background-color: var(--accent);
+  color: #ffffff;
+}
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+    height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #E4E4E7;
   border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A1A1AA;
 }

@@ -26,17 +26,17 @@ export default async function PerformancePage() {
     <div className="flex-1 min-h-screen">
       <Topbar
         title="Marketing Performance"
-        subtitle="Data diperbarui periodik oleh tim AdsBangda."
+        subtitle="Analisis terukur dari seluruh channel pemasaran."
       />
 
       <div className="space-y-10 p-6 sm:p-8 pt-4">
         {/* Meta Ads */}
         <section className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-border/60 pb-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-soft text-accent">
+          <div className="flex items-center gap-2 border-b border-[#ECECEC] pb-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EFF6FF] text-[#1D4ED8]">
               <Target className="h-4 w-4" />
             </div>
-            <h2 className="text-base font-bold text-ink">Meta Ads Performance</h2>
+            <h2 className="text-base font-bold text-[#18181B]">Meta Ads Performance</h2>
           </div>
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
@@ -48,24 +48,24 @@ export default async function PerformancePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-paper-deep p-6 shadow-2xs">
-              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted font-data">Leads Per Minggu</p>
+            <div className="rounded-[20px] border border-[#ECECEC] bg-[#FFFFFF] p-6 shadow-xs">
+              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[#71717A] font-data">Leads Per Minggu</p>
               <TrendChart data={metaChartData} dataKey="value" format="number" />
             </div>
-            <div className="rounded-2xl border border-border bg-paper-deep p-6 shadow-2xs">
-              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted font-data">Ad Spend Per Minggu</p>
+            <div className="rounded-[20px] border border-[#ECECEC] bg-[#FFFFFF] p-6 shadow-xs">
+              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[#71717A] font-data">Ad Spend Per Minggu</p>
               <TrendChart data={spendChartData} dataKey="value" format="idr" />
             </div>
           </div>
         </section>
 
         {/* Social Media */}
-        <section className="space-y-4 pt-4 border-t border-border/60">
-          <div className="flex items-center gap-2 border-b border-border/60 pb-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-soft text-accent">
+        <section className="space-y-4 pt-4 border-t border-[#ECECEC]">
+          <div className="flex items-center gap-2 border-b border-[#ECECEC] pb-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EFF6FF] text-[#1D4ED8]">
               <Users2 className="h-4 w-4" />
             </div>
-            <h2 className="text-base font-bold text-ink">Social Media Organic</h2>
+            <h2 className="text-base font-bold text-[#18181B]">Social Media Organic</h2>
           </div>
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
@@ -75,21 +75,21 @@ export default async function PerformancePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-paper-deep p-6 shadow-2xs">
-              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted font-data">Followers Growth</p>
+            <div className="rounded-[20px] border border-[#ECECEC] bg-[#FFFFFF] p-6 shadow-xs">
+              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[#71717A] font-data">Followers Growth</p>
               <TrendChart data={followersChartData} dataKey="value" format="number" />
             </div>
-            <div className="rounded-2xl border border-border bg-paper-deep p-6 shadow-2xs flex flex-col justify-between">
+            <div className="rounded-[20px] border border-[#ECECEC] bg-[#FFFFFF] p-6 shadow-xs flex flex-col justify-between">
               <div>
-                <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted font-data">Top Performing Content</p>
+                <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[#71717A] font-data">Top Performing Content</p>
                 <ul className="space-y-3.5">
                   {topContent.map((item, i) => (
-                    <li key={i} className="flex items-start justify-between gap-4 border-b border-border/60 pb-3 last:border-0 last:pb-0">
+                    <li key={i} className="flex items-start justify-between gap-4 border-b border-[#ECECEC] pb-3 last:border-0 last:pb-0">
                       <div>
-                        <p className="text-xs font-semibold text-ink">{item.title}</p>
-                        <p className="font-data text-[11px] text-muted mt-0.5">{formatNumber(item.reach)} reach</p>
+                        <p className="text-xs font-semibold text-[#18181B]">{item.title}</p>
+                        <p className="font-data text-[11px] text-[#71717A] mt-0.5">{formatNumber(item.reach)} reach</p>
                       </div>
-                      <span className="inline-flex shrink-0 items-center gap-1 font-data text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      <span className="inline-flex shrink-0 items-center gap-1 font-data text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                         <TrendingUp className="h-3 w-3" /> {item.engagementRate}%
                       </span>
                     </li>
@@ -101,12 +101,12 @@ export default async function PerformancePage() {
         </section>
 
         {/* Website Traffic */}
-        <section className="space-y-4 pt-4 border-t border-border/60">
-          <div className="flex items-center gap-2 border-b border-border/60 pb-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-soft text-accent">
+        <section className="space-y-4 pt-4 border-t border-[#ECECEC]">
+          <div className="flex items-center gap-2 border-b border-[#ECECEC] pb-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EFF6FF] text-[#1D4ED8]">
               <Globe className="h-4 w-4" />
             </div>
-            <h2 className="text-base font-bold text-ink">Website Traffic & Conversions</h2>
+            <h2 className="text-base font-bold text-[#18181B]">Website Traffic & Conversions</h2>
           </div>
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
@@ -123,13 +123,13 @@ export default async function PerformancePage() {
             />
           </div>
 
-          <div className="rounded-2xl border border-border bg-paper-deep p-6 shadow-2xs">
-            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted font-data">Visitors Per Minggu</p>
+          <div className="rounded-[20px] border border-[#ECECEC] bg-[#FFFFFF] p-6 shadow-xs">
+            <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[#71717A] font-data">Visitors Per Minggu</p>
             <TrendChart data={visitorsChartData} dataKey="value" format="number" />
           </div>
         </section>
 
-        <p className="font-data text-xs text-muted pt-2">
+        <p className="font-data text-xs text-[#71717A] pt-2">
           Update Terakhir: {latestMeta ? formatDateID(latestMeta.date) : "—"}
         </p>
       </div>
