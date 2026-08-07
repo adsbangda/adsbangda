@@ -18,23 +18,37 @@ const STATUS_MAP: Record<
   completed: { label: "Selesai", tone: "muted" },
 };
 
-const TONE_CLASSES: Record<string, string> = {
-  success: "bg-success-soft text-success",
-  warning: "bg-warning-soft text-warning",
-  muted: "bg-black/5 text-muted",
-  accent: "bg-accent-soft text-accent",
+const TONE_CLASSES: Record<string, { badge: string; dot: string }> = {
+  success: {
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+    dot: "bg-emerald-500",
+  },
+  warning: {
+    badge: "bg-amber-50 text-amber-700 border-amber-200/80",
+    dot: "bg-amber-500",
+  },
+  muted: {
+    badge: "bg-slate-100 text-slate-600 border-slate-200",
+    dot: "bg-slate-400",
+  },
+  accent: {
+    badge: "bg-blue-50 text-blue-700 border-blue-200/80",
+    dot: "bg-blue-600",
+  },
 };
 
 export function StatusBadge({ status }: { status: string }) {
   const config = STATUS_MAP[status] ?? { label: status, tone: "muted" as const };
+  const styles = TONE_CLASSES[config.tone];
 
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap",
-        TONE_CLASSES[config.tone]
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-tight whitespace-nowrap shadow-2xs",
+        styles.badge
       )}
     >
+      <span className={cn("h-1.5 w-1.5 rounded-full", styles.dot)} />
       {config.label}
     </span>
   );
