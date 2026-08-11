@@ -27,6 +27,11 @@ export const mockClient: Client = {
   status: "active",
 };
 
+// Dipakai Admin Portal (mode demo) untuk menampilkan daftar client. Client
+// baru yang dibuat admin lewat UI akan di-push ke array ini saat runtime —
+// tapi karena ini array in-memory biasa, isinya reset setiap server restart.
+export const mockClients: Client[] = [mockClient];
+
 export const mockProjects: Project[] = [
   {
     id: "proj_aug_2026",

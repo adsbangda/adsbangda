@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InstagramGlyph } from "./platform-icons";
+import { signOut } from "@/app/(auth)/login/actions";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: LayoutGrid },
@@ -32,7 +33,7 @@ const NAV_ITEMS = [
 const WA_PHONE = "6282289348724";
 const SUPPORT_EMAIL = "info@adsbangda.com";
 
-export function Sidebar({ clientName, onNavigate }: { clientName: string; onNavigate?: () => void }) {
+export function Sidebar({ clientName, isAdmin = false, onNavigate }: { clientName: string; isAdmin?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -84,6 +85,16 @@ export function Sidebar({ clientName, onNavigate }: { clientName: string; onNavi
           Back to AdsBangda Website
         </a>
 
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className="flex items-center gap-3 rounded-[var(--radius-md)] bg-ink px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-accent"
+          >
+            <ArrowUpRight className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+            Buka Admin Portal
+          </Link>
+        )}
+
         <div className="rounded-[var(--radius-md)] bg-accent-soft/60 p-3.5">
           <p className="mb-1 text-xs font-semibold text-ink">Need help?</p>
           <p className="mb-2.5 text-[11px] leading-relaxed text-muted">Our team is ready to support you.</p>
@@ -114,9 +125,11 @@ export function Sidebar({ clientName, onNavigate }: { clientName: string; onNavi
             <div className="font-data text-[10px] text-muted">Client</div>
           </div>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted" strokeWidth={1.75} />
-          <button type="button" aria-label="Keluar" className="shrink-0 text-muted transition-colors hover:text-ink">
-            <LogOut className="h-4 w-4" strokeWidth={1.75} />
-          </button>
+          <form action={signOut}>
+            <button type="submit" aria-label="Keluar" className="shrink-0 text-muted transition-colors hover:text-ink">
+              <LogOut className="h-4 w-4" strokeWidth={1.75} />
+            </button>
+          </form>
         </div>
       </div>
     </div>

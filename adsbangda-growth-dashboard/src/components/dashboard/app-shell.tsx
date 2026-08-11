@@ -7,7 +7,7 @@ import { Menu } from "lucide-react";
 const MenuContext = createContext<{ open: () => void }>({ open: () => {} });
 export const useMobileMenu = () => useContext(MenuContext);
 
-export function AppShell({ clientName, children }: { clientName: string; children: React.ReactNode }) {
+export function AppShell({ clientName, isAdmin = false, children }: { clientName: string; isAdmin?: boolean; children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -15,7 +15,7 @@ export function AppShell({ clientName, children }: { clientName: string; childre
       <div className="flex min-h-screen bg-paper">
         {/* Desktop sidebar */}
         <div className="sticky top-0 hidden h-screen shrink-0 lg:block">
-          <Sidebar clientName={clientName} />
+          <Sidebar clientName={clientName} isAdmin={isAdmin} />
         </div>
 
         {/* Mobile drawer */}
@@ -27,7 +27,7 @@ export function AppShell({ clientName, children }: { clientName: string; childre
               aria-hidden="true"
             />
             <div className="absolute inset-y-0 left-0 animate-rise">
-              <Sidebar clientName={clientName} onNavigate={() => setMobileOpen(false)} />
+              <Sidebar clientName={clientName} isAdmin={isAdmin} onNavigate={() => setMobileOpen(false)} />
             </div>
           </div>
         )}

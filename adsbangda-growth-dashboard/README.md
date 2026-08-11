@@ -1,100 +1,138 @@
 # Adsbangda Growth Dashboard
 
 Platform terpisah untuk client Adsbangda memantau perkembangan marketing
-mereka — bukan pengganti website utama (`www.adsbangda.com`, Astro +
-Cloudflare Pages), tapi aplikasi berdiri sendiri di `dashboard.adsbangda.com`
+mereka, plus Admin Portal internal untuk tim Adsbangda mengelola datanya —
+bukan pengganti website utama (`www.adsbangda.com`, Astro + Cloudflare
+Pages), tapi aplikasi berdiri sendiri di `dashboard.adsbangda.com`
 (Next.js + Supabase + Vercel).
 
 **Repo ini SENGAJA dipisah dari repo website utama.** Jangan digabung.
 
-## Status: MVP — Mode Demo
+## Dua mode berjalan berdampingan
 
-Semua data yang tampil berasal dari `src/lib/mock-data.ts`. Tidak butuh
-Supabase, tidak butuh environment variable apa pun untuk menjalankan atau
-men-deploy versi ini.
+Aplikasi ini otomatis mendeteksi apakah env Supabase sudah diisi
+(`.env.local`). Tidak ada kode yang perlu diubah untuk pindah mode.
+
+| | **Mode Demo** (default, tanpa setup apa pun) | **Mode Live** (Supabase terhubung) |
+|---|---|---|
+| Data | `src/lib/mock-data.ts`, statis di memori | Database Supabase sungguhan |
+| Login | Tidak ada — semua halaman terbuka bebas | Wajib, real Supabase Auth (email+password) |
+| Admin Portal (`/admin`) | Terbuka bebas, mutasi hanya bertahan sampai server restart | Wajib role `admin`, tersimpan permanen |
+| Cocok untuk | Preview desain & alur ke client/tim | Pemakaian sungguhan |
 
 ```bash
 npm install
-npm run build
 npm run dev
 ```
 
-Buka `http://localhost:3000` — langsung tampil dengan data contoh client
-"Amati Coffee".
+Buka `http://localhost:3000` — langsung tampil (mode demo, data contoh
+client "Amati Coffee"). Buka `http://localhost:3000/admin` untuk lihat
+Admin Portal-nya juga, tanpa perlu login di mode demo.
 
-## Deploy ke Vercel
+## Menyalakan Mode Live
 
-### 1. Push ke GitHub (dari nol)
+### 1. Buat project Supabase
 
-```bash
-cd adsbangda-growth-dashboard
-git init
-git add .
-git commit -m "Initial commit: Adsbangda Growth Dashboard MVP"
-git branch -M main
-git remote add origin https://github.com/<username-atau-org>/adsbangda-growth-dashboard.git
-git push -u origin main
+Buat project baru di [supabase.com](https://supabase.com), lalu jalankan
+KEDUA migration ini secara berurutan lewat **SQL Editor** (paste isi
+filenya satu-satu, klik Run):
+
+1. `supabase/migrations/0001_init.sql`
+2. `supabase/migrations/0002_admin_portal.sql`
+
+Migration kedua ini juga memperbaiki beberapa kolom yang kurang di migration
+pertama (mis. `platform`/`type` di `content_items`) — jangan lewati.
+
+### 2. Isi environment variable
+
+Copy `.env.example` ke `.env.local`, isi dengan URL & anon key dari
+Settings → API di project Supabase kamu:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
 
-Pastikan nama repo GitHub-nya **`adsbangda-growth-dashboard`** — terpisah
-total dari repo website utama.
+Tidak butuh `service_role` key sama sekali — semua operasi admin (kelola
+role & akses client per user) lewat fungsi database aman
+(`security definer`) yang sudah dibuatkan di migration 0002.
 
-### 2. Connect ke Vercel
+### 3. Buat admin pertama
 
-1. Buka [vercel.com](https://vercel.com) → **Add New → Project**
-2. Pilih repo `adsbangda-growth-dashboard` dari GitHub
-3. Vercel otomatis mendeteksi framework **Next.js** — biarkan semua setting
-   default, tidak perlu diubah:
-   - Framework Preset: `Next.js` (auto)
-   - Build Command: `npm run build` (auto)
-   - Output Directory: (auto, jangan diisi manual)
-   - Install Command: `npm install` (auto)
-   - Root Directory: `.` (kosongkan/biarkan default — karena repo ini
-     sudah standalone, bukan monorepo)
-4. Environment Variables: **kosongkan dulu** — mode demo tidak butuh env
-   apa pun. Nanti tambahkan `NEXT_PUBLIC_SUPABASE_URL` dan
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` di sini kalau sudah siap ke mode live
-   (lihat `.env.example`)
-5. Klik **Deploy**
+1. `npm run dev`, buka `/login`, klik tab **Daftar**, buat akun dengan email
+   kamu sendiri.
+2. Buka **SQL Editor** Supabase, jalankan (ganti emailnya):
+   ```sql
+   update public.profiles set role = 'admin'
+   where id = (select id from auth.users where email = 'kamu@adsbangda.com');
+   ```
+3. Login lagi di `/login` — sekarang otomatis masuk ke `/admin`.
 
-### 3. Tambah custom domain
+Admin selanjutnya bisa dipromosikan lewat halaman **Admin → Team & Akses**
+tanpa perlu SQL lagi.
 
-1. Di project Vercel → **Settings → Domains** → tambahkan
-   `dashboard.adsbangda.com`
-2. Vercel akan kasih tahu CNAME record yang perlu ditambahkan
-3. Buka DNS Cloudflare untuk domain `adsbangda.com` (DNS-nya tetap boleh di
-   Cloudflare walau hosting-nya di Vercel) → tambahkan CNAME sesuai
-   instruksi Vercel
-4. Tunggu propagasi DNS (biasanya beberapa menit sampai 1 jam)
+### 4. Buat client pertama & hubungkan user client-nya
 
-## Menyalakan Mode Live (nanti, belum sekarang)
+1. Di `/admin`, klik **Tambah Client**, isi nama & industri.
+2. Isi Monthly Delivery, Content Calendar, dll di halaman detail client.
+3. Client-nya sendiri daftar akun lewat `/login` (tab Daftar) — role
+   default `client`, tapi belum terhubung ke client manapun (lihat halaman
+   `/pending` yang mereka lihat sampai dihubungkan).
+4. Admin buka **Admin → Team & Akses**, hubungkan user tadi ke client yang
+   sesuai. Setelah itu, saat mereka login mereka langsung melihat
+   Client Portal client tersebut.
 
-1. Buat project baru di [supabase.com](https://supabase.com)
-2. Jalankan migration: SQL Editor → paste isi `supabase/migrations/0001_init.sql` → Run
-3. Di Vercel → Settings → Environment Variables → isi
-   `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Redeploy — aplikasi otomatis pindah dari mock data ke query Supabase asli
-   (lihat `src/lib/data.ts`), tidak ada komponen UI yang perlu diubah
+### 5. Deploy ke Vercel
+
+Sama seperti sebelumnya — connect repo, isi kedua environment variable di
+atas di Vercel → Settings → Environment Variables, deploy. Jangan lupa
+tambahkan URL production ke **Supabase → Authentication → URL
+Configuration** (Site URL + Redirect URLs) supaya auth berfungsi di
+production.
+
+## Yang diperbaiki dari MVP sebelumnya
+
+Waktu bikin migration 0002, ditemukan beberapa mismatch antara skema 0001
+dan kode aplikasi (peninggalan waktu skema ditulis duluan sebelum semua
+komponen selesai) — sudah diperbaiki semua:
+
+- `content_items` kekurangan kolom `platform` dan `type` yang dipakai UI.
+- `project_tasks` kekurangan kolom `owner`, `due_date`, `blocker`.
+- `projects.status` dan `content_items.status` check constraint-nya tidak
+  sinkron dengan nilai yang benar-benar dipakai kode.
+- `reports` kekurangan kolom `summary`.
+- Semua query Supabase sekarang konsisten dipetakan snake_case ↔ camelCase
+  lewat `src/lib/mappers.ts` (sebelumnya beberapa fungsi mengembalikan row
+  mentah yang tidak cocok dengan tipe TypeScript-nya).
 
 ## Struktur
 
 ```
 src/
+├── middleware.ts             Proteksi route (redirect ke /login, blokir /admin non-admin)
 ├── app/
-│   ├── (auth)/login/        Halaman login client (UI, belum disambung auth)
-│   └── (app)/               Shell dashboard (sidebar + halaman)
-│       ├── page.tsx             Overview
-│       ├── performance/         Marketing Performance
-│       ├── projects/            Project Progress
-│       ├── content-calendar/    Content Calendar
-│       └── reports/             Report Center
-├── components/dashboard/    StatCard, StatusBadge, ProgressBar, Sidebar, dll
+│   ├── (auth)/login/         Login + signup nyata (Supabase Auth)
+│   ├── pending/               Halaman untuk user login tapi belum terhubung ke client
+│   ├── (app)/                 Client Portal — Overview, Performance, Projects, dst
+│   └── admin/                 Admin Portal
+│       ├── page.tsx               Dashboard (daftar client)
+│       ├── clients/new/           Tambah client
+│       ├── clients/[clientId]/    Kelola semua konten satu client
+│       └── team/                  Kelola role & akses client per user
+├── components/
+│   ├── dashboard/             Komponen shared Client Portal
+│   └── admin/                 Komponen shared Admin Portal
 └── lib/
-    ├── data.ts              Data access layer (mock <-> Supabase, transparan)
-    ├── mock-data.ts         Data contoh mode demo
-    ├── types.ts             Tipe data, sinkron dengan skema database
-    └── supabase/            Client Supabase (browser & server)
-supabase/migrations/         Skema database + Row Level Security
+    ├── data.ts                 Data access CLIENT (mock <-> Supabase, transparan)
+    ├── admin-data.ts            Data access + mutasi ADMIN (mock <-> Supabase)
+    ├── mappers.ts               Konversi snake_case <-> camelCase, satu tempat
+    ├── auth.ts                  Helper session/role + guard requireAdmin()
+    ├── mock-data.ts              Data contoh mode demo
+    ├── types.ts                  Tipe data, sinkron dengan skema database
+    └── supabase/                 Client Supabase (browser, server, middleware)
+supabase/migrations/
+    ├── 0001_init.sql              Skema awal
+    └── 0002_admin_portal.sql      Perbaikan skema + tabel admin + RLS + fungsi role
 ```
 
 ## Prinsip Desain
@@ -104,16 +142,20 @@ Warna, tipografi, dan radius diturunkan langsung dari
 identitas dengan `www.adsbangda.com`, walau repo & stack-nya sengaja
 dipisah. Lihat token di `src/app/globals.css`.
 
-- **Ink** `#18181B` — teks utama & sidebar gelap
-- **Accent** `#1D4ED8` — satu-satunya warna aksen brand
+- **Ink** `#18181B` — teks utama
+- **Accent** `#1D4ED8` — satu-satunya warna aksen brand (ikon platform di
+  Monthly Delivery pakai warna khasnya masing-masing — itu semantik, bukan
+  dekoratif)
 - **Plus Jakarta Sans** — heading
 - **Instrument Sans** — body text
 - **IBM Plex Mono** — angka, label, data
 
-## Roadmap ke "Adsbangda Operating System"
+## Roadmap berikutnya
 
-1. **Sekarang:** Client login (UI), overview, performance (manual input),
-   project progress, content calendar, report PDF — mode demo
-2. **Berikutnya:** Supabase Auth aktif, admin tool internal untuk input data
+1. **Sekarang:** Client Portal + Admin Portal lengkap, auth Supabase asli
+2. **Berikutnya:** Input performa mingguan lewat Admin Portal (saat ini
+   `performance_metrics` masih perlu diisi lewat SQL/Table editor Supabase
+   langsung — belum ada form-nya di Admin Portal)
 3. **Lalu:** Integrasi live Meta Marketing API & Instagram Graph API
+   (otomatis isi `performance_metrics`, bukan input manual lagi)
 4. **Nanti:** Project management penuh, automation, AI assistant

@@ -26,8 +26,8 @@ export default async function OverviewPage() {
   const [delivery, quickStats, attentionItems, activity, channelRows, upcomingEvents, weeklyCalendar] = await Promise.all([
     getMonthlyDelivery(client.id),
     getQuickStats(client.id),
-    getAttentionItems(),
-    getRecentActivity(),
+    getAttentionItems(client.id),
+    getRecentActivity(client.id),
     getChannelOverview(client.id),
     getUpcomingEvents(client.id),
     getWeeklyCalendar(client.id),

@@ -22,6 +22,11 @@ const STATUS_MAP: Record<
   healthy: { label: "Healthy", tone: "success" },
   watch: { label: "Watch", tone: "warning" },
   underperforming: { label: "Underperforming", tone: "danger" },
+  active: { label: "Active", tone: "success" },
+  paused: { label: "Paused", tone: "warning" },
+  onboarding: { label: "Onboarding", tone: "accent" },
+  admin: { label: "Admin", tone: "accent" },
+  client: { label: "Client", tone: "muted" },
 };
 
 const TONE_CLASSES: Record<string, string> = {
