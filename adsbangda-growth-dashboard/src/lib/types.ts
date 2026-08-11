@@ -3,8 +3,10 @@
 // jadi UI tidak perlu tahu datanya datang dari mock atau database sungguhan.
 
 export type TaskStatus = "not_started" | "in_progress" | "waiting" | "done";
-export type ContentStatus = "draft" | "review" | "approved" | "scheduled" | "published";
+export type ContentStatus = "draft" | "in_production" | "waiting_approval" | "approved" | "scheduled" | "published";
 export type Channel = "meta_ads" | "social" | "website";
+export type Platform = "instagram" | "facebook" | "tiktok" | "website";
+export type ContentType = "reel" | "carousel" | "story" | "post" | "article";
 
 export interface Client {
   id: string;
@@ -20,7 +22,7 @@ export interface Project {
   name: string;
   startDate: string;
   endDate: string;
-  status: "active" | "completed" | "on_hold";
+  status: "on_track" | "at_risk" | "completed" | "on_hold";
 }
 
 export interface ProjectTask {
@@ -30,6 +32,9 @@ export interface ProjectTask {
   status: TaskStatus;
   progressPct: number;
   orderIndex: number;
+  owner: string;
+  dueDate: string;
+  blocker?: string;
 }
 
 export interface PerformanceMetric {
@@ -49,12 +54,23 @@ export interface PerformanceMetric {
   conversions?: number;
 }
 
+export interface ChannelSummary {
+  channel: string;
+  spend: number;
+  leads: number;
+  costPerLead: number;
+  engagementRate: number;
+  status: "healthy" | "watch" | "underperforming";
+}
+
 export interface ContentItem {
   id: string;
   clientId: string;
   title: string;
   plannedDate: string;
   status: ContentStatus;
+  platform: Platform;
+  type: ContentType;
   notes?: string;
 }
 
@@ -64,10 +80,15 @@ export interface ReportItem {
   periodMonth: string; // contoh: "2026-08"
   fileUrl: string;
   generatedAt: string;
+  summary: string;
 }
 
-export interface UpcomingTask {
+export interface AttentionItem {
   id: string;
   title: string;
-  dueDate: string;
+  description: string;
+  dueLabel: string;
+  actionLabel: string;
+  actionHref: string;
+  urgent: boolean;
 }

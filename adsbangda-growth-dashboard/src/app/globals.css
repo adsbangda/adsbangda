@@ -1,35 +1,49 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   AdsBangda Growth Dashboard — Design Tokens
-   Diturunkan langsung dari public/assets/css/style.css milik
-   www.adsbangda.com, supaya dashboard terasa satu identitas dengan situs
-   utama walau repo & stack-nya terpisah. Jangan improvisasi warna baru
-   tanpa alasan — brand hanya punya 1 warna aksen (biru) + ink/paper.
+   AdsBangda Growth OS — Design Tokens
+   Diturunkan dari public/assets/css/style.css milik www.adsbangda.com.
+   Prinsip: restrained radius, border > shadow, warna dipakai semantik
+   (bukan dekoratif), satu warna aksen brand (biru).
    ========================================================================== */
 
 :root {
-  --ink: #18181b;         /* teks utama, sidebar, elemen gelap */
-  --ink-soft: #23262f;    /* card gelap sekunder */
-  --paper: #fafafa;       /* background utama */
-  --paper-deep: #ffffff;  /* card/surface di atas paper */
-  --accent: #1d4ed8;      /* satu-satunya warna aksen brand (biru) */
-  --accent-2: #2563eb;    /* pasangan gradient aksen, sama seperti gradient di website utama */
-  --accent-soft: #eff4ff; /* accent tint untuk background badge/hover */
-  --muted: #6f6b5e;       /* teks sekunder di atas paper */
+  /* Brand foundation — sama seperti website utama */
+  --ink: #18181b;
+  --ink-soft: #23262f;
+  --paper: #fafafa;
+  --paper-deep: #ffffff;
+  --accent: #1d4ed8;
+  --accent-2: #2563eb;
+  --accent-soft: #eff4ff;
+  --muted: #6f6b5e;
   --muted-on-dark: #8d8879;
   --border: #e5e7eb;
-  --success: #16a34a;
+
+  /* Semantic tokens */
+  --background: var(--paper);
+  --surface: var(--paper-deep);
+  --surface-elevated: #ffffff;
+  --text-primary: var(--ink);
+  --text-secondary: #45473f;
+  --text-muted: var(--muted);
+  --brand: var(--accent);
+  --brand-soft: var(--accent-soft);
+  --success: #15803d;
   --success-soft: #ecfdf3;
-  --warning: #d97706;
+  --warning: #b45309;
   --warning-soft: #fffaeb;
-  --danger: #dc2626;
+  --danger: #b91c1c;
   --danger-soft: #fef2f2;
-  --radius-card: 20px;
+
+  /* Restrained radius scale — no more 20-24px everywhere */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
   --radius-pill: 100px;
-  --shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.04);
-  --shadow-card: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 24px -12px rgba(24, 24, 27, 0.08);
-  --shadow-hover: 0 1px 2px rgba(24, 24, 27, 0.04), 0 16px 32px -12px rgba(24, 24, 27, 0.14);
+
+  --shadow-xs: 0 1px 2px rgba(24, 24, 27, 0.04);
+  --shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.04), 0 4px 10px -6px rgba(24, 24, 27, 0.08);
 }
 
 @theme inline {
@@ -43,6 +57,14 @@
   --color-muted: var(--muted);
   --color-muted-on-dark: var(--muted-on-dark);
   --color-border: var(--border);
+
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -50,40 +72,59 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
 
-  --shadow-sm: var(--shadow-sm);
-  --shadow-card: var(--shadow-card);
-  --shadow-hover: var(--shadow-hover);
-
   --font-display: var(--font-plus-jakarta), sans-serif;
   --font-body: var(--font-instrument), sans-serif;
   --font-data: var(--font-plex-mono), monospace;
 
-  --radius-card: var(--radius-card);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
   --radius-pill: var(--radius-pill);
+}
+
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Subtle ambient backdrop so flat areas don't feel sterile */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.012em;
+}
+
+.font-data {
+  font-family: var(--font-data);
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Faint grain, same device used on the main site, kept very subtle */
 .page-backdrop {
   position: relative;
-  background:
-    radial-gradient(560px circle at 8% -10%, rgba(37, 99, 235, 0.07), transparent 60%),
-    radial-gradient(480px circle at 100% 0%, rgba(29, 78, 216, 0.05), transparent 55%);
 }
 
-/* Same faint grain used on the main site, kept very subtle so text stays crisp */
 .page-backdrop::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.02;
+  opacity: 0.015;
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
@@ -97,48 +138,40 @@ body {
   background: linear-gradient(135deg, var(--accent-2) 0%, var(--accent) 100%);
 }
 
-/* Simple, restrained entrance animation for cards */
 @keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-rise {
-  animation: rise-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: rise-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes dot-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.35); }
+  50% { opacity: 0.4; transform: scale(1.3); }
 }
 
 .animate-pulse-dot {
   animation: dot-pulse 1.8s ease-in-out infinite;
 }
 
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.08) 37%, rgba(0,0,0,0.04) 63%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-rise,
-  .animate-pulse-dot {
+  .animate-pulse-dot,
+  .skeleton {
     animation: none;
   }
-}
-
-h1, h2, h3, h4 {
-  font-family: var(--font-display);
-  letter-spacing: -0.01em;
-}
-
-.font-data {
-  font-family: var(--font-data);
-}
-
-::selection {
-  background: var(--accent);
-  color: #fff;
 }

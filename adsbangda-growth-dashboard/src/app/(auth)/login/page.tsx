@@ -14,7 +14,7 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-muted">Masuk untuk melihat perkembangan marketing bisnis kamu.</p>
         </div>
 
-        <form className="space-y-4 rounded-[var(--radius-card)] border border-border bg-paper-deep p-6">
+        <form className="space-y-4 rounded-[var(--radius-lg)] border border-border bg-paper-deep p-6">
           <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-ink">
               Email

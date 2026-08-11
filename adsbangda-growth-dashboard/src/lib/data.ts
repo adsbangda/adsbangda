@@ -1,28 +1,22 @@
 // Data access layer — satu-satunya tempat komponen boleh mengambil data.
-//
-// Kenapa dipisah begini: MVP ini jalan dulu di "mode demo" (data dari
-// mock-data.ts) supaya bisa langsung di-review tanpa perlu setup Supabase.
-// Begitu project Supabase sungguhan sudah dibuat & env di-isi
-// (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY), fungsi di
-// bawah otomatis pindah ke query database asli — komponen halaman TIDAK
-// perlu diubah sama sekali.
-//
-// Setiap fungsi query Supabase difilter oleh RLS policy di database
-// (lihat supabase/migrations/0001_init.sql) berdasarkan client_id user
-// yang sedang login, jadi isolasi data antar-client dijamin di level DB.
+// Mode demo (mock-data.ts) vs mode live (Supabase) transparan bagi UI;
+// begitu env Supabase di-isi, fungsi di bawah otomatis pindah ke query
+// database asli tanpa mengubah satu pun komponen halaman.
 
 import { isSupabaseConfigured, createClient } from "./supabase/server";
 import {
   mockClient,
   mockProjects,
   mockProjectTasks,
-  mockUpcomingTasks,
+  mockAttentionItems,
   mockPerformance,
   mockSocial,
   mockWebsite,
+  mockChannelSummary,
   mockTopContent,
   mockContentCalendar,
   mockReports,
+  marketingInsight,
 } from "./mock-data";
 import type { Client, Project, ProjectTask, ContentItem, ReportItem } from "./types";
 
@@ -65,7 +59,7 @@ export async function getActiveProject(clientId: string): Promise<{
     .from("projects")
     .select("*")
     .eq("client_id", clientId)
-    .eq("status", "active")
+    .eq("status", "on_track")
     .order("start_date", { ascending: false })
     .limit(1)
     .single();
@@ -79,17 +73,23 @@ export async function getActiveProject(clientId: string): Promise<{
   return { project, tasks: tasks ?? [] };
 }
 
-export async function getUpcomingTasks() {
-  if (!isSupabaseConfigured) return mockUpcomingTasks;
-  // TODO (live mode): tabel task terpisah untuk to-do client, atau
-  // turunan dari project_tasks yang statusnya "waiting"/"in_progress"
-  // dengan due date terdekat.
-  return mockUpcomingTasks;
+export async function getAttentionItems() {
+  if (!isSupabaseConfigured) return mockAttentionItems;
+  // TODO (live mode): turunkan dari content_items berstatus waiting_approval
+  // + project_tasks berstatus waiting + jadwal meeting terdekat.
+  return mockAttentionItems;
 }
 
 export async function getPerformanceSummary(clientId: string) {
   if (!isSupabaseConfigured) {
-    return { metaAds: mockPerformance, social: mockSocial, website: mockWebsite, topContent: mockTopContent };
+    return {
+      metaAds: mockPerformance,
+      social: mockSocial,
+      website: mockWebsite,
+      topContent: mockTopContent,
+      channelSummary: mockChannelSummary,
+      insight: marketingInsight,
+    };
   }
 
   const supabase = await createClient();
@@ -104,6 +104,8 @@ export async function getPerformanceSummary(clientId: string) {
     social: social.data ?? [],
     website: website.data ?? [],
     topContent: mockTopContent, // TODO (live mode): turunkan dari content_items + metrik per-post
+    channelSummary: mockChannelSummary, // TODO (live mode): agregat per channel dari performance_metrics
+    insight: marketingInsight, // TODO (live mode): hasil generate dari perbandingan periode
   };
 }
 

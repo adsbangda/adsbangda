@@ -3,6 +3,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { ProgressBar } from "@/components/dashboard/progress-bar";
 import { getCurrentClient, getActiveProject } from "@/lib/data";
 import { formatDateID } from "@/lib/utils";
+import { AlertCircle } from "lucide-react";
 
 export default async function ProjectsPage() {
   const client = await getCurrentClient();
@@ -12,24 +13,24 @@ export default async function ProjectsPage() {
     <div className="page-backdrop min-h-screen">
       <Topbar title="Project Progress" subtitle="Perkembangan pekerjaan project yang sedang berjalan." />
 
-      <div className="p-8">
+      <div className="mx-auto max-w-4xl px-5 py-8 lg:px-8 lg:py-10">
         {!project ? (
-          <div className="rounded-[var(--radius-card)] border border-border bg-paper-deep shadow-[var(--shadow-card)] p-10 text-center text-sm text-muted">
+          <div className="rounded-[var(--radius-lg)] border border-border bg-surface p-10 text-center text-sm text-muted">
             Belum ada project aktif saat ini.
           </div>
         ) : (
-          <div className="rounded-[var(--radius-card)] border border-border bg-paper-deep shadow-[var(--shadow-card)] p-6">
-            <div className="mb-6 flex items-center justify-between border-b border-border pb-5">
+          <>
+            <div className="mb-8 flex items-center justify-between border-b border-border pb-6">
               <div>
-                <h2 className="text-lg font-bold text-ink">{project.name}</h2>
-                <p className="mt-0.5 text-sm text-muted">
+                <h2 className="text-xl font-bold text-ink">{project.name}</h2>
+                <p className="mt-1 text-sm text-muted">
                   {formatDateID(project.startDate)} — {formatDateID(project.endDate)}
                 </p>
               </div>
               <StatusBadge status={project.status} />
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-0">
               {tasks.map((task, index) => (
                 <div key={task.id} className="flex gap-4">
                   <div className="flex flex-col items-center">
@@ -38,8 +39,8 @@ export default async function ProjectsPage() {
                     </div>
                     {index < tasks.length - 1 && <div className="mt-1 w-px flex-1 bg-border" />}
                   </div>
-                  <div className="flex-1 pb-6">
-                    <div className="flex items-center justify-between">
+                  <div className="flex-1 pb-8">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <h3 className="text-sm font-semibold text-ink">{task.name}</h3>
                       <StatusBadge status={task.status} />
                     </div>
@@ -49,11 +50,21 @@ export default async function ProjectsPage() {
                       </div>
                       <span className="font-data text-xs text-muted">{task.progressPct}%</span>
                     </div>
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+                      <span>Owner: {task.owner}</span>
+                      <span>Due {formatDateID(task.dueDate)}</span>
+                    </div>
+                    {task.blocker && (
+                      <div className="mt-3 flex items-start gap-2 rounded-md bg-warning-soft/60 p-3 text-xs">
+                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" strokeWidth={1.75} />
+                        <span className="text-ink">{task.blocker}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
