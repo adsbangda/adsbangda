@@ -92,3 +92,8 @@ export interface AttentionItem {
   actionHref: string;
   urgent: boolean;
 }
+
+// Role architecture — disiapkan untuk pemisahan Client vs Admin nanti.
+// Belum ada UI Admin di MVP ini (lihat README), tapi tipe ini jadi dasar
+// supaya penambahan /admin/* nanti tidak perlu migrasi ulang skema.
+export type UserRole = "client" | "admin";

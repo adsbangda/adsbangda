@@ -8,59 +8,55 @@ import { AlertCircle } from "lucide-react";
 export default async function ProjectsPage() {
   const client = await getCurrentClient();
   const { project, tasks } = await getActiveProject(client.id);
+  const completed = tasks.filter((t) => t.status === "done").length;
 
   return (
     <div className="page-backdrop min-h-screen">
-      <Topbar title="Project Progress" subtitle="Perkembangan pekerjaan project yang sedang berjalan." />
+      <Topbar title="Project Progress" />
 
-      <div className="mx-auto max-w-4xl px-5 py-8 lg:px-8 lg:py-10">
+      <div className="mx-auto max-w-3xl px-5 py-10 lg:px-8 lg:py-14">
         {!project ? (
-          <div className="rounded-[var(--radius-lg)] border border-border bg-surface p-10 text-center text-sm text-muted">
-            Belum ada project aktif saat ini.
-          </div>
+          <p className="text-sm text-muted">Belum ada project aktif saat ini.</p>
         ) : (
           <>
-            <div className="mb-8 flex items-center justify-between border-b border-border pb-6">
-              <div>
-                <h2 className="text-xl font-bold text-ink">{project.name}</h2>
-                <p className="mt-1 text-sm text-muted">
-                  {formatDateID(project.startDate)} — {formatDateID(project.endDate)}
-                </p>
+            <header className="animate-rise mb-12">
+              <p className="font-data text-xs uppercase tracking-[0.14em] text-muted">
+                {formatDateID(project.startDate)} — {formatDateID(project.endDate)}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <h1 className="font-display text-3xl font-bold tracking-tight text-ink lg:text-4xl">
+                  {project.name}
+                </h1>
+                <StatusBadge status={project.status} />
               </div>
-              <StatusBadge status={project.status} />
-            </div>
+              <p className="mt-2 text-sm text-muted">
+                {completed} dari {tasks.length} tahap selesai.
+              </p>
+            </header>
 
-            <div className="space-y-0">
-              {tasks.map((task, index) => (
-                <div key={task.id} className="flex gap-4">
-                  <div className="flex flex-col items-center">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft font-data text-xs font-bold text-accent">
-                      {index + 1}
-                    </div>
-                    {index < tasks.length - 1 && <div className="mt-1 w-px flex-1 bg-border" />}
+            <div className="divide-y divide-border">
+              {tasks.map((task) => (
+                <div key={task.id} className="py-5 first:pt-0">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-sm font-semibold text-ink">{task.name}</h3>
+                    <StatusBadge status={task.status} />
                   </div>
-                  <div className="flex-1 pb-8">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-ink">{task.name}</h3>
-                      <StatusBadge status={task.status} />
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="flex-1">
+                      <ProgressBar value={task.progressPct} />
                     </div>
-                    <div className="mt-3 flex items-center gap-3">
-                      <div className="flex-1">
-                        <ProgressBar value={task.progressPct} />
-                      </div>
-                      <span className="font-data text-xs text-muted">{task.progressPct}%</span>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-                      <span>Owner: {task.owner}</span>
-                      <span>Due {formatDateID(task.dueDate)}</span>
-                    </div>
-                    {task.blocker && (
-                      <div className="mt-3 flex items-start gap-2 rounded-md bg-warning-soft/60 p-3 text-xs">
-                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" strokeWidth={1.75} />
-                        <span className="text-ink">{task.blocker}</span>
-                      </div>
-                    )}
+                    <span className="font-data text-xs text-muted">{task.progressPct}%</span>
                   </div>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+                    <span>{task.owner}</span>
+                    <span>Due {formatDateID(task.dueDate)}</span>
+                  </div>
+                  {task.blocker && (
+                    <div className="mt-2.5 flex items-start gap-2 text-xs">
+                      <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" strokeWidth={1.75} />
+                      <span className="text-ink">{task.blocker}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

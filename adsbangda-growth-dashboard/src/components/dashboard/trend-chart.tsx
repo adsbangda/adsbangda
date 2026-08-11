@@ -7,7 +7,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid,
 } from "recharts";
 
 interface TrendChartProps {
@@ -28,9 +27,8 @@ function formatValue(value: number, format?: "number" | "idr") {
 
 export function TrendChart({ data, dataKey, xKey = "label", format }: TrendChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height={240}>
       <LineChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
-        <CartesianGrid stroke="#e5e7eb" strokeDasharray="4 4" vertical={false} />
         <XAxis
           dataKey={xKey}
           tick={{ fontSize: 11, fill: "#6f6b5e", fontFamily: "var(--font-plex-mono)" }}
@@ -46,10 +44,11 @@ export function TrendChart({ data, dataKey, xKey = "label", format }: TrendChart
         />
         <Tooltip
           contentStyle={{
-            borderRadius: 12,
+            borderRadius: 8,
             border: "1px solid #e5e7eb",
             fontSize: 12,
             fontFamily: "var(--font-instrument)",
+            boxShadow: "0 4px 16px -4px rgba(24,24,27,0.12)",
           }}
           formatter={(value) => formatValue(Number(value), format)}
         />
@@ -57,8 +56,8 @@ export function TrendChart({ data, dataKey, xKey = "label", format }: TrendChart
           type="monotone"
           dataKey={dataKey}
           stroke="#1d4ed8"
-          strokeWidth={2.5}
-          dot={{ r: 3, fill: "#1d4ed8" }}
+          strokeWidth={2}
+          dot={{ r: 2.5, fill: "#1d4ed8" }}
           activeDot={{ r: 5 }}
         />
       </LineChart>

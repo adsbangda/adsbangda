@@ -4,51 +4,82 @@
 // langsung untuk keperluan review desain & alur.
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-paper px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-accent font-display text-lg font-extrabold text-white">
+    <div className="grid min-h-screen lg:grid-cols-2">
+      {/* Brand panel */}
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-ink p-10 text-paper lg:flex">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
+        <div className="relative flex items-center gap-2.5">
+          <div className="brand-gradient flex h-8 w-8 items-center justify-center rounded-md font-display text-sm font-extrabold text-white">
             A
           </div>
-          <h1 className="font-display text-xl font-bold text-ink">Growth Dashboard</h1>
-          <p className="mt-1 text-sm text-muted">Masuk untuk melihat perkembangan marketing bisnis kamu.</p>
+          <span className="font-display text-sm font-bold">Adsbangda</span>
         </div>
 
-        <form className="space-y-4 rounded-[var(--radius-lg)] border border-border bg-paper-deep p-6">
-          <div>
-            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-ink">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              placeholder="nama@bisnis.com"
-              className="w-full rounded-lg border border-border bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-accent"
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-ink">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              placeholder="••••••••"
-              className="w-full rounded-lg border border-border bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-accent"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-ink py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-accent"
-          >
-            Masuk
-          </button>
-          <p className="text-center text-xs text-muted">
-            Belum punya akun? Hubungi tim Adsbangda kamu.
+        <div className="relative max-w-sm">
+          <p className="font-data text-xs uppercase tracking-[0.14em] text-muted-on-dark">Growth OS</p>
+          <h1 className="mt-3 font-display text-3xl font-bold leading-tight tracking-tight">
+            Satu tempat untuk memahami marketing bisnismu.
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-muted-on-dark">
+            Performance, campaign, konten, dan approval — semua terhubung, tanpa
+            menunggu laporan manual setiap bulan.
           </p>
-        </form>
+        </div>
+
+        <p className="relative font-data text-xs text-muted-on-dark">© 2026 Adsbangda</p>
+      </div>
+
+      {/* Sign in */}
+      <div className="flex items-center justify-center bg-paper px-6 py-16">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 lg:hidden">
+            <div className="brand-gradient inline-flex h-8 w-8 items-center justify-center rounded-md font-display text-sm font-extrabold text-white">
+              A
+            </div>
+          </div>
+
+          <h2 className="font-display text-2xl font-bold tracking-tight text-ink">Sign in</h2>
+          <p className="mt-1.5 text-sm text-muted">Masuk untuk melihat perkembangan marketing kamu.</p>
+
+          <form className="mt-8 space-y-5">
+            <div>
+              <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-ink">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                placeholder="nama@bisnis.com"
+                className="w-full border-b border-border bg-transparent py-2 text-sm text-ink outline-none transition-colors focus:border-ink"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-ink">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                placeholder="••••••••"
+                className="w-full border-b border-border bg-transparent py-2 text-sm text-ink outline-none transition-colors focus:border-ink"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full rounded-[var(--radius-md)] bg-ink py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-accent"
+            >
+              Sign in
+            </button>
+            <div className="flex items-center justify-between text-xs">
+              <a href="#" className="text-muted transition-colors hover:text-ink">
+                Forgot password?
+              </a>
+              <span className="text-muted">Belum punya akun? Hubungi Adsbangda.</span>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
