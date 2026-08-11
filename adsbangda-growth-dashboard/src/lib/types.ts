@@ -85,102 +85,119 @@ export interface ReportItem {
 
 export interface AttentionItem {
   id: string;
+  icon: "approval" | "budget" | "meeting";
   title: string;
   description: string;
-  dueLabel: string;
-  actionLabel: string;
-  actionHref: string;
-  urgent: boolean;
+  href: string;
+  countBadge?: number;
 }
 
 // ---------------------------------------------------------------------------
-// Monthly Delivery — service-agnostic contracted-work tracking.
-//
-// This is intentionally generic: a "deliverable" only knows how to describe
-// its own progress (a fixed quantity, a soft cap, a recurring cadence, a
-// milestone sequence, or a single monthly artifact). The Overview renders
-// whatever groups/deliverables it receives — nothing about "Social Media" or
-// "Meta Ads" is hardcoded into the component layer. Later phases will feed
-// this from data the Admin Portal writes; for now it comes from mock-data.ts.
+// Monthly Delivery — service-agnostic contracted-work tracking, rendered as
+// the Overview's hero card: one dominant percentage plus a grid of individual
+// deliverables. `icon` only selects which glyph/tint to show — it carries no
+// business logic, so any service line can supply any icon.
 // ---------------------------------------------------------------------------
 
 export type DeliveryStatus = "on_track" | "at_risk" | "completed" | "delayed";
+export type DeliveryIcon = "calendar" | "instagram" | "facebook" | "tiktok" | "edit" | "megaphone" | "chart";
 
-interface DeliverableBase {
+export interface DeliveryMetricItem {
   id: string;
+  icon: DeliveryIcon;
   label: string;
-}
-
-/** A fixed number of units contracted for the month, e.g. "Feed Design 10 / 14". */
-export interface QuantityDeliverable extends DeliverableBase {
-  kind: "quantity";
   completed: number;
   target: number;
+  unit: string;
 }
 
-/** A soft ceiling, not a mandatory target, e.g. "Instagram Stories 18 / up to 30". */
-export interface UpToDeliverable extends DeliverableBase {
-  kind: "up_to";
-  used: number;
-  max: number;
+export interface MonthlyDeliveryMeta {
+  periodRange: string;
+  lastUpdated: string;
+  agreedDate: string;
+  contractHref: string;
 }
 
-export interface RecurringPeriod {
-  label: string;
-  status: "done" | "in_progress" | "upcoming";
-}
-
-/** A cadence-based deliverable, e.g. weekly campaign optimization. */
-export interface RecurringDeliverable extends DeliverableBase {
-  kind: "recurring";
-  periods: RecurringPeriod[];
-}
-
-export interface MilestoneStep {
-  label: string;
-  status: "done" | "in_progress" | "pending";
-  pct?: number;
-}
-
-/** A sequence of steps toward one outcome, e.g. a website build. */
-export interface MilestoneDeliverable extends DeliverableBase {
-  kind: "milestone";
-  milestones: MilestoneStep[];
-}
-
-/** A single artifact produced once a month, e.g. the monthly report. */
-export interface MonthlyDeliverable extends DeliverableBase {
-  kind: "monthly";
-  status: "preparing" | "done" | "pending";
-  note?: string;
-}
-
-export type Deliverable =
-  | QuantityDeliverable
-  | UpToDeliverable
-  | RecurringDeliverable
-  | MilestoneDeliverable
-  | MonthlyDeliverable;
-
-export interface DeliveryGroup {
-  /** Service line label, e.g. "Social Media" — display-only, never branched on. */
-  serviceGroup: string;
-  deliverables: Deliverable[];
-}
-
-export interface MonthlyDelivery {
+export interface MonthlyDeliveryHero {
   periodLabel: string;
   overallPct: number;
   status: DeliveryStatus;
-  groups: DeliveryGroup[];
+  helperText: string;
+  items: DeliveryMetricItem[];
+  meta: MonthlyDeliveryMeta;
 }
 
-/** Compact per-service status line for the Overview's "Current Work" section. */
-export interface CurrentWorkItem {
+export type QuickStatIcon = "send" | "story" | "heart" | "users";
+
+export interface QuickStat {
   id: string;
-  serviceGroup: string;
-  detail: string;
-  status: string;
+  icon: QuickStatIcon;
+  label: string;
+  value: string;
+  deltaLabel: string;
+  deltaPositive: boolean;
+}
+
+export interface ActivityEntry {
+  id: string;
+  /** Grouping label — "Hari ini", "Kemarin", or a date like "9 Agustus 2026". */
+  day: string;
+  title: string;
+  description: string;
+  done: boolean;
+  /** Purely decorative — number of demo thumbnail swatches to render. */
+  thumbnailCount?: number;
+}
+
+export type ChannelIcon = "instagram" | "facebook" | "tiktok" | "reach";
+
+export interface ChannelOverviewRow {
+  id: string;
+  icon: ChannelIcon;
+  label: string;
+  metricLabel: string;
+  value: string;
+  deltaLabel: string;
+  sparkline: number[];
+}
+
+export interface UpcomingEvent {
+  id: string;
+  day: string;
+  month: string;
+  title: string;
+  timeLabel: string;
+}
+
+export type ContentPlatform = "instagram_feed" | "instagram_story" | "facebook_post" | "tiktok_post";
+
+export interface WeeklyCalendarRow {
+  id: string;
+  platform: ContentPlatform;
+  label: string;
+  /** One count per day, aligned with WeeklyCalendar.weekDays; null = no content. */
+  counts: (number | null)[];
+}
+
+export interface WeeklyCalendarDay {
+  label: string;
+  date: number;
+}
+
+export interface WeeklyCalendar {
+  weekDays: WeeklyCalendarDay[];
+  activeIndex: number;
+  rows: WeeklyCalendarRow[];
+  totalLabel: string;
+}
+
+export interface FileEntry {
+  id: string;
+  name: string;
+  category: string;
+  fileUrl: string;
+  updatedAt: string;
+  sizeLabel: string;
 }
 
 // Role architecture — disiapkan untuk pemisahan Client vs Admin nanti.

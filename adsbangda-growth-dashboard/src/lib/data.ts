@@ -18,10 +18,14 @@ import {
   mockReports,
   mockActivity,
   mockMonthlyDelivery,
-  mockCurrentWork,
+  mockQuickStats,
+  mockChannelOverview,
+  mockUpcomingEvents,
+  mockWeeklyCalendar,
+  mockFiles,
   marketingInsight,
 } from "./mock-data";
-import type { Client, Project, ProjectTask, ContentItem, ReportItem } from "./types";
+import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry } from "./types";
 
 export const DEMO_MODE = !isSupabaseConfigured;
 
@@ -97,11 +101,32 @@ export async function getMonthlyDelivery(clientId: string) {
   return mockMonthlyDelivery;
 }
 
-export async function getCurrentWork(clientId: string) {
-  if (!isSupabaseConfigured) return mockCurrentWork;
-  // TODO (live mode): turunkan dari status project/service per client.
+export async function getQuickStats(clientId: string) {
+  if (!isSupabaseConfigured) return mockQuickStats;
+  // TODO (live mode): agregat mingguan dari performance_metrics.
   void clientId;
-  return mockCurrentWork;
+  return mockQuickStats;
+}
+
+export async function getChannelOverview(clientId: string) {
+  if (!isSupabaseConfigured) return mockChannelOverview;
+  // TODO (live mode): agregat per channel + tren 7 hari dari performance_metrics.
+  void clientId;
+  return mockChannelOverview;
+}
+
+export async function getUpcomingEvents(clientId: string) {
+  if (!isSupabaseConfigured) return mockUpcomingEvents;
+  // TODO (live mode): turunkan dari jadwal meeting & milestone kontrak.
+  void clientId;
+  return mockUpcomingEvents;
+}
+
+export async function getWeeklyCalendar(clientId: string) {
+  if (!isSupabaseConfigured) return mockWeeklyCalendar;
+  // TODO (live mode): agregat content_items per hari untuk minggu berjalan.
+  void clientId;
+  return mockWeeklyCalendar;
 }
 
 export async function getPerformanceSummary(clientId: string) {
@@ -157,4 +182,11 @@ export async function getReports(clientId: string): Promise<ReportItem[]> {
     .order("period_month", { ascending: false });
 
   return data ?? [];
+}
+
+export async function getFiles(clientId: string): Promise<FileEntry[]> {
+  if (!isSupabaseConfigured) return mockFiles;
+  // TODO (live mode): turunkan dari file storage/bucket per client.
+  void clientId;
+  return mockFiles;
 }

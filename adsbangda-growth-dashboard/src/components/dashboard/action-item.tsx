@@ -1,42 +1,29 @@
-import { ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ChevronRight, FileCheck, Wallet, CalendarClock } from "lucide-react";
+import type { AttentionItem } from "@/lib/types";
 
-export interface ActionEntry {
-  id: string;
-  title: string;
-  description: string;
-  dueLabel: string;
-  actionLabel: string;
-  actionHref: string;
-  urgent: boolean;
-}
+const ICON_MAP: Record<AttentionItem["icon"], { Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; iconClass: string; bgClass: string }> = {
+  approval: { Icon: FileCheck, iconClass: "text-accent", bgClass: "bg-accent-soft" },
+  budget: { Icon: Wallet, iconClass: "text-success", bgClass: "bg-success-soft" },
+  meeting: { Icon: CalendarClock, iconClass: "text-purple-600", bgClass: "bg-purple-50" },
+};
 
-/**
- * A single row inside "Needs Your Attention" (spec §10). Importance comes
- * from typography and a small tone dot — not a loud alert-colored card.
- * Rendered as a divided row inside one shared container, not its own
- * floating card, to avoid the generic "grid of cards" dashboard formula.
- */
-export function ActionItem({ title, description, dueLabel, actionLabel, actionHref, urgent }: ActionEntry) {
+export function ActionItem({ icon, title, description, href, countBadge }: AttentionItem) {
+  const { Icon, iconClass, bgClass } = ICON_MAP[icon];
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4 py-4 first:pt-0 last:pb-0">
-      <div className="flex min-w-0 gap-3">
-        <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", urgent ? "bg-danger" : "bg-accent")} />
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-ink">{title}</p>
-          <p className="mt-0.5 text-xs leading-relaxed text-muted">{description}</p>
-          <p className="mt-1.5 font-data text-[11px] text-muted">{dueLabel}</p>
-        </div>
+    <a href={href} className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0">
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] ${bgClass}`}>
+        <Icon className={`h-4.5 w-4.5 ${iconClass}`} strokeWidth={1.75} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold leading-snug text-ink">{title}</p>
+        <p className="mt-0.5 text-xs text-muted">{description}</p>
       </div>
-      <a
-        href={actionHref}
-        className={cn(
-          "inline-flex shrink-0 items-center gap-1 font-data text-xs font-semibold hover:underline",
-          urgent ? "text-danger" : "text-accent"
-        )}
-      >
-        {actionLabel} <ArrowRight className="h-3.5 w-3.5" />
-      </a>
-    </div>
+      {countBadge ? (
+        <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-danger px-1.5 font-data text-[11px] font-semibold text-white">
+          {countBadge}
+        </span>
+      ) : null}
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} />
+    </a>
   );
 }

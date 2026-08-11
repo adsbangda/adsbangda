@@ -11,8 +11,13 @@ import type {
   ContentItem,
   ReportItem,
   AttentionItem,
-  MonthlyDelivery,
-  CurrentWorkItem,
+  MonthlyDeliveryHero,
+  QuickStat,
+  ActivityEntry,
+  ChannelOverviewRow,
+  UpcomingEvent,
+  WeeklyCalendar,
+  FileEntry,
 } from "./types";
 
 export const mockClient: Client = {
@@ -44,98 +49,94 @@ export const mockProjectTasks: ProjectTask[] = [
 export const mockAttentionItems: AttentionItem[] = [
   {
     id: "a1",
-    title: "6 konten menunggu approval",
-    description: "Review konten Instagram minggu ini sebelum jadwal publish 12 Agustus.",
-    dueLabel: "Hari ini",
-    actionLabel: "Review Konten",
-    actionHref: "/content-calendar",
-    urgent: true,
+    icon: "approval",
+    title: "6 konten menunggu persetujuan kamu",
+    description: "Due today",
+    href: "/content-calendar",
+    countBadge: 6,
   },
   {
     id: "a2",
-    title: "Konfirmasi budget Meta Ads September",
-    description: "Tim strategist mengusulkan kenaikan budget 15% berdasarkan performa CPL yang membaik.",
-    dueLabel: "12 Agustus",
-    actionLabel: "Lihat Detail",
-    actionHref: "/performance",
-    urgent: false,
+    icon: "budget",
+    title: "Konfirmasi budget Meta Ads",
+    description: "Due 12 Agustus 2026",
+    href: "/meta-ads",
   },
   {
     id: "a3",
-    title: "Sync bulanan dengan tim Adsbangda",
-    description: "Pembahasan hasil Agustus dan rencana campaign September.",
-    dueLabel: "15 Agustus · 14:00",
-    actionLabel: "Lihat Agenda",
-    actionHref: "/reports",
-    urgent: false,
+    icon: "meeting",
+    title: "Meeting bulanan",
+    description: "15 Agustus 2026 · 14:00",
+    href: "/reports",
   },
 ];
 
-// Monthly Delivery — contoh kontrak "Amati Coffee" bulan Agustus dengan tiga
-// service line (Social Media, Meta Ads, Website). Nilai-nilai ini SENGAJA
-// hanya contoh untuk mendemonstrasikan sistem visual; struktur tipe di
-// types.ts tidak menghardcode nama service atau jenis deliverable apa pun —
-// nanti ini akan datang dari input Admin Portal.
-export const mockMonthlyDelivery: MonthlyDelivery = {
-  periodLabel: "Agustus 2026",
-  overallPct: 82,
+// Monthly Delivery hero — contoh kontrak "Amati Coffee" bulan Agustus.
+// Nilai-nilai ini SENGAJA hanya contoh untuk mendemonstrasikan sistem visual;
+// `icon` hanya memilih glyph/warna tampilan, tidak membawa logika bisnis apa
+// pun, jadi service line apa saja bisa memakai deliverable & ikon apa saja.
+export const mockMonthlyDelivery: MonthlyDeliveryHero = {
+  periodLabel: "August 2026",
+  overallPct: 72,
   status: "on_track",
-  groups: [
-    {
-      serviceGroup: "Social Media",
-      deliverables: [
-        { id: "dl1", kind: "quantity", label: "Feed Design", completed: 10, target: 14 },
-        { id: "dl2", kind: "quantity", label: "Short-form Video", completed: 8, target: 12 },
-        { id: "dl3", kind: "quantity", label: "Long-form Video", completed: 6, target: 8 },
-        { id: "dl4", kind: "quantity", label: "Promotional Poster", completed: 4, target: 6 },
-        { id: "dl5", kind: "up_to", label: "Instagram Stories", used: 18, max: 30 },
-      ],
-    },
-    {
-      serviceGroup: "Meta Ads",
-      deliverables: [
-        {
-          id: "dl6",
-          kind: "recurring",
-          label: "Weekly Campaign Optimization",
-          periods: [
-            { label: "Week 1", status: "done" },
-            { label: "Week 2", status: "done" },
-            { label: "Week 3", status: "done" },
-            { label: "Week 4", status: "upcoming" },
-          ],
-        },
-        { id: "dl7", kind: "monthly", label: "Monthly Performance Report", status: "preparing" },
-      ],
-    },
-    {
-      serviceGroup: "Website",
-      deliverables: [
-        {
-          id: "dl8",
-          kind: "milestone",
-          label: "Website Development",
-          milestones: [
-            { label: "UI/UX Design", status: "done" },
-            { label: "Development", status: "in_progress", pct: 75 },
-            { label: "Responsive Optimization", status: "in_progress", pct: 40 },
-            { label: "SEO", status: "pending" },
-            { label: "Deployment", status: "pending" },
-          ],
-        },
-      ],
-    },
+  helperText: "Progres dihitung berdasarkan target pekerjaan yang disepakati di awal bulan.",
+  items: [
+    { id: "dl1", icon: "calendar", label: "Content (Semua Platform)", completed: 24, target: 30, unit: "postingan" },
+    { id: "dl2", icon: "instagram", label: "Instagram Feed", completed: 12, target: 15, unit: "postingan" },
+    { id: "dl3", icon: "instagram", label: "Instagram Story", completed: 36, target: 50, unit: "story" },
+    { id: "dl4", icon: "facebook", label: "Facebook", completed: 8, target: 12, unit: "postingan" },
+    { id: "dl5", icon: "tiktok", label: "TikTok", completed: 10, target: 15, unit: "postingan" },
+    { id: "dl6", icon: "edit", label: "Content Creative", completed: 28, target: 35, unit: "desain" },
+    { id: "dl7", icon: "megaphone", label: "Meta Ads Campaign", completed: 4, target: 6, unit: "campaign" },
+    { id: "dl8", icon: "chart", label: "Laporan & Analisis", completed: 1, target: 1, unit: "laporan bulanan" },
   ],
+  meta: {
+    periodRange: "1 – 31 August 2026",
+    lastUpdated: "11 August 2026, 10:00 WIB",
+    agreedDate: "30 Juli 2026",
+    contractHref: "/reports",
+  },
 };
 
-// "Current Work" — ringkasan status per service line, terpisah dari detail
-// task di halaman Projects. Sengaja generik (serviceGroup + detail + status
-// bebas teks) supaya tidak terikat pada service tertentu.
-export const mockCurrentWork: CurrentWorkItem[] = [
-  { id: "cw1", serviceGroup: "Social Media", detail: "Content production", status: "On Track" },
-  { id: "cw2", serviceGroup: "Meta Ads", detail: "3 campaigns active", status: "Optimizing" },
-  { id: "cw3", serviceGroup: "Website", detail: "Development", status: "75%" },
+export const mockQuickStats: QuickStat[] = [
+  { id: "qs1", icon: "send", label: "Postingan Terpublikasi", value: "18 postingan", deltaLabel: "20% vs last month", deltaPositive: true },
+  { id: "qs2", icon: "story", label: "Total Story", value: "48 story", deltaLabel: "14% vs last month", deltaPositive: true },
+  { id: "qs3", icon: "heart", label: "Engagement", value: "12.430", deltaLabel: "18.6% vs last month", deltaPositive: true },
+  { id: "qs4", icon: "users", label: "New Followers", value: "1.250", deltaLabel: "15.2% vs last month", deltaPositive: true },
 ];
+
+export const mockChannelOverview: ChannelOverviewRow[] = [
+  { id: "co1", icon: "instagram", label: "Instagram", metricLabel: "Engagement Rate", value: "3.82%", deltaLabel: "↑ 12.5%", sparkline: [4, 5, 4.5, 6, 5.5, 7, 6.8] },
+  { id: "co2", icon: "facebook", label: "Facebook", metricLabel: "Engagement Rate", value: "2.45%", deltaLabel: "↑ 10.3%", sparkline: [3, 3.2, 2.8, 3.5, 3.1, 3.8, 3.6] },
+  { id: "co3", icon: "tiktok", label: "TikTok", metricLabel: "Engagement Rate", value: "5.12%", deltaLabel: "↑ 18.6%", sparkline: [4, 4.5, 5, 4.8, 5.5, 6, 5.8] },
+  { id: "co4", icon: "reach", label: "Total Reach", metricLabel: "Seluruh Platform", value: "128.430", deltaLabel: "↑ 16.2%", sparkline: [90, 95, 100, 98, 110, 120, 128] },
+];
+
+export const mockUpcomingEvents: UpcomingEvent[] = [
+  { id: "ue1", day: "15", month: "AUG", title: "Monthly Review Meeting", timeLabel: "14:00 – 15:00 WIB" },
+  { id: "ue2", day: "20", month: "AUG", title: "Content Planning September", timeLabel: "10:00 – 11:30 WIB" },
+  { id: "ue3", day: "31", month: "AUG", title: "Monthly Report & Evaluation", timeLabel: "End of Month" },
+];
+
+export const mockWeeklyCalendar: WeeklyCalendar = {
+  weekDays: [
+    { label: "Sen", date: 11 },
+    { label: "Sel", date: 12 },
+    { label: "Rab", date: 13 },
+    { label: "Kam", date: 14 },
+    { label: "Jum", date: 15 },
+    { label: "Sab", date: 16 },
+    { label: "Min", date: 17 },
+  ],
+  activeIndex: 1,
+  totalLabel: "16 konten",
+  rows: [
+    { id: "wc1", platform: "instagram_feed", label: "Instagram Feed", counts: [1, 1, 1, 1, 1, null, null] },
+    { id: "wc2", platform: "instagram_story", label: "Instagram Story", counts: [5, 5, 5, 5, 5, 5, 5] },
+    { id: "wc3", platform: "facebook_post", label: "Facebook Post", counts: [1, 1, 1, 1, null, null, null] },
+    { id: "wc4", platform: "tiktok_post", label: "TikTok Post", counts: [1, 1, 1, 1, null, null, null] },
+  ],
+};
 
 // Snapshot mingguan — dipakai untuk chart trend & perbandingan periode.
 export const mockPerformance: PerformanceMetric[] = [
@@ -194,21 +195,42 @@ export const mockReports: ReportItem[] = [
 export const marketingInsight =
   "Lead generation naik 9,2% minggu ini sementara cost per lead turun 12% — Meta Ads jadi kanal akuisisi paling efisien saat ini. Instagram organic juga mulai berkontribusi lewat konten reel behind-the-scenes.";
 
-export interface ActivityEvent {
-  id: string;
-  /** Grouping label — "Hari Ini", "Kemarin", or a date like "9 Agustus". */
-  day: string;
-  time: string;
-  actor: string;
-  action: string;
-  tone: "success" | "accent" | "warning" | "muted";
-}
+export const mockFiles: FileEntry[] = [
+  { id: "f1", name: "Kontrak Kerja Sama — Amati Coffee.pdf", category: "Kontrak", fileUrl: "#", updatedAt: "2026-07-30", sizeLabel: "480 KB" },
+  { id: "f2", name: "Brand Guidelines Amati Coffee.pdf", category: "Brand Asset", fileUrl: "#", updatedAt: "2026-07-15", sizeLabel: "2.1 MB" },
+  { id: "f3", name: "Logo & Aset Visual.zip", category: "Brand Asset", fileUrl: "#", updatedAt: "2026-07-15", sizeLabel: "12.4 MB" },
+  { id: "f4", name: "Content Plan — Agustus 2026.xlsx", category: "Perencanaan", fileUrl: "#", updatedAt: "2026-08-01", sizeLabel: "96 KB" },
+];
 
-export const mockActivity: ActivityEvent[] = [
-  { id: "ac1", day: "Hari Ini", time: "14:20", actor: "Tim Adsbangda", action: "mengoptimasi campaign Meta Ads", tone: "accent" },
-  { id: "ac2", day: "Kemarin", time: "16:40", actor: "Tim Adsbangda", action: "mempublikasikan 3 post Instagram", tone: "success" },
-  { id: "ac3", day: "9 Agustus", time: "11:05", actor: "Rani — Strategist", action: "menyelesaikan content strategy bulan ini", tone: "success" },
-  { id: "ac4", day: "9 Agustus", time: "09:40", actor: "Diko — Content Lead", action: "mengunggah 3 draft konten baru untuk direview", tone: "accent" },
-  { id: "ac5", day: "8 Agustus", time: "10:15", actor: "Rani — Strategist", action: "menyelesaikan riset audiens", tone: "muted" },
+export const mockActivity: ActivityEntry[] = [
+  {
+    id: "ac1",
+    day: "Hari ini",
+    title: "Optimasi Meta Ads Campaign",
+    description: "Menyesuaikan audience dan penempatan iklan untuk meningkatkan performa.",
+    done: true,
+  },
+  {
+    id: "ac2",
+    day: "Kemarin",
+    title: "3 Konten Instagram Dipublikasikan",
+    description: "1 Carousel • 1 Reel • 1 Story",
+    done: true,
+    thumbnailCount: 4,
+  },
+  {
+    id: "ac3",
+    day: "9 Agustus 2026",
+    title: "Content Strategy Weekly Meeting",
+    description: "Membahas ide konten mingguan dan campaign berjalan.",
+    done: false,
+  },
+  {
+    id: "ac4",
+    day: "8 Agustus 2026",
+    title: "Desain 6 Konten Feed & 10 Story",
+    description: "Pembuatan desain konten untuk minggu ke-2 bulan ini.",
+    done: false,
+  },
 ];
 
