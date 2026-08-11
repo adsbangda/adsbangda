@@ -37,7 +37,7 @@ export default async function OverviewPage() {
 
       <div className="space-y-8 p-8">
         {/* Hero summary banner */}
-        <section className="relative overflow-hidden rounded-[var(--radius-card)] bg-ink px-7 py-8 text-paper shadow-[var(--shadow-card)]">
+        <section className="animate-rise relative overflow-hidden rounded-[var(--radius-card)] bg-ink px-7 py-8 text-paper shadow-[var(--shadow-card)]">
           <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-accent/25 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 left-1/3 h-52 w-52 rounded-full bg-blue-400/10 blur-3xl" />
           <div className="relative flex flex-wrap items-center justify-between gap-6">
@@ -68,34 +68,42 @@ export default async function OverviewPage() {
 
         {/* KPI cards */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Ad Spend Minggu Ini"
-            value={latestMeta ? formatIDR(latestMeta.spend ?? 0) : "—"}
-            icon={Wallet}
-          />
-          <StatCard
-            label="Leads Minggu Ini"
-            value={latestMeta ? formatNumber(latestMeta.leads ?? 0) : "—"}
-            delta={
-              leadDelta !== null
-                ? { value: `${Math.abs(leadDelta)}% vs minggu lalu`, direction: leadDelta >= 0 ? "up" : "down" }
-                : undefined
-            }
-            icon={MousePointerClick}
-          />
-          <StatCard
-            label="Followers"
-            value={latestSocial ? formatNumber(latestSocial.followers ?? 0) : "—"}
-            icon={Users}
-          />
-          <StatCard
-            label="Engagement Rate"
-            value={latestSocial ? `${latestSocial.engagementRate?.toFixed(1)}%` : "—"}
-            icon={CalendarClock}
-          />
+          <div className="animate-rise" style={{ animationDelay: "60ms" }}>
+            <StatCard
+              label="Ad Spend Minggu Ini"
+              value={latestMeta ? formatIDR(latestMeta.spend ?? 0) : "—"}
+              icon={Wallet}
+            />
+          </div>
+          <div className="animate-rise" style={{ animationDelay: "120ms" }}>
+            <StatCard
+              label="Leads Minggu Ini"
+              value={latestMeta ? formatNumber(latestMeta.leads ?? 0) : "—"}
+              delta={
+                leadDelta !== null
+                  ? { value: `${Math.abs(leadDelta)}% vs minggu lalu`, direction: leadDelta >= 0 ? "up" : "down" }
+                  : undefined
+              }
+              icon={MousePointerClick}
+            />
+          </div>
+          <div className="animate-rise" style={{ animationDelay: "180ms" }}>
+            <StatCard
+              label="Followers"
+              value={latestSocial ? formatNumber(latestSocial.followers ?? 0) : "—"}
+              icon={Users}
+            />
+          </div>
+          <div className="animate-rise" style={{ animationDelay: "240ms" }}>
+            <StatCard
+              label="Engagement Rate"
+              value={latestSocial ? `${latestSocial.engagementRate?.toFixed(1)}%` : "—"}
+              icon={CalendarClock}
+            />
+          </div>
         </section>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="animate-rise grid grid-cols-1 gap-6 lg:grid-cols-3" style={{ animationDelay: "300ms" }}>
           {/* Project progress */}
           <section className="lg:col-span-2 rounded-[var(--radius-card)] border border-border bg-paper-deep p-6 shadow-[var(--shadow-card)]">
             <div className="mb-5 flex items-center justify-between">

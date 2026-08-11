@@ -22,7 +22,7 @@ export function StatCard({ label, value, delta, icon: Icon, className }: StatCar
           {label}
         </span>
         {Icon && (
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-accent transition-transform duration-200 group-hover:scale-110">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-accent transition-all duration-200 group-hover:scale-110 group-hover:bg-gradient-to-br group-hover:from-accent-2 group-hover:to-accent group-hover:text-white">
             <Icon className="h-4 w-4" strokeWidth={1.75} />
           </div>
         )}

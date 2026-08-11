@@ -14,6 +14,7 @@
   --paper: #fafafa;       /* background utama */
   --paper-deep: #ffffff;  /* card/surface di atas paper */
   --accent: #1d4ed8;      /* satu-satunya warna aksen brand (biru) */
+  --accent-2: #2563eb;    /* pasangan gradient aksen, sama seperti gradient di website utama */
   --accent-soft: #eff4ff; /* accent tint untuk background badge/hover */
   --muted: #6f6b5e;       /* teks sekunder di atas paper */
   --muted-on-dark: #8d8879;
@@ -37,6 +38,7 @@
   --color-paper: var(--paper);
   --color-paper-deep: var(--paper-deep);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
   --color-accent-soft: var(--accent-soft);
   --color-muted: var(--muted);
   --color-muted-on-dark: var(--muted-on-dark);
@@ -68,9 +70,63 @@ body {
 
 /* Subtle ambient backdrop so flat areas don't feel sterile */
 .page-backdrop {
+  position: relative;
   background:
-    radial-gradient(560px circle at 8% -10%, rgba(29, 78, 216, 0.06), transparent 60%),
-    radial-gradient(480px circle at 100% 0%, rgba(29, 78, 216, 0.04), transparent 55%);
+    radial-gradient(560px circle at 8% -10%, rgba(37, 99, 235, 0.07), transparent 60%),
+    radial-gradient(480px circle at 100% 0%, rgba(29, 78, 216, 0.05), transparent 55%);
+}
+
+/* Same faint grain used on the main site, kept very subtle so text stays crisp */
+.page-backdrop::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.02;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.page-backdrop > * {
+  position: relative;
+  z-index: 1;
+}
+
+.brand-gradient {
+  background: linear-gradient(135deg, var(--accent-2) 0%, var(--accent) 100%);
+}
+
+/* Simple, restrained entrance animation for cards */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.35); }
+}
+
+.animate-pulse-dot {
+  animation: dot-pulse 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-pulse-dot {
+    animation: none;
+  }
 }
 
 h1, h2, h3, h4 {

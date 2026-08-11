@@ -12,7 +12,7 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
       <div className="flex shrink-0 items-center gap-3">
         {DEMO_MODE && (
           <span className="hidden items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1.5 font-data text-[11px] font-semibold text-warning sm:inline-flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+            <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-warning" />
             Mode Demo
           </span>
         )}
