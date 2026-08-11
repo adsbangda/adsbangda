@@ -22,10 +22,14 @@ export async function middleware(request: NextRequest) {
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
   const isAdminPath = pathname === ADMIN_PREFIX || pathname.startsWith(ADMIN_PREFIX + "/");
 
+  // Query role HANYA kalau benar-benar perlu (buka /login saat sudah login,
+  // atau buka /admin/*). Untuk semua halaman client biasa, cukup 1 network
+  // call (auth.getUser() di atas) — TIDAK ada query tambahan di sini.
+  const needsRole = (user && pathname === "/login") || (user && isAdminPath);
+  const role = needsRole ? await getRole(request, user!.id, url, key) : null;
+
   if (isPublic) {
-    // Sudah login tapi buka /login lagi -> lempar ke halaman yang sesuai.
     if (user && pathname === "/login") {
-      const role = await getRole(request, user.id, url, key);
       return NextResponse.redirect(new URL(role === "admin" ? "/admin" : "/", request.url));
     }
     return response;
@@ -37,11 +41,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (isAdminPath) {
-    const role = await getRole(request, user.id, url, key);
-    if (role !== "admin") {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
+  if (isAdminPath && role !== "admin") {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return response;
