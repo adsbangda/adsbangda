@@ -93,6 +93,96 @@ export interface AttentionItem {
   urgent: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// Monthly Delivery — service-agnostic contracted-work tracking.
+//
+// This is intentionally generic: a "deliverable" only knows how to describe
+// its own progress (a fixed quantity, a soft cap, a recurring cadence, a
+// milestone sequence, or a single monthly artifact). The Overview renders
+// whatever groups/deliverables it receives — nothing about "Social Media" or
+// "Meta Ads" is hardcoded into the component layer. Later phases will feed
+// this from data the Admin Portal writes; for now it comes from mock-data.ts.
+// ---------------------------------------------------------------------------
+
+export type DeliveryStatus = "on_track" | "at_risk" | "completed" | "delayed";
+
+interface DeliverableBase {
+  id: string;
+  label: string;
+}
+
+/** A fixed number of units contracted for the month, e.g. "Feed Design 10 / 14". */
+export interface QuantityDeliverable extends DeliverableBase {
+  kind: "quantity";
+  completed: number;
+  target: number;
+}
+
+/** A soft ceiling, not a mandatory target, e.g. "Instagram Stories 18 / up to 30". */
+export interface UpToDeliverable extends DeliverableBase {
+  kind: "up_to";
+  used: number;
+  max: number;
+}
+
+export interface RecurringPeriod {
+  label: string;
+  status: "done" | "in_progress" | "upcoming";
+}
+
+/** A cadence-based deliverable, e.g. weekly campaign optimization. */
+export interface RecurringDeliverable extends DeliverableBase {
+  kind: "recurring";
+  periods: RecurringPeriod[];
+}
+
+export interface MilestoneStep {
+  label: string;
+  status: "done" | "in_progress" | "pending";
+  pct?: number;
+}
+
+/** A sequence of steps toward one outcome, e.g. a website build. */
+export interface MilestoneDeliverable extends DeliverableBase {
+  kind: "milestone";
+  milestones: MilestoneStep[];
+}
+
+/** A single artifact produced once a month, e.g. the monthly report. */
+export interface MonthlyDeliverable extends DeliverableBase {
+  kind: "monthly";
+  status: "preparing" | "done" | "pending";
+  note?: string;
+}
+
+export type Deliverable =
+  | QuantityDeliverable
+  | UpToDeliverable
+  | RecurringDeliverable
+  | MilestoneDeliverable
+  | MonthlyDeliverable;
+
+export interface DeliveryGroup {
+  /** Service line label, e.g. "Social Media" — display-only, never branched on. */
+  serviceGroup: string;
+  deliverables: Deliverable[];
+}
+
+export interface MonthlyDelivery {
+  periodLabel: string;
+  overallPct: number;
+  status: DeliveryStatus;
+  groups: DeliveryGroup[];
+}
+
+/** Compact per-service status line for the Overview's "Current Work" section. */
+export interface CurrentWorkItem {
+  id: string;
+  serviceGroup: string;
+  detail: string;
+  status: string;
+}
+
 // Role architecture — disiapkan untuk pemisahan Client vs Admin nanti.
 // Belum ada UI Admin di MVP ini (lihat README), tapi tipe ini jadi dasar
 // supaya penambahan /admin/* nanti tidak perlu migrasi ulang skema.

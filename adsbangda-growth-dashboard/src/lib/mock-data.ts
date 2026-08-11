@@ -11,6 +11,8 @@ import type {
   ContentItem,
   ReportItem,
   AttentionItem,
+  MonthlyDelivery,
+  CurrentWorkItem,
 } from "./types";
 
 export const mockClient: Client = {
@@ -67,6 +69,72 @@ export const mockAttentionItems: AttentionItem[] = [
     actionHref: "/reports",
     urgent: false,
   },
+];
+
+// Monthly Delivery — contoh kontrak "Amati Coffee" bulan Agustus dengan tiga
+// service line (Social Media, Meta Ads, Website). Nilai-nilai ini SENGAJA
+// hanya contoh untuk mendemonstrasikan sistem visual; struktur tipe di
+// types.ts tidak menghardcode nama service atau jenis deliverable apa pun —
+// nanti ini akan datang dari input Admin Portal.
+export const mockMonthlyDelivery: MonthlyDelivery = {
+  periodLabel: "Agustus 2026",
+  overallPct: 82,
+  status: "on_track",
+  groups: [
+    {
+      serviceGroup: "Social Media",
+      deliverables: [
+        { id: "dl1", kind: "quantity", label: "Feed Design", completed: 10, target: 14 },
+        { id: "dl2", kind: "quantity", label: "Short-form Video", completed: 8, target: 12 },
+        { id: "dl3", kind: "quantity", label: "Long-form Video", completed: 6, target: 8 },
+        { id: "dl4", kind: "quantity", label: "Promotional Poster", completed: 4, target: 6 },
+        { id: "dl5", kind: "up_to", label: "Instagram Stories", used: 18, max: 30 },
+      ],
+    },
+    {
+      serviceGroup: "Meta Ads",
+      deliverables: [
+        {
+          id: "dl6",
+          kind: "recurring",
+          label: "Weekly Campaign Optimization",
+          periods: [
+            { label: "Week 1", status: "done" },
+            { label: "Week 2", status: "done" },
+            { label: "Week 3", status: "done" },
+            { label: "Week 4", status: "upcoming" },
+          ],
+        },
+        { id: "dl7", kind: "monthly", label: "Monthly Performance Report", status: "preparing" },
+      ],
+    },
+    {
+      serviceGroup: "Website",
+      deliverables: [
+        {
+          id: "dl8",
+          kind: "milestone",
+          label: "Website Development",
+          milestones: [
+            { label: "UI/UX Design", status: "done" },
+            { label: "Development", status: "in_progress", pct: 75 },
+            { label: "Responsive Optimization", status: "in_progress", pct: 40 },
+            { label: "SEO", status: "pending" },
+            { label: "Deployment", status: "pending" },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+// "Current Work" — ringkasan status per service line, terpisah dari detail
+// task di halaman Projects. Sengaja generik (serviceGroup + detail + status
+// bebas teks) supaya tidak terikat pada service tertentu.
+export const mockCurrentWork: CurrentWorkItem[] = [
+  { id: "cw1", serviceGroup: "Social Media", detail: "Content production", status: "On Track" },
+  { id: "cw2", serviceGroup: "Meta Ads", detail: "3 campaigns active", status: "Optimizing" },
+  { id: "cw3", serviceGroup: "Website", detail: "Development", status: "75%" },
 ];
 
 // Snapshot mingguan — dipakai untuk chart trend & perbandingan periode.
@@ -128,16 +196,19 @@ export const marketingInsight =
 
 export interface ActivityEvent {
   id: string;
+  /** Grouping label — "Hari Ini", "Kemarin", or a date like "9 Agustus". */
+  day: string;
+  time: string;
   actor: string;
   action: string;
-  time: string;
   tone: "success" | "accent" | "warning" | "muted";
 }
 
 export const mockActivity: ActivityEvent[] = [
-  { id: "ac1", actor: "Tim Adsbangda", action: "mempublikasikan reel \"Proses roasting biji kopi\"", time: "2 jam lalu", tone: "success" },
-  { id: "ac2", actor: "Diko — Content Lead", action: "mengunggah 3 draft konten baru untuk direview", time: "5 jam lalu", tone: "accent" },
-  { id: "ac3", actor: "Meta Ads", action: "budget mingguan otomatis diperbarui ke Rp3.750.000", time: "1 hari lalu", tone: "muted" },
-  { id: "ac4", actor: "Rani — Strategist", action: "menyelesaikan tahap Strategy campaign Agustus", time: "3 hari lalu", tone: "success" },
+  { id: "ac1", day: "Hari Ini", time: "14:20", actor: "Tim Adsbangda", action: "mengoptimasi campaign Meta Ads", tone: "accent" },
+  { id: "ac2", day: "Kemarin", time: "16:40", actor: "Tim Adsbangda", action: "mempublikasikan 3 post Instagram", tone: "success" },
+  { id: "ac3", day: "9 Agustus", time: "11:05", actor: "Rani — Strategist", action: "menyelesaikan content strategy bulan ini", tone: "success" },
+  { id: "ac4", day: "9 Agustus", time: "09:40", actor: "Diko — Content Lead", action: "mengunggah 3 draft konten baru untuk direview", tone: "accent" },
+  { id: "ac5", day: "8 Agustus", time: "10:15", actor: "Rani — Strategist", action: "menyelesaikan riset audiens", tone: "muted" },
 ];
 

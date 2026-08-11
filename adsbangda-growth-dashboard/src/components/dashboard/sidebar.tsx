@@ -131,7 +131,7 @@ export function Sidebar({ clientName, onNavigate }: { clientName: string; onNavi
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold">{clientName}</div>
-            <div className="font-data text-[10px] text-muted-on-dark">Active Client</div>
+            <div className="font-data text-[10px] text-muted-on-dark">Client Account</div>
           </div>
           <button type="button" aria-label="Keluar" className="text-muted-on-dark transition-colors hover:text-white">
             <LogOut className="h-4 w-4" strokeWidth={1.75} />

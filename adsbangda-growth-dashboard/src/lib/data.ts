@@ -17,6 +17,8 @@ import {
   mockContentCalendar,
   mockReports,
   mockActivity,
+  mockMonthlyDelivery,
+  mockCurrentWork,
   marketingInsight,
 } from "./mock-data";
 import type { Client, Project, ProjectTask, ContentItem, ReportItem } from "./types";
@@ -85,6 +87,21 @@ export async function getRecentActivity() {
   if (!isSupabaseConfigured) return mockActivity;
   // TODO (live mode): turunkan dari audit-log / activity table.
   return mockActivity;
+}
+
+export async function getMonthlyDelivery(clientId: string) {
+  if (!isSupabaseConfigured) return mockMonthlyDelivery;
+  // TODO (live mode): turunkan dari deliverable/contract items yang diinput
+  // lewat Admin Portal (belum ada di MVP ini — lihat roadmap di README).
+  void clientId;
+  return mockMonthlyDelivery;
+}
+
+export async function getCurrentWork(clientId: string) {
+  if (!isSupabaseConfigured) return mockCurrentWork;
+  // TODO (live mode): turunkan dari status project/service per client.
+  void clientId;
+  return mockCurrentWork;
 }
 
 export async function getPerformanceSummary(clientId: string) {
