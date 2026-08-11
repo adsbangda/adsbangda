@@ -1,4 +1,6 @@
 import { Topbar } from "@/components/dashboard/topbar";
+import { Card } from "@/components/dashboard/card";
+import { EmptyState } from "@/components/dashboard/empty-state";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { ProgressBar } from "@/components/dashboard/progress-bar";
 import { getCurrentClient, getActiveProject } from "@/lib/data";
@@ -15,11 +17,9 @@ export default async function ProjectsPage() {
 
       <div className="p-5 lg:p-8">
         {!project ? (
-          <div className="rounded-[var(--radius-lg)] border border-border bg-surface p-10 text-center text-sm text-muted shadow-[var(--shadow-sm)]">
-            Belum ada project aktif saat ini.
-          </div>
+          <EmptyState title="Belum ada project aktif" description="Project baru akan muncul di sini begitu dimulai oleh tim Adsbangda." />
         ) : (
-          <div className="rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)] lg:p-7">
+          <Card padding="lg">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-5">
               <div>
                 <h2 className="text-lg font-bold text-ink">{project.name}</h2>
@@ -64,7 +64,7 @@ export default async function ProjectsPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
       </div>
     </div>

@@ -16,55 +16,50 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const WORKSPACE_ITEMS = [
+// Flat client navigation per design system spec — Overview, Performance,
+// Projects, Content, Reports. Routes are unchanged; only the sidebar label
+// and grouping were simplified (no more Workspace/Reporting split).
+const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/performance", label: "Performance", icon: LineChart },
-  { href: "/projects", label: "Project Progress", icon: ListChecks },
-  { href: "/content-calendar", label: "Content Calendar", icon: CalendarDays },
+  { href: "/projects", label: "Projects", icon: ListChecks },
+  { href: "/content-calendar", label: "Content", icon: CalendarDays },
+  { href: "/reports", label: "Reports", icon: FileText },
 ];
-
-const REPORTING_ITEMS = [{ href: "/reports", label: "Reports", icon: FileText }];
 
 const WA_PHONE = "6282289348724";
 const SUPPORT_EMAIL = "info@adsbangda.com";
 
 function NavSection({
-  label,
   items,
   pathname,
   onNavigate,
 }: {
-  label: string;
-  items: typeof WORKSPACE_ITEMS;
+  items: typeof NAV_ITEMS;
   pathname: string;
   onNavigate?: () => void;
 }) {
   return (
-    <div>
-      <p className="px-3 pb-1.5 font-data text-[10px] font-semibold uppercase tracking-wider text-muted-on-dark/70">
-        {label}
-      </p>
-      <div className="space-y-0.5">
-        {items.map((item) => {
-          const active = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={cn(
-                "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                active ? "bg-white/[0.07] text-white" : "text-muted-on-dark hover:bg-white/[0.04] hover:text-white"
-              )}
-            >
-              {active && <span className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 bg-accent-2" />}
-              <Icon className={cn("h-4 w-4 shrink-0", active && "text-accent-2")} strokeWidth={1.75} />
-              <span className="truncate">{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
+    <div className="space-y-0.5">
+      {items.map((item) => {
+        const active = pathname === item.href;
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              active ? "bg-white/[0.07] text-white" : "text-muted-on-dark hover:bg-white/[0.04] hover:text-white"
+            )}
+          >
+            {active && <span className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 bg-accent-2" />}
+            <Icon className={cn("h-4 w-4 shrink-0", active && "text-accent-2")} strokeWidth={1.75} />
+            <span className="truncate">{item.label}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -82,7 +77,7 @@ export function Sidebar({ clientName, onNavigate }: { clientName: string; onNavi
           <div>
             <div className="font-display text-sm font-bold leading-none">Adsbangda</div>
             <div className="mt-1 font-data text-[9.5px] uppercase tracking-wider text-muted-on-dark">
-              Growth OS
+              Client Portal
             </div>
           </div>
         </div>
@@ -93,9 +88,8 @@ export function Sidebar({ clientName, onNavigate }: { clientName: string; onNavi
         )}
       </div>
 
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-2">
-        <NavSection label="Workspace" items={WORKSPACE_ITEMS} pathname={pathname} onNavigate={onNavigate} />
-        <NavSection label="Reporting" items={REPORTING_ITEMS} pathname={pathname} onNavigate={onNavigate} />
+      <nav className="flex-1 overflow-y-auto px-3 py-2">
+        <NavSection items={NAV_ITEMS} pathname={pathname} onNavigate={onNavigate} />
       </nav>
 
       <div className="space-y-3 px-3 pb-3">

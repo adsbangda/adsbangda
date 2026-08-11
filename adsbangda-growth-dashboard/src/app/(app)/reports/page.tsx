@@ -1,4 +1,7 @@
 import { Topbar } from "@/components/dashboard/topbar";
+import { Card } from "@/components/dashboard/card";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { buttonVariants } from "@/components/dashboard/button";
 import { getCurrentClient, getReports } from "@/lib/data";
 import { Download, FileText } from "lucide-react";
 
@@ -18,7 +21,10 @@ export default async function ReportsPage() {
       <Topbar title="Report Center" subtitle="Laporan bulanan dan riwayat performance." />
 
       <div className="p-5 lg:p-8">
-        <div className="divide-y divide-border overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-[var(--shadow-sm)]">
+        {reports.length === 0 ? (
+          <EmptyState title="Belum ada laporan tersedia" description="Laporan bulanan akan muncul di sini setelah periode pertama selesai." />
+        ) : (
+        <Card padding="sm" className="divide-y divide-border overflow-hidden p-0">
           {reports.map((report) => (
             <div key={report.id} className="flex flex-wrap items-start justify-between gap-4 p-5 lg:p-6">
               <div className="flex items-start gap-4">
@@ -35,20 +41,14 @@ export default async function ReportsPage() {
                   </p>
                 </div>
               </div>
-              <a
-                href={report.fileUrl}
-                className="inline-flex shrink-0 items-center gap-2 rounded-[var(--radius-md)] border border-ink px-4 py-2 text-xs font-semibold text-ink transition-colors hover:bg-ink hover:text-paper"
-              >
+              <a href={report.fileUrl} className={buttonVariants({ variant: "outline" })}>
                 <Download className="h-3.5 w-3.5" strokeWidth={1.75} />
                 Download
               </a>
             </div>
           ))}
-
-          {reports.length === 0 && (
-            <div className="p-10 text-center text-sm text-muted">Belum ada laporan tersedia.</div>
-          )}
-        </div>
+        </Card>
+        )}
       </div>
     </div>
   );

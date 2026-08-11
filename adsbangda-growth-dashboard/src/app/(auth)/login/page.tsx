@@ -6,9 +6,8 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Brand panel */}
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-ink p-10 text-paper lg:flex">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
-        <div className="relative flex items-center gap-2.5">
+      <div className="hidden flex-col justify-between bg-ink p-10 text-paper lg:flex">
+        <div className="flex items-center gap-2.5">
           <div className="brand-gradient flex h-8 w-8 items-center justify-center rounded-md font-display text-sm font-extrabold text-white">
             A
           </div>

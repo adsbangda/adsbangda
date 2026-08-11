@@ -1,7 +1,10 @@
 import { Topbar } from "@/components/dashboard/topbar";
+import { Card } from "@/components/dashboard/card";
+import { SectionHeading } from "@/components/dashboard/section-heading";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { TrendChart } from "@/components/dashboard/trend-chart";
+import { DateRangeTabs } from "@/components/dashboard/date-range-tabs";
 import { getCurrentClient, getPerformanceSummary } from "@/lib/data";
 import { formatIDR, formatNumber } from "@/lib/utils";
 import { Wallet, Target, Eye, Heart, TrendingUp, Users2 } from "lucide-react";
@@ -29,23 +32,27 @@ export default async function PerformancePage() {
       <Topbar title="Performance" subtitle="Data diperbarui manual oleh tim Adsbangda setiap minggu." />
 
       <div className="space-y-8 p-5 lg:p-8">
+        {/* Key metrics — one restrained accent tone; color is reserved for delta direction */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <KpiCard label="Leads" value={formatNumber(latestMeta?.leads ?? 0)} icon={Target} iconColor="text-accent" iconBg="bg-accent-soft" delta={leadDelta !== null ? { value: `${Math.abs(leadDelta)}%`, direction: leadDelta >= 0 ? "up" : "down" } : undefined} />
-          <KpiCard label="Cost per Lead" value={formatIDR(latestMeta?.costPerLead ?? 0)} icon={Wallet} iconColor="text-success" iconBg="bg-success-soft" />
-          <KpiCard label="Ad Spend" value={formatIDR(latestMeta?.spend ?? 0)} icon={Wallet} iconColor="text-warning" iconBg="bg-warning-soft" />
-          <KpiCard label="Reach" value={formatNumber(latestMeta?.reach ?? 0)} icon={Eye} iconColor="text-accent-2" iconBg="bg-accent-soft" />
-          <KpiCard label="Engagement" value={`${latestSocial?.engagementRate?.toFixed(1) ?? "0"}%`} icon={Heart} iconColor="text-danger" iconBg="bg-danger-soft" />
-          <KpiCard label="Conversions" value={formatNumber(latestWebsite?.conversions ?? 0)} icon={Users2} iconColor="text-ink" iconBg="bg-black/[0.05]" />
+          <KpiCard label="Cost per Lead" value={formatIDR(latestMeta?.costPerLead ?? 0)} icon={Wallet} iconColor="text-accent" iconBg="bg-accent-soft" />
+          <KpiCard label="Ad Spend" value={formatIDR(latestMeta?.spend ?? 0)} icon={Wallet} iconColor="text-accent" iconBg="bg-accent-soft" />
+          <KpiCard label="Reach" value={formatNumber(latestMeta?.reach ?? 0)} icon={Eye} iconColor="text-accent" iconBg="bg-accent-soft" />
+          <KpiCard label="Engagement" value={`${latestSocial?.engagementRate?.toFixed(1) ?? "0"}%`} icon={Heart} iconColor="text-accent" iconBg="bg-accent-soft" />
+          <KpiCard label="Conversions" value={formatNumber(latestWebsite?.conversions ?? 0)} icon={Users2} iconColor="text-accent" iconBg="bg-accent-soft" />
         </section>
 
-        <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)]">
-          <h2 className="mb-1 text-base font-bold text-ink">Leads Over Time</h2>
-          <p className="mb-5 text-sm text-muted">5 minggu terakhir · Meta Ads</p>
+        <Card>
+          <SectionHeading
+            title="Leads Over Time"
+            description="Meta Ads · data mingguan"
+            action={<DateRangeTabs />}
+          />
           <TrendChart data={leadsChartData} dataKey="value" format="number" />
-        </section>
+        </Card>
 
-        <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)]">
-          <h2 className="mb-5 text-base font-bold text-ink">Channel Performance</h2>
+        <Card padding="lg">
+          <SectionHeading title="Channel Performance" />
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
@@ -74,10 +81,10 @@ export default async function PerformancePage() {
               </tbody>
             </table>
           </div>
-        </section>
+        </Card>
 
-        <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)]">
-          <h2 className="mb-4 text-base font-bold text-ink">Top Performing Content</h2>
+        <Card>
+          <SectionHeading title="Top Performing Content" />
           <div className="divide-y divide-border">
             {topContent.map((item, i) => (
               <div key={i} className="flex items-center justify-between gap-4 py-3.5 first:pt-0">
@@ -91,7 +98,7 @@ export default async function PerformancePage() {
               </div>
             ))}
           </div>
-        </section>
+        </Card>
       </div>
     </div>
   );
