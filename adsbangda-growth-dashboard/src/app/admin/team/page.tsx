@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -6,8 +7,17 @@ import { buttonVariants } from "@/components/dashboard/button";
 import { DemoModeBanner } from "@/components/admin/demo-banner";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { DEMO_MODE } from "@/lib/data";
-import { adminListUsers, adminListClientAccess, adminSetRole, adminAssignClient, adminUnassignClient, adminListClients } from "@/lib/admin-data";
-import { Users } from "lucide-react";
+import {
+  adminListUsers,
+  adminListClientAccess,
+  adminSetRole,
+  adminAssignClient,
+  adminUnassignClient,
+  adminListClients,
+  adminCreateUser,
+  canCreateUsersDirectly,
+} from "@/lib/admin-data";
+import { Users, KeyRound } from "lucide-react";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 
@@ -50,6 +60,21 @@ export default async function TeamPage() {
     revalidatePath("/admin/team");
   }
 
+  async function createUserAction(formData: FormData) {
+    "use server";
+    const role = String(formData.get("role")) as "client" | "admin";
+    const clientId = String(formData.get("clientId") ?? "");
+    await adminCreateUser({
+      email: String(formData.get("email")),
+      password: String(formData.get("password")),
+      fullName: String(formData.get("fullName") ?? ""),
+      role,
+      clientId: role === "client" && clientId ? clientId : undefined,
+    });
+    revalidatePath("/admin/team");
+    redirect("/admin/team");
+  }
+
   return (
     <div className="min-h-screen">
       <DemoModeBanner />
@@ -60,7 +85,45 @@ export default async function TeamPage() {
         </div>
 
         <Card padding="lg">
-          <SectionHeading title="Semua User" description="User baru mendaftar sendiri lewat halaman /login (tab Daftar) dengan role client secara default." />
+          <SectionHeading
+            title="Buat User Baru"
+            description="Kamu yang tentukan email & password-nya langsung dari sini — client tidak perlu daftar sendiri."
+          />
+          {!canCreateUsersDirectly() ? (
+            <div className="flex items-start gap-3 rounded-[var(--radius-md)] border border-warning-soft bg-warning-soft p-4 text-xs text-warning">
+              <KeyRound className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
+              <p>
+                Fitur ini butuh <code className="font-data">SUPABASE_SERVICE_ROLE_KEY</code> yang belum diisi di environment variable. Ambil dari Supabase → Settings → API Keys → Secret keys, lalu tambahkan ke <code className="font-data">.env.local</code> / Vercel dan redeploy. Sebelum itu, pakai cara lama: minta orangnya daftar sendiri lewat <code className="font-data">/login</code>, lalu hubungkan lewat bagian &quot;Akses Client&quot; di bawah.
+              </p>
+            </div>
+          ) : (
+            <form action={createUserAction} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <input name="fullName" placeholder="Nama lengkap" required className={inputClass} />
+              <input name="email" type="email" placeholder="amaticoffee@adsbangda.com" required className={inputClass} />
+              <input name="password" type="text" placeholder="Password awal" required minLength={8} className={inputClass} />
+              <select name="role" defaultValue="client" className={inputClass}>
+                <option value="client">client</option>
+                <option value="admin">admin</option>
+              </select>
+              <select name="clientId" className={inputClass}>
+                <option value="">Tanpa hubungkan client dulu</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <div className="sm:col-span-2 lg:col-span-5">
+                <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                  Buat User
+                </button>
+              </div>
+            </form>
+          )}
+        </Card>
+
+        <Card padding="lg">
+          <SectionHeading title="Semua User" description="Dibuat lewat form di atas, atau daftar sendiri lewat halaman /login (tab Daftar) dengan role client secara default." />
           <div className="divide-y divide-border border-t border-border">
             {users.map((u) => (
               <div key={u.id} className="flex flex-wrap items-center justify-between gap-3 py-3">

@@ -71,24 +71,43 @@ role & akses client per user) lewat fungsi database aman
 Admin selanjutnya bisa dipromosikan lewat halaman **Admin → Team & Akses**
 tanpa perlu SQL lagi.
 
-### 4. Buat client pertama & hubungkan user client-nya
+### 4. Buat client pertama & akun login-nya
 
-1. Di `/admin`, klik **Tambah Client**, isi nama & industri.
-2. Isi Monthly Delivery, Content Calendar, dll di halaman detail client.
-3. Client-nya sendiri daftar akun lewat `/login` (tab Daftar) — role
-   default `client`, tapi belum terhubung ke client manapun (lihat halaman
-   `/pending` yang mereka lihat sampai dihubungkan).
-4. Admin buka **Admin → Team & Akses**, hubungkan user tadi ke client yang
-   sesuai. Setelah itu, saat mereka login mereka langsung melihat
-   Client Portal client tersebut.
+Di `/admin`, klik **Tambah Client**, isi nama & industri, lalu isi Monthly
+Delivery/Content Calendar/dll di halaman detail client.
+
+Untuk akun login client-nya, ada dua cara:
+
+**Cara A — Agency yang buat akunnya (direkomendasikan kalau kamu mau pegang
+kendali penuh atas email/password client, mis. `namaclient@adsbangda.com`):**
+
+1. Isi env `SUPABASE_SERVICE_ROLE_KEY` (lihat `.env.example` — ambil dari
+   Supabase → Settings → API Keys → **Secret keys**, BUKAN yang publishable).
+   Redeploy setelah isi ini di Vercel.
+2. Buka **Admin → Team & Akses** → bagian **"Buat User Baru"** sudah aktif
+   (kalau masih ada peringatan kuning, berarti key di atas belum kebaca).
+3. Isi nama, email, password, role `client`, dan langsung pilih client-nya
+   di dropdown — user langsung dibuat, email otomatis terverifikasi, dan
+   langsung terhubung ke client tersebut dalam satu langkah.
+4. Kasih tahu client-nya email + password itu supaya mereka bisa login.
+
+**Cara B — Client daftar sendiri (tidak butuh service role key):**
+
+1. Client buka `/login` → tab **Daftar** → isi data sendiri. Role default
+   `client`, tapi belum terhubung ke client manapun (mereka akan melihat
+   halaman `/pending` sampai dihubungkan).
+2. Admin buka **Admin → Team & Akses**, bagian **"Akses Client"**,
+   hubungkan user tadi ke client yang sesuai.
+
+Dua-duanya bisa dipakai bersamaan — pilih sesuai kebutuhan per client.
 
 ### 5. Deploy ke Vercel
 
-Sama seperti sebelumnya — connect repo, isi kedua environment variable di
-atas di Vercel → Settings → Environment Variables, deploy. Jangan lupa
-tambahkan URL production ke **Supabase → Authentication → URL
-Configuration** (Site URL + Redirect URLs) supaya auth berfungsi di
-production.
+Sama seperti sebelumnya — connect repo, isi environment variable di atas
+(termasuk `SUPABASE_SERVICE_ROLE_KEY` kalau mau pakai Cara A) di Vercel →
+Settings → Environment Variables, deploy. Jangan lupa tambahkan URL
+production ke **Supabase → Authentication → URL Configuration** (Site URL +
+Redirect URLs) supaya auth berfungsi di production.
 
 ## Yang diperbaiki dari MVP sebelumnya
 
