@@ -9,23 +9,20 @@ export default async function ProjectsPage() {
   const { project, tasks } = await getActiveProject(client.id);
 
   return (
-    <div className="flex-1 min-h-screen">
-      <Topbar title="Project Progress" subtitle="Perkembangan milestone & task project berjalan." />
+    <div className="page-backdrop min-h-screen">
+      <Topbar title="Project Progress" subtitle="Perkembangan pekerjaan project yang sedang berjalan." />
 
-      <div className="p-6 sm:p-8 pt-4">
+      <div className="p-8">
         {!project ? (
-          <div className="rounded-[20px] border border-[#ECECEC] bg-[#FFFFFF] p-12 text-center text-sm text-[#71717A] shadow-xs">
+          <div className="rounded-[var(--radius-card)] border border-border bg-paper-deep shadow-[var(--shadow-card)] p-10 text-center text-sm text-muted">
             Belum ada project aktif saat ini.
           </div>
         ) : (
-          <div className="rounded-[20px] border border-[#ECECEC] bg-[#FFFFFF] p-6 sm:p-8 shadow-xs">
-            <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-[#ECECEC] pb-6">
+          <div className="rounded-[var(--radius-card)] border border-border bg-paper-deep shadow-[var(--shadow-card)] p-6">
+            <div className="mb-6 flex items-center justify-between border-b border-border pb-5">
               <div>
-                <span className="font-data text-[10px] font-bold uppercase tracking-wider text-[#71717A] bg-[#FAFAFA] px-2.5 py-1 rounded-full border border-[#ECECEC]">
-                  Active Sprint
-                </span>
-                <h2 className="text-xl font-bold text-[#18181B] mt-2">{project.name}</h2>
-                <p className="mt-1 text-xs text-[#71717A] font-data">
+                <h2 className="text-lg font-bold text-ink">{project.name}</h2>
+                <p className="mt-0.5 text-sm text-muted">
                   {formatDateID(project.startDate)} — {formatDateID(project.endDate)}
                 </p>
               </div>
@@ -36,23 +33,21 @@ export default async function ProjectsPage() {
               {tasks.map((task, index) => (
                 <div key={task.id} className="flex gap-4">
                   <div className="flex flex-col items-center">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF] font-data text-xs font-bold text-[#1D4ED8] border border-[#1D4ED8]/20">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft font-data text-xs font-bold text-accent">
                       {index + 1}
                     </div>
-                    {index < tasks.length - 1 && <div className="mt-2 w-0.5 flex-1 bg-[#ECECEC]" />}
+                    {index < tasks.length - 1 && <div className="mt-1 w-px flex-1 bg-border" />}
                   </div>
                   <div className="flex-1 pb-6">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="text-sm font-bold text-[#18181B]">{task.name}</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-ink">{task.name}</h3>
                       <StatusBadge status={task.status} />
                     </div>
-                    <div className="mt-3 flex items-center gap-4">
+                    <div className="mt-3 flex items-center gap-3">
                       <div className="flex-1">
                         <ProgressBar value={task.progressPct} />
                       </div>
-                      <span className="font-data text-xs font-bold text-[#71717A] w-10 text-right">
-                        {task.progressPct}%
-                      </span>
+                      <span className="font-data text-xs text-muted">{task.progressPct}%</span>
                     </div>
                   </div>
                 </div>

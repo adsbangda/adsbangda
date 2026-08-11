@@ -1,35 +1,41 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-     AdsBangda Growth Dashboard — Design Tokens (Linear/Stripe/Vercel Aesthetics)
+   AdsBangda Growth Dashboard — Design Tokens
+   Diturunkan langsung dari public/assets/css/style.css milik
+   www.adsbangda.com, supaya dashboard terasa satu identitas dengan situs
+   utama walau repo & stack-nya terpisah. Jangan improvisasi warna baru
+   tanpa alasan — brand hanya punya 1 warna aksen (biru) + ink/paper.
    ========================================================================== */
 
 :root {
-  --paper: #FAFAFA;
-    --paper-deep: #FFFFFF;
-    --ink: #18181B;
-    --ink-soft: #27272A;
-    --accent: #1D4ED8;
-    --accent-soft: #EFF6FF;
-    --accent-hover: #1E40AF;
-    --muted: #71717A;
-    --muted-on-dark: #A1A1AA;
-    --border: #ECECEC;
-    --success: #10B981;
-    --success-soft: #ECFDF5;
-    --warning: #F59E0B;
-    --warning-soft: #FFFBEB;
-    --danger: #EF4444;
-    --danger-soft: #FEF2F2;
+  --ink: #18181b;         /* teks utama, sidebar, elemen gelap */
+  --ink-soft: #23262f;    /* card gelap sekunder */
+  --paper: #fafafa;       /* background utama */
+  --paper-deep: #ffffff;  /* card/surface di atas paper */
+  --accent: #1d4ed8;      /* satu-satunya warna aksen brand (biru) */
+  --accent-soft: #eff4ff; /* accent tint untuk background badge/hover */
+  --muted: #6f6b5e;       /* teks sekunder di atas paper */
+  --muted-on-dark: #8d8879;
+  --border: #e5e7eb;
+  --success: #16a34a;
+  --success-soft: #ecfdf3;
+  --warning: #d97706;
+  --warning-soft: #fffaeb;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
   --radius-card: 20px;
-  --radius-pill: 9999px;
+  --radius-pill: 100px;
+  --shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.04);
+  --shadow-card: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 24px -12px rgba(24, 24, 27, 0.08);
+  --shadow-hover: 0 1px 2px rgba(24, 24, 27, 0.04), 0 16px 32px -12px rgba(24, 24, 27, 0.14);
 }
 
 @theme inline {
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
   --color-paper: var(--paper);
   --color-paper-deep: var(--paper-deep);
-  --color-ink: var(--ink);
-    --color-ink-soft: var(--ink-soft);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-muted: var(--muted);
@@ -40,7 +46,11 @@
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
-    --color-danger-soft: var(--danger-soft);
+  --color-danger-soft: var(--danger-soft);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-card: var(--shadow-card);
+  --shadow-hover: var(--shadow-hover);
 
   --font-display: var(--font-plus-jakarta), sans-serif;
   --font-body: var(--font-instrument), sans-serif;
@@ -51,21 +61,21 @@
 }
 
 body {
-  background-color: var(--paper);
+  background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
-  letter-spacing: -0.011em;
-    -webkit-font-smoothing: antialiased;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+/* Subtle ambient backdrop so flat areas don't feel sterile */
+.page-backdrop {
+  background:
+    radial-gradient(560px circle at 8% -10%, rgba(29, 78, 216, 0.06), transparent 60%),
+    radial-gradient(480px circle at 100% 0%, rgba(29, 78, 216, 0.04), transparent 55%);
+}
+
+h1, h2, h3, h4 {
   font-family: var(--font-display);
-  letter-spacing: -0.022em;
+  letter-spacing: -0.01em;
 }
 
 .font-data {
@@ -73,21 +83,6 @@ h6 {
 }
 
 ::selection {
-  background-color: var(--accent);
-  color: #ffffff;
-}
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 5px;
-    height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #E4E4E7;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #A1A1AA;
+  background: var(--accent);
+  color: #fff;
 }
