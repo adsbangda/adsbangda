@@ -4,7 +4,7 @@
 // database asli tanpa mengubah satu pun komponen halaman.
 
 import { isSupabaseConfigured, createClient } from "./supabase/server";
-import { ClientNotAssignedError } from "./auth";
+import { ClientNotAssignedError, getSessionUserId } from "./auth";
 import {
   mapProject,
   mapProjectTask,
@@ -52,14 +52,14 @@ function currentPeriod() {
 export async function getCurrentClient(): Promise<Client> {
   if (!isSupabaseConfigured) return mockClient;
 
-  const supabase = await createClient();
-  const { data: auth } = await supabase!.auth.getUser();
-  if (!auth.user) throw new ClientNotAssignedError();
+  const userId = await getSessionUserId();
+  if (!userId) throw new ClientNotAssignedError();
 
+  const supabase = await createClient();
   const { data } = await supabase!
     .from("client_users")
     .select("clients(*)")
-    .eq("user_id", auth.user.id)
+    .eq("user_id", userId)
     .limit(1)
     .maybeSingle();
 

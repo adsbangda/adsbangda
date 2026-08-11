@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient, isSupabaseConfigured } from "./supabase/server";
 
 export class ClientNotAssignedError extends Error {
@@ -14,28 +15,40 @@ export class NotAuthorizedError extends Error {
   }
 }
 
-/** Current authenticated user's id, or null (also null in demo mode). */
-export async function getSessionUserId(): Promise<string | null> {
+// react's cache() men-dedupe pemanggilan dalam SATU request server yang
+// sama — jadi kalau requireAdmin() dipanggil 7x di satu halaman (mis.
+// halaman detail client yang memuat Delivery/Content/Attention/dst
+// sekaligus), auth.getUser() dan query tabel profiles cuma benar-benar
+// dieksekusi SEKALI, sisanya langsung pakai hasil yang sama. Ini yang
+// bikin Admin Portal terasa lambat sebelumnya — tiap fungsi melakukan
+// pengecekan auth sendiri-sendiri lewat network round-trip terpisah.
+const getAuthUser = cache(async () => {
   if (!isSupabaseConfigured) return null;
   const supabase = await createClient();
   const { data } = await supabase!.auth.getUser();
-  return data.user?.id ?? null;
-}
+  return data.user ?? null;
+});
+
+/** Current authenticated user's id, or null (also null in demo mode). */
+export const getSessionUserId = cache(async (): Promise<string | null> => {
+  const user = await getAuthUser();
+  return user?.id ?? null;
+});
 
 /** Current user's role ('client' | 'admin'), or null if signed out / demo mode. */
-export async function getSessionRole(): Promise<"client" | "admin" | null> {
+export const getSessionRole = cache(async (): Promise<"client" | "admin" | null> => {
   if (!isSupabaseConfigured) return null;
-  const supabase = await createClient();
-  const { data: auth } = await supabase!.auth.getUser();
-  if (!auth.user) return null;
+  const user = await getAuthUser();
+  if (!user) return null;
 
-  const { data } = await supabase!.from("profiles").select("role").eq("id", auth.user.id).single();
+  const supabase = await createClient();
+  const { data } = await supabase!.from("profiles").select("role").eq("id", user.id).single();
   return (data?.role as "client" | "admin") ?? "client";
-}
+});
 
 /** Throws NotAuthorizedError if the current session isn't an admin. No-op in demo mode. */
-export async function requireAdmin(): Promise<void> {
+export const requireAdmin = cache(async (): Promise<void> => {
   if (!isSupabaseConfigured) return; // Admin Portal terbuka bebas di mode demo.
   const role = await getSessionRole();
   if (role !== "admin") throw new NotAuthorizedError();
-}
+});
