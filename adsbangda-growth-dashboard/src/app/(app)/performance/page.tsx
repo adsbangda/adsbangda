@@ -1,10 +1,10 @@
 import { Topbar } from "@/components/dashboard/topbar";
-import { SectionLabel } from "@/components/dashboard/section-label";
+import { KpiCard } from "@/components/dashboard/kpi-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { getCurrentClient, getPerformanceSummary } from "@/lib/data";
 import { formatIDR, formatNumber } from "@/lib/utils";
-import { TrendingUp } from "lucide-react";
+import { Wallet, Target, Eye, Heart, TrendingUp, Users2 } from "lucide-react";
 
 function shortDate(iso: string) {
   return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short" }).format(new Date(iso));
@@ -26,79 +26,58 @@ export default async function PerformancePage() {
 
   return (
     <div className="page-backdrop min-h-screen">
-      <Topbar title="Performance" />
+      <Topbar title="Performance" subtitle="Data diperbarui manual oleh tim Adsbangda setiap minggu." />
 
-      <div className="mx-auto max-w-5xl px-5 py-10 lg:px-8 lg:py-14">
-        <header className="animate-rise mb-14">
-          <h1 className="font-display text-3xl font-bold tracking-tight text-ink lg:text-4xl">
-            {leadDelta !== null && leadDelta >= 0
-              ? "Akuisisi kamu membaik periode ini."
-              : "Akuisisi kamu melambat periode ini."}
-          </h1>
-          <p className="mt-2 text-sm text-muted">Data diperbarui manual oleh tim Adsbangda setiap minggu.</p>
-        </header>
-
-        {/* Metrics — inline, not carded */}
-        <section className="animate-rise mb-14 flex flex-wrap gap-x-12 gap-y-6" style={{ animationDelay: "60ms" }}>
-          {[
-            { label: "Leads", value: formatNumber(latestMeta?.leads ?? 0) },
-            { label: "CPL", value: formatIDR(latestMeta?.costPerLead ?? 0) },
-            { label: "Ad Spend", value: formatIDR(latestMeta?.spend ?? 0) },
-            { label: "Reach", value: formatNumber(latestMeta?.reach ?? 0) },
-            { label: "Engagement", value: `${latestSocial?.engagementRate?.toFixed(1) ?? "0"}%` },
-            { label: "Conversions", value: formatNumber(latestWebsite?.conversions ?? 0) },
-          ].map((m) => (
-            <div key={m.label}>
-              <p className="font-data text-2xl font-semibold text-ink">{m.value}</p>
-              <p className="mt-0.5 text-xs text-muted">{m.label}</p>
-            </div>
-          ))}
+      <div className="space-y-8 p-5 lg:p-8">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <KpiCard label="Leads" value={formatNumber(latestMeta?.leads ?? 0)} icon={Target} iconColor="text-accent" iconBg="bg-accent-soft" delta={leadDelta !== null ? { value: `${Math.abs(leadDelta)}%`, direction: leadDelta >= 0 ? "up" : "down" } : undefined} />
+          <KpiCard label="Cost per Lead" value={formatIDR(latestMeta?.costPerLead ?? 0)} icon={Wallet} iconColor="text-success" iconBg="bg-success-soft" />
+          <KpiCard label="Ad Spend" value={formatIDR(latestMeta?.spend ?? 0)} icon={Wallet} iconColor="text-warning" iconBg="bg-warning-soft" />
+          <KpiCard label="Reach" value={formatNumber(latestMeta?.reach ?? 0)} icon={Eye} iconColor="text-accent-2" iconBg="bg-accent-soft" />
+          <KpiCard label="Engagement" value={`${latestSocial?.engagementRate?.toFixed(1) ?? "0"}%`} icon={Heart} iconColor="text-danger" iconBg="bg-danger-soft" />
+          <KpiCard label="Conversions" value={formatNumber(latestWebsite?.conversions ?? 0)} icon={Users2} iconColor="text-ink" iconBg="bg-black/[0.05]" />
         </section>
 
-        {/* Chart */}
-        <section className="animate-rise mb-14" style={{ animationDelay: "100ms" }}>
-          <SectionLabel>Leads Over Time · 5 Minggu Terakhir</SectionLabel>
+        <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)]">
+          <h2 className="mb-1 text-base font-bold text-ink">Leads Over Time</h2>
+          <p className="mb-5 text-sm text-muted">5 minggu terakhir · Meta Ads</p>
           <TrendChart data={leadsChartData} dataKey="value" format="number" />
         </section>
 
-        {/* Channel performance — table is the right pattern here */}
-        <section className="animate-rise mb-14" style={{ animationDelay: "140ms" }}>
-          <SectionLabel>Channel Performance</SectionLabel>
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-border text-xs uppercase tracking-wide text-muted">
-                <th className="py-2.5 pr-4 font-medium">Channel</th>
-                <th className="py-2.5 pr-4 font-medium">Spend</th>
-                <th className="py-2.5 pr-4 font-medium">Leads</th>
-                <th className="py-2.5 pr-4 font-medium">CPL</th>
-                <th className="py-2.5 pr-4 font-medium">Engagement</th>
-                <th className="py-2.5 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {channelSummary.map((row) => (
-                <tr key={row.channel} className="border-b border-border last:border-0">
-                  <td className="py-3.5 pr-4 font-medium text-ink">{row.channel}</td>
-                  <td className="py-3.5 pr-4 font-data text-xs text-muted">
-                    {row.spend ? formatIDR(row.spend) : "—"}
-                  </td>
-                  <td className="py-3.5 pr-4 font-data text-xs text-ink">{row.leads}</td>
-                  <td className="py-3.5 pr-4 font-data text-xs text-muted">
-                    {row.costPerLead ? formatIDR(row.costPerLead) : "—"}
-                  </td>
-                  <td className="py-3.5 pr-4 font-data text-xs text-ink">{row.engagementRate}%</td>
-                  <td className="py-3.5">
-                    <StatusBadge status={row.status} />
-                  </td>
+        <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)]">
+          <h2 className="mb-5 text-base font-bold text-ink">Channel Performance</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                  <th className="py-2.5 pr-4 font-medium">Channel</th>
+                  <th className="py-2.5 pr-4 font-medium">Spend</th>
+                  <th className="py-2.5 pr-4 font-medium">Leads</th>
+                  <th className="py-2.5 pr-4 font-medium">CPL</th>
+                  <th className="py-2.5 pr-4 font-medium">Engagement</th>
+                  <th className="py-2.5 font-medium">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {channelSummary.map((row) => (
+                  <tr key={row.channel} className="border-b border-border last:border-0">
+                    <td className="py-3.5 pr-4 font-medium text-ink">{row.channel}</td>
+                    <td className="py-3.5 pr-4 font-data text-xs text-muted">{row.spend ? formatIDR(row.spend) : "—"}</td>
+                    <td className="py-3.5 pr-4 font-data text-xs text-ink">{row.leads}</td>
+                    <td className="py-3.5 pr-4 font-data text-xs text-muted">{row.costPerLead ? formatIDR(row.costPerLead) : "—"}</td>
+                    <td className="py-3.5 pr-4 font-data text-xs text-ink">{row.engagementRate}%</td>
+                    <td className="py-3.5">
+                      <StatusBadge status={row.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
-        {/* Top content */}
-        <section className="animate-rise" style={{ animationDelay: "180ms" }}>
-          <SectionLabel>Top Performing Content</SectionLabel>
+        <section className="rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-sm)]">
+          <h2 className="mb-4 text-base font-bold text-ink">Top Performing Content</h2>
           <div className="divide-y divide-border">
             {topContent.map((item, i) => (
               <div key={i} className="flex items-center justify-between gap-4 py-3.5 first:pt-0">

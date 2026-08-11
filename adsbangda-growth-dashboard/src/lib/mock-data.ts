@@ -125,3 +125,19 @@ export const mockReports: ReportItem[] = [
 
 export const marketingInsight =
   "Lead generation naik 9,2% minggu ini sementara cost per lead turun 12% — Meta Ads jadi kanal akuisisi paling efisien saat ini. Instagram organic juga mulai berkontribusi lewat konten reel behind-the-scenes.";
+
+export interface ActivityEvent {
+  id: string;
+  actor: string;
+  action: string;
+  time: string;
+  tone: "success" | "accent" | "warning" | "muted";
+}
+
+export const mockActivity: ActivityEvent[] = [
+  { id: "ac1", actor: "Tim Adsbangda", action: "mempublikasikan reel \"Proses roasting biji kopi\"", time: "2 jam lalu", tone: "success" },
+  { id: "ac2", actor: "Diko — Content Lead", action: "mengunggah 3 draft konten baru untuk direview", time: "5 jam lalu", tone: "accent" },
+  { id: "ac3", actor: "Meta Ads", action: "budget mingguan otomatis diperbarui ke Rp3.750.000", time: "1 hari lalu", tone: "muted" },
+  { id: "ac4", actor: "Rani — Strategist", action: "menyelesaikan tahap Strategy campaign Agustus", time: "3 hari lalu", tone: "success" },
+];
+

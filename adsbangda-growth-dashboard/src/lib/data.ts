@@ -16,6 +16,7 @@ import {
   mockTopContent,
   mockContentCalendar,
   mockReports,
+  mockActivity,
   marketingInsight,
 } from "./mock-data";
 import type { Client, Project, ProjectTask, ContentItem, ReportItem } from "./types";
@@ -78,6 +79,12 @@ export async function getAttentionItems() {
   // TODO (live mode): turunkan dari content_items berstatus waiting_approval
   // + project_tasks berstatus waiting + jadwal meeting terdekat.
   return mockAttentionItems;
+}
+
+export async function getRecentActivity() {
+  if (!isSupabaseConfigured) return mockActivity;
+  // TODO (live mode): turunkan dari audit-log / activity table.
+  return mockActivity;
 }
 
 export async function getPerformanceSummary(clientId: string) {
