@@ -8,12 +8,24 @@ export type Channel = "meta_ads" | "social" | "website";
 export type Platform = "instagram" | "facebook" | "tiktok" | "website";
 export type ContentType = "reel" | "carousel" | "story" | "post" | "article";
 
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface Client {
   id: string;
   name: string;
   logoUrl?: string | null;
   industry: string;
   status: "active" | "paused" | "onboarding";
+  /**
+   * Tenant tertinggi (agency-level). Optional di tipe supaya mock-data mode
+   * demo tidak wajib mengisinya — di mode live selalu terisi (kolom NOT NULL
+   * di DB, default ke organization "Adsbangda" lewat migration 0004).
+   */
+  organizationId?: string;
 }
 
 export interface Project {
@@ -200,7 +212,15 @@ export interface FileEntry {
   sizeLabel: string;
 }
 
-// Role architecture — disiapkan untuk pemisahan Client vs Admin nanti.
-// Belum ada UI Admin di MVP ini (lihat README), tapi tipe ini jadi dasar
-// supaya penambahan /admin/* nanti tidak perlu migrasi ulang skema.
-export type UserRole = "client" | "admin";
+// Role architecture — foundation Phase 1 (lihat supabase/migrations/0004).
+// 5 tingkat: super_admin & admin punya akses penuh (is_admin() di DB tidak
+// membedakan keduanya untuk hak akses — bedanya cuma super_admin yang boleh
+// menaikkan orang lain jadi admin-tier). account_manager & creative adalah
+// role staff (is_staff()) yang DISIAPKAN untuk permission granular di fase
+// berikutnya — Phase 1 sengaja belum membatasi kemampuan mereka lebih detail
+// dari "admin" supaya scope tetap kecil, sesuai arahan "jangan terlalu rumit
+// dulu di foundation".
+export type UserRole = "super_admin" | "admin" | "account_manager" | "creative" | "client";
+
+/** Role apa pun selain 'client' dianggap staff internal Adsbangda. */
+export const STAFF_ROLES: readonly UserRole[] = ["super_admin", "admin", "account_manager", "creative"];

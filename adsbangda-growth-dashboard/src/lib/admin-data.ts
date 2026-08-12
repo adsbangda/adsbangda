@@ -42,6 +42,7 @@ import type {
   DeliveryIcon,
   QuickStatIcon,
   ChannelIcon,
+  UserRole,
 } from "./types";
 
 const uid = () => crypto.randomUUID();
@@ -616,7 +617,7 @@ export async function adminUpdateTaskProgress(taskId: string, progressPct: numbe
 export interface AdminUserRow {
   id: string;
   email: string;
-  role: "client" | "admin";
+  role: UserRole;
   fullName: string | null;
   createdAt: string;
 }
@@ -646,7 +647,7 @@ export async function adminCreateUser(input: {
   email: string;
   password: string;
   fullName: string;
-  role: "client" | "admin";
+  role: UserRole;
   clientId?: string;
 }) {
   await requireAdmin();
@@ -667,11 +668,14 @@ export async function adminCreateUser(input: {
 
   // Trigger handle_new_user (migration 0002) sudah otomatis bikin baris
   // profiles dengan role 'client' — di sini kita sesuaikan kalau perlu jadi
-  // admin, dan hubungkan ke client kalau diminta, lewat RPC yang sama
-  // dengan yang dipakai halaman Team & Akses.
+  // role lain (super_admin/admin/account_manager/creative), dan hubungkan
+  // ke client kalau diminta, lewat RPC yang sama dengan yang dipakai
+  // halaman Team & Akses. Catatan: admin_set_role() di DB menolak assign
+  // super_admin/admin kecuali pemanggilnya sendiri super_admin (guard
+  // privilege-escalation, lihat migration 0004).
   const supabase = await createClient();
-  if (input.role === "admin") {
-    const { error: roleError } = await supabase!.rpc("admin_set_role", { target_user_id: userId, new_role: "admin" });
+  if (input.role !== "client") {
+    const { error: roleError } = await supabase!.rpc("admin_set_role", { target_user_id: userId, new_role: input.role });
     if (roleError) throw new Error(roleError.message);
   } else if (input.clientId) {
     const { error: assignError } = await supabase!.rpc("admin_assign_client", {
@@ -694,7 +698,7 @@ export async function adminListUsers(): Promise<AdminUserRow[]> {
   return (data ?? []).map((r: Record<string, unknown>) => ({
     id: r.id as string,
     email: r.email as string,
-    role: r.role as "client" | "admin",
+    role: r.role as UserRole,
     fullName: (r.full_name as string | null) ?? null,
     createdAt: r.created_at as string,
   }));}
@@ -715,7 +719,7 @@ export async function adminListClientAccess(): Promise<ClientAccessRow[]> {
   }));
 }
 
-export async function adminSetRole(userId: string, role: "client" | "admin") {
+export async function adminSetRole(userId: string, role: UserRole) {
   await requireAdmin();
   if (!isSupabaseConfigured) return;
   const supabase = await createClient();

@@ -26,6 +26,7 @@ export function mapClient(row: Record<string, unknown>): Client {
     logoUrl: (row.logo_url as string | null) ?? null,
     industry: row.industry as string,
     status: row.status as Client["status"],
+    organizationId: row.organization_id as string | undefined,
   };
 }
 

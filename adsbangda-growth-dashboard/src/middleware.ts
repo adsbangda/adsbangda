@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
 
   if (isPublic) {
     if (user && pathname === "/login") {
-      return NextResponse.redirect(new URL(role === "admin" ? "/admin" : "/", request.url));
+      return NextResponse.redirect(new URL(isStaff(role) ? "/admin" : "/", request.url));
     }
     return response;
   }
@@ -41,14 +41,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (isAdminPath && role !== "admin") {
+  // Admin Portal terbuka untuk SEMUA role staff (super_admin, admin,
+  // account_manager, creative) — bukan cuma literal 'admin'. Pembedaan
+  // kemampuan yang lebih detail per role staff ditangani di layer
+  // requireAdmin()/requireStaff() (lib/auth.ts) untuk mutasi spesifik,
+  // bukan di sini (di sini cuma gate MASUK ke halaman /admin/*).
+  if (isAdminPath && !isStaff(role)) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   return response;
 }
 
-async function getRole(request: NextRequest, userId: string, url: string, key: string) {
+type Role = "super_admin" | "admin" | "account_manager" | "creative" | "client";
+const STAFF_ROLES: readonly Role[] = ["super_admin", "admin", "account_manager", "creative"];
+function isStaff(role: Role | null) {
+  return !!role && STAFF_ROLES.includes(role);
+}
+
+async function getRole(request: NextRequest, userId: string, url: string, key: string): Promise<Role> {
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll() {
@@ -60,7 +71,7 @@ async function getRole(request: NextRequest, userId: string, url: string, key: s
     },
   });
   const { data } = await supabase.from("profiles").select("role").eq("id", userId).single();
-  return (data?.role as "client" | "admin" | undefined) ?? "client";
+  return (data?.role as Role | undefined) ?? "client";
 }
 
 export const config = {

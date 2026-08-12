@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { isStaffRole } from "@/lib/auth";
+import type { UserRole } from "@/lib/types";
 
 function safeNext(next: FormDataEntryValue | null): string | null {
   if (typeof next !== "string" || !next.startsWith("/") || next.startsWith("//")) return null;
@@ -26,9 +28,9 @@ export async function signIn(_prevState: AuthState, formData: FormData): Promise
   if (error) return { error: "Email atau password salah." };
 
   const { data: profile } = await supabase!.from("profiles").select("role").eq("id", data.user.id).single();
-  const role = profile?.role ?? "client";
+  const role = (profile?.role as UserRole | undefined) ?? "client";
 
-  redirect(next ?? (role === "admin" ? "/admin" : "/"));
+  redirect(next ?? (isStaffRole(role) ? "/admin" : "/"));
 }
 
 export async function signUp(_prevState: SignUpState, formData: FormData): Promise<SignUpState> {

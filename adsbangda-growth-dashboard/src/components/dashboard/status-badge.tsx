@@ -25,7 +25,10 @@ const STATUS_MAP: Record<
   active: { label: "Active", tone: "success" },
   paused: { label: "Paused", tone: "warning" },
   onboarding: { label: "Onboarding", tone: "accent" },
+  super_admin: { label: "Super Admin", tone: "accent" },
   admin: { label: "Admin", tone: "accent" },
+  account_manager: { label: "Account Manager", tone: "warning" },
+  creative: { label: "Creative", tone: "warning" },
   client: { label: "Client", tone: "muted" },
 };
 

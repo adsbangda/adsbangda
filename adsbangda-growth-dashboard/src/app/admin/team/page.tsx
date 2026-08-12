@@ -18,8 +18,21 @@ import {
   canCreateUsersDirectly,
 } from "@/lib/admin-data";
 import { Users, KeyRound } from "lucide-react";
+import type { UserRole } from "@/lib/types";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
+
+// Urutan sengaja dari akses tertinggi ke terendah supaya gampang di-scan.
+// Deskripsi singkat ini yang membedakan role — belum ada pembatasan
+// kemampuan granular per role di kode (itu tugas permission matrix Phase 2+),
+// tapi label & urutan sudah mencerminkan hierarki yang benar sejak sekarang.
+const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
+  { value: "super_admin", label: "Super Admin" },
+  { value: "admin", label: "Admin" },
+  { value: "account_manager", label: "Account Manager" },
+  { value: "creative", label: "Creative" },
+  { value: "client", label: "Client" },
+];
 
 export default async function TeamPage() {
   if (DEMO_MODE) {
@@ -44,7 +57,7 @@ export default async function TeamPage() {
 
   async function setRoleAction(formData: FormData) {
     "use server";
-    await adminSetRole(String(formData.get("userId")), formData.get("role") as "client" | "admin");
+    await adminSetRole(String(formData.get("userId")), formData.get("role") as UserRole);
     revalidatePath("/admin/team");
   }
 
@@ -62,7 +75,7 @@ export default async function TeamPage() {
 
   async function createUserAction(formData: FormData) {
     "use server";
-    const role = String(formData.get("role")) as "client" | "admin";
+    const role = String(formData.get("role")) as UserRole;
     const clientId = String(formData.get("clientId") ?? "");
     await adminCreateUser({
       email: String(formData.get("email")),
@@ -102,8 +115,11 @@ export default async function TeamPage() {
               <input name="email" type="email" placeholder="amaticoffee@adsbangda.com" required className={inputClass} />
               <input name="password" type="text" placeholder="Password awal" required minLength={8} className={inputClass} />
               <select name="role" defaultValue="client" className={inputClass}>
-                <option value="client">client</option>
-                <option value="admin">admin</option>
+                {ROLE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
               <select name="clientId" className={inputClass}>
                 <option value="">Tanpa hubungkan client dulu</option>
@@ -136,8 +152,11 @@ export default async function TeamPage() {
                   <form action={setRoleAction} className="flex items-center gap-1.5">
                     <input type="hidden" name="userId" value={u.id} />
                     <select name="role" defaultValue={u.role} className={inputClass}>
-                      <option value="client">client</option>
-                      <option value="admin">admin</option>
+                      {ROLE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
                     </select>
                     <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
                       Ubah
