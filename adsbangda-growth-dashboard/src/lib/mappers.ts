@@ -20,6 +20,7 @@ import type {
   Goal,
   ContentTarget,
   WebsiteActivityEntry,
+  ApprovalHistoryEntry,
 } from "./types";
 
 export function mapClient(row: Record<string, unknown>): Client {
@@ -31,6 +32,9 @@ export function mapClient(row: Record<string, unknown>): Client {
     status: row.status as Client["status"],
     website: (row.website as string | null) ?? null,
     description: (row.description as string | null) ?? null,
+    socialMediaActive: (row.social_media_active as boolean | null) ?? false,
+    metaAdsActive: (row.meta_ads_active as boolean | null) ?? false,
+    websiteActive: (row.website_active as boolean | null) ?? false,
     organizationId: row.organization_id as string | undefined,
   };
 }
@@ -88,6 +92,7 @@ export function mapPerformanceMetric(row: Record<string, unknown>): PerformanceM
     ctr: (row.ctr as number | null) ?? undefined,
     cpc: (row.cpc as number | null) ?? undefined,
     roas: (row.roas as number | null) ?? undefined,
+    targetLeads: (row.target_leads as number | null) ?? undefined,
   };
 }
 
@@ -142,6 +147,17 @@ export function mapWebsiteActivity(row: Record<string, unknown>): WebsiteActivit
     title: row.title as string,
     description: (row.description as string) ?? "",
     status: (row.status as WebsiteActivityEntry["status"]) ?? "done",
+  };
+}
+
+export function mapApprovalHistoryEntry(row: Record<string, unknown>): ApprovalHistoryEntry {
+  return {
+    id: row.id as string,
+    contentId: row.content_id as string,
+    action: row.action as ApprovalHistoryEntry["action"],
+    note: (row.note as string) ?? "",
+    actor: (row.actor as string) ?? "",
+    createdAt: row.created_at as string,
   };
 }
 

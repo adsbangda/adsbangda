@@ -35,6 +35,10 @@ export interface Client {
   status: "active" | "paused" | "onboarding" | "archived";
   website?: string | null;
   description?: string | null;
+  /** Layanan aktif untuk client ini — dipakai buat tahu tab/section mana yang relevan. */
+  socialMediaActive?: boolean;
+  metaAdsActive?: boolean;
+  websiteActive?: boolean;
   /**
    * Tenant tertinggi (agency-level). Optional di tipe supaya mock-data mode
    * demo tidak wajib mengisinya — di mode live selalu terisi (kolom NOT NULL
@@ -102,6 +106,8 @@ export interface PerformanceMetric {
   ctr?: number;
   cpc?: number;
   roas?: number;
+  /** Opsional — kalau diisi, Meta Ads bisa tampilkan Goal Achievement %. */
+  targetLeads?: number;
 }
 
 export interface ChannelSummary {
@@ -144,6 +150,15 @@ export interface WebsiteActivityEntry {
   title: string;
   description: string;
   status: "done" | "in_progress" | "planned";
+}
+
+export interface ApprovalHistoryEntry {
+  id: string;
+  contentId: string;
+  action: "submitted" | "approved" | "revision_requested" | "note";
+  note: string;
+  actor: string;
+  createdAt: string;
 }
 
 export interface ReportItem {

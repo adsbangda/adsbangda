@@ -20,7 +20,7 @@ export default async function AdminClientLayout({
   return (
     <div className="min-h-screen">
       <DemoModeBanner />
-      <div className="border-b border-border bg-surface px-5 pt-6 lg:px-8">
+      <div className="border-b border-border bg-surface px-5 pt-6 print:hidden lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
@@ -39,7 +39,7 @@ export default async function AdminClientLayout({
             items={[
               { href: base, label: "Overview", exact: true },
               { href: `${base}/projects`, label: "Projects" },
-              { href: `${base}/social-media`, label: "Social Media" },
+              { href: `${base}/social-media`, label: "Social Media", groupLabel: "Services" },
               { href: `${base}/meta-ads`, label: "Meta Ads" },
               { href: `${base}/website`, label: "Website" },
               { href: `${base}/files`, label: "Files" },

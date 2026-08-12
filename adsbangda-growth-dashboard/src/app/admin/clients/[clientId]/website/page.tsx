@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { Trash2, Plus, Globe, Eye, Users, Clock } from "lucide-react";
+import { Trash2, Plus, Globe, Eye, Users, Clock, Pencil } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -8,9 +8,11 @@ import { buttonVariants } from "@/components/dashboard/button";
 import {
   adminListPerformanceMetrics,
   adminCreatePerformanceMetric,
+  adminUpdatePerformanceMetric,
   adminDeletePerformanceMetric,
   adminListWebsiteActivity,
   adminCreateWebsiteActivity,
+  adminUpdateWebsiteActivity,
   adminDeleteWebsiteActivity,
 } from "@/lib/admin-data";
 import { formatDateID, cn } from "@/lib/utils";
@@ -45,10 +47,10 @@ export default async function AdminClientWebsitePage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; edit?: string }>;
 }) {
   const { clientId } = await params;
-  const { tab = "performance" } = await searchParams;
+  const { tab = "performance", edit } = await searchParams;
   const base = `/admin/clients/${clientId}/website`;
   const path = base;
   const activeTab = tab === "activity" ? "activity" : "performance";
@@ -59,6 +61,20 @@ export default async function AdminClientWebsitePage({
   async function addMetric(formData: FormData) {
     "use server";
     await adminCreatePerformanceMetric(clientId, "website", {
+      date: String(formData.get("date")),
+      visitors: Number(formData.get("visitors") ?? 0) || undefined,
+      pageViews: Number(formData.get("pageViews") ?? 0) || undefined,
+      sessions: Number(formData.get("sessions") ?? 0) || undefined,
+      bounceRate: Number(formData.get("bounceRate") ?? 0) || undefined,
+      avgSessionDuration: String(formData.get("avgSessionDuration") ?? "").trim() || undefined,
+      conversions: Number(formData.get("conversions") ?? 0) || undefined,
+    });
+    revalidatePath(path);
+  }
+
+  async function updateMetricAction(formData: FormData) {
+    "use server";
+    await adminUpdatePerformanceMetric(String(formData.get("id")), "website", {
       date: String(formData.get("date")),
       visitors: Number(formData.get("visitors") ?? 0) || undefined,
       pageViews: Number(formData.get("pageViews") ?? 0) || undefined,
@@ -155,47 +171,86 @@ export default async function AdminClientWebsitePage({
           </Card>
 
           <Card padding="lg">
-            <SectionHeading title="Performance History" />
+            <SectionHeading title="Performance History" description="Klik Edit untuk perbaiki data." />
             {metrics.length === 0 ? (
               <p className="text-xs text-muted">Belum ada data.</p>
             ) : (
               <div className="divide-y divide-border border-t border-border">
-                {metrics.map((m) => (
-                  <div key={m.id} className="flex items-center justify-between gap-3 py-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-ink">{formatDateID(m.date)}</p>
-                      <p className="font-data text-xs text-muted">
-                        {m.visitors != null && `${m.visitors.toLocaleString("id-ID")} visitors · `}
-                        {m.sessions != null && `${m.sessions.toLocaleString("id-ID")} sessions · `}
-                        {m.pageViews != null && `${m.pageViews.toLocaleString("id-ID")} page views · `}
-                        {m.conversions != null && `${m.conversions} leads`}
-                      </p>
+                {metrics.map((m) =>
+                  edit === m.id ? (
+                    <div key={m.id} className="bg-accent-soft/40 py-3">
+                      <form action={updateMetricAction} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                        <input type="hidden" name="id" value={m.id} />
+                        <input name="date" type="date" defaultValue={m.date} required className={inputClass} />
+                        <input name="visitors" type="number" defaultValue={m.visitors ?? ""} placeholder="Visitors" className={inputClass} />
+                        <input name="pageViews" type="number" defaultValue={m.pageViews ?? ""} placeholder="Page Views" className={inputClass} />
+                        <input name="sessions" type="number" defaultValue={m.sessions ?? ""} placeholder="Sessions" className={inputClass} />
+                        <input name="bounceRate" type="number" step="0.1" defaultValue={m.bounceRate ?? ""} placeholder="Bounce Rate" className={inputClass} />
+                        <input name="avgSessionDuration" defaultValue={m.avgSessionDuration ?? ""} placeholder="Avg Duration" className={inputClass} />
+                        <input name="conversions" type="number" defaultValue={m.conversions ?? ""} placeholder="Leads" className={inputClass} />
+                        <div className="flex gap-2">
+                          <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                            Save
+                          </button>
+                          <Link href={path} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                            Cancel
+                          </Link>
+                        </div>
+                      </form>
                     </div>
-                    <form action={deleteMetricAction}>
-                      <input type="hidden" name="id" value={m.id} />
-                      <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
-                        <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                      </button>
-                    </form>
-                  </div>
-                ))}
+                  ) : (
+                    <div key={m.id} className="flex items-center justify-between gap-3 py-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-ink">{formatDateID(m.date)}</p>
+                        <p className="font-data text-xs text-muted">
+                          {m.visitors != null && `${m.visitors.toLocaleString("id-ID")} visitors · `}
+                          {m.sessions != null && `${m.sessions.toLocaleString("id-ID")} sessions · `}
+                          {m.pageViews != null && `${m.pageViews.toLocaleString("id-ID")} page views · `}
+                          {m.conversions != null && `${m.conversions} leads`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Link href={`${path}?tab=performance&edit=${m.id}`} className="text-muted hover:text-ink" aria-label="Edit">
+                          <Pencil className="h-4 w-4" strokeWidth={1.75} />
+                        </Link>
+                        <form action={deleteMetricAction}>
+                          <input type="hidden" name="id" value={m.id} />
+                          <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
+                            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  )
+                )}
               </div>
             )}
           </Card>
         </div>
       ) : (
-        <WebsiteActivityPanel clientId={clientId} path={path} />
+        <WebsiteActivityPanel clientId={clientId} path={path} editId={edit} />
       )}
     </div>
   );
 }
 
-async function WebsiteActivityPanel({ clientId, path }: { clientId: string; path: string }) {
+async function WebsiteActivityPanel({ clientId, path, editId }: { clientId: string; path: string; editId?: string }) {
   const activity = await adminListWebsiteActivity(clientId);
 
   async function addActivity(formData: FormData) {
     "use server";
     await adminCreateWebsiteActivity(clientId, {
+      date: String(formData.get("date")),
+      title: String(formData.get("title")),
+      description: String(formData.get("description") ?? ""),
+      status: String(formData.get("status") ?? "done") as never,
+    });
+    revalidatePath(path);
+  }
+
+  async function updateActivityAction(formData: FormData) {
+    "use server";
+    await adminUpdateWebsiteActivity(String(formData.get("id")), {
       date: String(formData.get("date")),
       title: String(formData.get("title")),
       description: String(formData.get("description") ?? ""),
@@ -217,21 +272,50 @@ async function WebsiteActivityPanel({ clientId, path }: { clientId: string; path
         <EmptyState title="Belum ada activity" description="Tambahkan activity pertama lewat form di bawah." />
       ) : (
         <div className="divide-y divide-border border-t border-border">
-          {activity.map((item) => (
-            <div key={item.id} className="flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <p className="font-data text-[10px] uppercase text-muted">{formatDateID(item.date)}</p>
-                <p className="text-sm font-medium text-ink">{item.title}</p>
-                {item.description && <p className="text-xs text-muted">{item.description}</p>}
+          {activity.map((item) =>
+            editId === item.id ? (
+              <div key={item.id} className="bg-accent-soft/40 py-3">
+                <form action={updateActivityAction} className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                  <input type="hidden" name="id" value={item.id} />
+                  <input name="date" type="date" defaultValue={item.date} required className={inputClass} />
+                  <input name="title" defaultValue={item.title} required placeholder="Judul" className="sm:col-span-2 rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink" />
+                  <input name="description" defaultValue={item.description} placeholder="Deskripsi" className={inputClass} />
+                  <select name="status" defaultValue={item.status} className={inputClass}>
+                    <option value="done">done</option>
+                    <option value="in_progress">in_progress</option>
+                    <option value="planned">planned</option>
+                  </select>
+                  <div className="flex gap-2">
+                    <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                      Save
+                    </button>
+                    <Link href={`${path}?tab=activity`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                      Cancel
+                    </Link>
+                  </div>
+                </form>
               </div>
-              <form action={deleteActivityAction}>
-                <input type="hidden" name="id" value={item.id} />
-                <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
-                  <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                </button>
-              </form>
-            </div>
-          ))}
+            ) : (
+              <div key={item.id} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="font-data text-[10px] uppercase text-muted">{formatDateID(item.date)}</p>
+                  <p className="text-sm font-medium text-ink">{item.title}</p>
+                  {item.description && <p className="text-xs text-muted">{item.description}</p>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link href={`${path}?tab=activity&edit=${item.id}`} className="text-muted hover:text-ink" aria-label="Edit">
+                    <Pencil className="h-4 w-4" strokeWidth={1.75} />
+                  </Link>
+                  <form action={deleteActivityAction}>
+                    <input type="hidden" name="id" value={item.id} />
+                    <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
+                      <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )
+          )}
         </div>
       )}
 

@@ -9,6 +9,8 @@ export interface DetailTabItem {
   label: string;
   /** Exact match only — used for the base/Overview tab so it doesn't stay active on sub-routes. */
   exact?: boolean;
+  /** Label kecil non-klik yang muncul SEBELUM pill ini — dipakai untuk mengelompokkan tab secara visual (mis. "Services" sebelum Social Media/Meta Ads/Website), tanpa mengubah struktur navigasi. */
+  groupLabel?: string;
 }
 
 /**
@@ -25,16 +27,22 @@ export function DetailTabs({ items }: { items: DetailTabItem[] }) {
       {items.map((item) => {
         const active = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/");
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "rounded-[var(--radius-sm)] px-3.5 py-2 font-data text-[11px] font-semibold transition-all duration-200 ease-out",
-              active ? "bg-white text-ink shadow-[var(--shadow-xs)]" : "text-muted hover:bg-white/60 hover:text-ink"
+          <div key={item.href} className="flex items-center">
+            {item.groupLabel && (
+              <span className="ml-2 mr-1.5 flex items-center gap-1.5 border-l border-border pl-2.5 font-data text-[10px] font-semibold uppercase tracking-wider text-muted/70">
+                {item.groupLabel}
+              </span>
             )}
-          >
-            {item.label}
-          </Link>
+            <Link
+              href={item.href}
+              className={cn(
+                "rounded-[var(--radius-sm)] px-3.5 py-2 font-data text-[11px] font-semibold transition-all duration-200 ease-out",
+                active ? "bg-white text-ink shadow-[var(--shadow-xs)]" : "text-muted hover:bg-white/60 hover:text-ink"
+              )}
+            >
+              {item.label}
+            </Link>
+          </div>
         );
       })}
     </div>

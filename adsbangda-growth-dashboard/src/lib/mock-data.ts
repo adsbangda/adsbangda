@@ -21,6 +21,7 @@ import type {
   Goal,
   ContentTarget,
   WebsiteActivityEntry,
+  ApprovalHistoryEntry,
 } from "./types";
 
 export const mockClient: Client = {
@@ -28,6 +29,9 @@ export const mockClient: Client = {
   name: "Amati Coffee",
   industry: "F&B — Coffee Shop",
   status: "active",
+  socialMediaActive: true,
+  metaAdsActive: true,
+  websiteActive: true,
 };
 
 // Dipakai Admin Portal (mode demo) untuk menampilkan daftar client. Client
@@ -248,6 +252,10 @@ export const mockContentTargets: ContentTarget[] = [
 export const mockWebsiteActivity: WebsiteActivityEntry[] = [
   { id: "wa1", clientId: mockClient.id, date: "2026-08-12", title: "Homepage updated", description: "Ganti hero banner promo Agustus.", status: "done" },
   { id: "wa2", clientId: mockClient.id, date: "2026-08-10", title: "Website backup completed", description: "Backup rutin bulanan.", status: "done" },
+];
+
+export const mockApprovalHistory: ApprovalHistoryEntry[] = [
+  { id: "ah1", contentId: "c4", action: "submitted", note: "Menunggu review client.", actor: "Admin", createdAt: "2026-08-10T09:00:00Z" },
 ];
 
 export const mockReports: ReportItem[] = [

@@ -21,6 +21,7 @@ import {
   mapGoal,
   mapContentTarget,
   mapWebsiteActivity,
+  mapApprovalHistoryEntry,
 } from "./mappers";
 import {
   mockClients,
@@ -41,6 +42,7 @@ import {
   mockGoals,
   mockContentTargets,
   mockWebsiteActivity,
+  mockApprovalHistory,
 } from "./mock-data";
 import type {
   Client,
@@ -64,6 +66,7 @@ import type {
   GoalStatus,
   ContentTarget,
   WebsiteActivityEntry,
+  ApprovalHistoryEntry,
 } from "./types";
 
 const uid = () => crypto.randomUUID();
@@ -162,17 +165,44 @@ export async function adminCreateClient(input: { name: string; industry: string;
 
 export async function adminUpdateClient(
   clientId: string,
-  input: Partial<{ name: string; industry: string; status: Client["status"]; website: string; description: string }>
+  input: Partial<{
+    name: string;
+    industry: string;
+    status: Client["status"];
+    website: string;
+    description: string;
+    socialMediaActive: boolean;
+    metaAdsActive: boolean;
+    websiteActive: boolean;
+  }>
 ) {
   await requireAdmin();
   if (!isSupabaseConfigured) {
     const client = mockClients.find((c) => c.id === clientId);
-    if (client) Object.assign(client, input);
+    if (client) {
+      if (input.name !== undefined) client.name = input.name;
+      if (input.industry !== undefined) client.industry = input.industry;
+      if (input.status !== undefined) client.status = input.status;
+      if (input.website !== undefined) client.website = input.website;
+      if (input.description !== undefined) client.description = input.description;
+      if (input.socialMediaActive !== undefined) client.socialMediaActive = input.socialMediaActive;
+      if (input.metaAdsActive !== undefined) client.metaAdsActive = input.metaAdsActive;
+      if (input.websiteActive !== undefined) client.websiteActive = input.websiteActive;
+    }
     return;
   }
 
   const supabase = await createClient();
-  await supabase!.from("clients").update(input).eq("id", clientId);
+  const payload: Record<string, unknown> = {};
+  if (input.name !== undefined) payload.name = input.name;
+  if (input.industry !== undefined) payload.industry = input.industry;
+  if (input.status !== undefined) payload.status = input.status;
+  if (input.website !== undefined) payload.website = input.website;
+  if (input.description !== undefined) payload.description = input.description;
+  if (input.socialMediaActive !== undefined) payload.social_media_active = input.socialMediaActive;
+  if (input.metaAdsActive !== undefined) payload.meta_ads_active = input.metaAdsActive;
+  if (input.websiteActive !== undefined) payload.website_active = input.websiteActive;
+  await supabase!.from("clients").update(payload).eq("id", clientId);
 }
 
 // ---------------------------------------------------------------------------
@@ -350,6 +380,59 @@ export async function adminUpdateContentStatus(itemId: string, status: ContentSt
   await supabase!.from("content_items").update({ status }).eq("id", itemId);
 }
 
+/**
+ * Edit PENUH satu content item — status tidak mengunci record (Published
+ * tetap bisa diedit semua field-nya, sesuai prinsip "update record yang
+ * sama", bukan bikin baris baru).
+ */
+export async function adminUpdateContentFull(
+  itemId: string,
+  input: Partial<{
+    title: string;
+    plannedDate: string;
+    status: ContentStatus;
+    platform: string;
+    type: ContentType;
+    notes: string;
+    assetUrl: string;
+    publishLink: string;
+    approvalRequired: boolean;
+    approvalStatus: "pending" | "approved" | "revision" | null;
+  }>
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const item = mockContentCalendar.find((c) => c.id === itemId);
+    if (item) {
+      if (input.title !== undefined) item.title = input.title;
+      if (input.plannedDate !== undefined) item.plannedDate = input.plannedDate;
+      if (input.status !== undefined) item.status = input.status;
+      if (input.platform !== undefined) item.platform = input.platform as never;
+      if (input.type !== undefined) item.type = input.type;
+      if (input.notes !== undefined) item.notes = input.notes;
+      if (input.assetUrl !== undefined) item.assetUrl = input.assetUrl;
+      if (input.publishLink !== undefined) item.publishLink = input.publishLink;
+      if (input.approvalRequired !== undefined) item.approvalRequired = input.approvalRequired;
+      if (input.approvalStatus !== undefined) item.approvalStatus = input.approvalStatus;
+    }
+    return;
+  }
+
+  const supabase = await createClient();
+  const payload: Record<string, unknown> = {};
+  if (input.title !== undefined) payload.title = input.title;
+  if (input.plannedDate !== undefined) payload.planned_date = input.plannedDate;
+  if (input.status !== undefined) payload.status = input.status;
+  if (input.platform !== undefined) payload.platform = input.platform;
+  if (input.type !== undefined) payload.type = input.type;
+  if (input.notes !== undefined) payload.notes = input.notes;
+  if (input.assetUrl !== undefined) payload.asset_url = input.assetUrl || null;
+  if (input.publishLink !== undefined) payload.publish_link = input.publishLink || null;
+  if (input.approvalRequired !== undefined) payload.approval_required = input.approvalRequired;
+  if (input.approvalStatus !== undefined) payload.approval_status = input.approvalStatus;
+  await supabase!.from("content_items").update(payload).eq("id", itemId);
+}
+
 export async function adminDeleteContent(itemId: string) {
   await requireAdmin();
   if (!isSupabaseConfigured) {
@@ -360,6 +443,34 @@ export async function adminDeleteContent(itemId: string) {
 
   const supabase = await createClient();
   await supabase!.from("content_items").delete().eq("id", itemId);
+}
+
+// ---------------------------------------------------------------------------
+// APPROVAL HISTORY — riwayat approval TIDAK overwrite. approval_status di
+// content_items tetap jadi status TERKINI; history-nya di sini.
+// ---------------------------------------------------------------------------
+
+export async function adminListApprovalHistory(contentId: string): Promise<ApprovalHistoryEntry[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return mockApprovalHistory.filter((h) => h.contentId === contentId);
+
+  const supabase = await createClient();
+  const { data } = await supabase!.from("content_approval_history").select("*").eq("content_id", contentId).order("created_at");
+  return (data ?? []).map(mapApprovalHistoryEntry);
+}
+
+export async function adminAddApprovalHistory(contentId: string, input: { action: ApprovalHistoryEntry["action"]; note: string; actor: string }) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    mockApprovalHistory.push({ id: uid(), contentId, createdAt: new Date().toISOString(), ...input });
+    return;
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase!
+    .from("content_approval_history")
+    .insert({ content_id: contentId, action: input.action, note: input.note, actor: input.actor });
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -1086,6 +1197,44 @@ export async function adminCreatePerformanceMetric(
   return mapPerformanceMetric(data);
 }
 
+export async function adminUpdatePerformanceMetric(
+  id: string,
+  channel: Channel,
+  input: Partial<Omit<PerformanceMetric, "id" | "clientId" | "channel">>
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const arr = mockArrayForChannel(channel);
+    const metric = arr.find((m) => m.id === id);
+    if (metric) Object.assign(metric, input);
+    return;
+  }
+
+  const supabase = await createClient();
+  const payload: Record<string, unknown> = {};
+  if (input.date !== undefined) payload.date = input.date;
+  if (input.platform !== undefined) payload.platform = input.platform;
+  if (input.spend !== undefined) payload.spend = input.spend;
+  if (input.reach !== undefined) payload.reach = input.reach;
+  if (input.impressions !== undefined) payload.impressions = input.impressions;
+  if (input.clicks !== undefined) payload.clicks = input.clicks;
+  if (input.leads !== undefined) payload.leads = input.leads;
+  if (input.costPerLead !== undefined) payload.cost_per_lead = input.costPerLead;
+  if (input.followers !== undefined) payload.followers = input.followers;
+  if (input.engagementRate !== undefined) payload.engagement_rate = input.engagementRate;
+  if (input.visitors !== undefined) payload.visitors = input.visitors;
+  if (input.conversions !== undefined) payload.conversions = input.conversions;
+  if (input.pageViews !== undefined) payload.page_views = input.pageViews;
+  if (input.sessions !== undefined) payload.sessions = input.sessions;
+  if (input.bounceRate !== undefined) payload.bounce_rate = input.bounceRate;
+  if (input.avgSessionDuration !== undefined) payload.avg_session_duration = input.avgSessionDuration;
+  if (input.ctr !== undefined) payload.ctr = input.ctr;
+  if (input.cpc !== undefined) payload.cpc = input.cpc;
+  if (input.roas !== undefined) payload.roas = input.roas;
+  if (input.targetLeads !== undefined) payload.target_leads = input.targetLeads;
+  await supabase!.from("performance_metrics").update(payload).eq("id", id);
+}
+
 export async function adminDeletePerformanceMetric(id: string, channel: Channel) {
   await requireAdmin();
   if (!isSupabaseConfigured) {
@@ -1252,6 +1401,27 @@ export async function adminCreateWebsiteActivity(clientId: string, input: { date
     .from("website_activity")
     .insert({ client_id: clientId, activity_date: input.date, title: input.title, description: input.description, status: input.status });
   if (error) throw new Error(error.message);
+}
+
+export async function adminUpdateWebsiteActivity(activityId: string, input: Partial<{ date: string; title: string; description: string; status: WebsiteActivityEntry["status"] }>) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const entry = mockWebsiteActivity.find((a) => a.id === activityId);
+    if (entry) {
+      if (input.date !== undefined) entry.date = input.date;
+      if (input.title !== undefined) entry.title = input.title;
+      if (input.description !== undefined) entry.description = input.description;
+      if (input.status !== undefined) entry.status = input.status;
+    }
+    return;
+  }
+  const supabase = await createClient();
+  const payload: Record<string, unknown> = {};
+  if (input.date !== undefined) payload.activity_date = input.date;
+  if (input.title !== undefined) payload.title = input.title;
+  if (input.description !== undefined) payload.description = input.description;
+  if (input.status !== undefined) payload.status = input.status;
+  await supabase!.from("website_activity").update(payload).eq("id", activityId);
 }
 
 export async function adminDeleteWebsiteActivity(activityId: string) {

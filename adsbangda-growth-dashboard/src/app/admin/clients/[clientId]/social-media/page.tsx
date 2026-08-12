@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { Trash2, Plus, Users, Eye, Heart, TrendingUp } from "lucide-react";
+import { Trash2, Plus, Users, Eye, Heart, TrendingUp, Pencil, Target } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -10,28 +10,35 @@ import { buttonVariants } from "@/components/dashboard/button";
 import {
   adminListContent,
   adminCreateContentFull,
+  adminUpdateContentFull,
   adminDeleteContent,
   adminListContentTargets,
   adminUpsertContentTarget,
   adminListPerformanceMetrics,
   adminCreatePerformanceMetric,
   adminDeletePerformanceMetric,
+  adminListGoals,
+  adminCreateGoal,
+  adminUpdateGoal,
+  adminDeleteGoal,
 } from "@/lib/admin-data";
-import { CONTENT_TYPES_BY_PLATFORM, type SocialPlatform } from "@/lib/types";
+import { CONTENT_TYPES_BY_PLATFORM, type SocialPlatform, type GoalStatus } from "@/lib/types";
 import { formatDateID, cn } from "@/lib/utils";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 const SOCIAL_PLATFORMS: SocialPlatform[] = ["instagram", "facebook", "tiktok", "x", "linkedin", "threads"];
+const ALL_CONTENT_TYPES = Array.from(new Set(Object.values(CONTENT_TYPES_BY_PLATFORM).flat()));
 
 function currentPeriod() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function SegmentedNav({ base, active }: { base: string; active: "delivery" | "performance" }) {
-  const items: { key: "delivery" | "performance"; label: string }[] = [
+function SegmentedNav({ base, active }: { base: string; active: "delivery" | "performance" | "goals" }) {
+  const items: { key: "delivery" | "performance" | "goals"; label: string }[] = [
     { key: "delivery", label: "Content Delivery" },
     { key: "performance", label: "Performance" },
+    { key: "goals", label: "Goals" },
   ];
   return (
     <div className="inline-flex items-center gap-1 rounded-[var(--radius-md)] border border-border bg-black/[0.02] p-1">
@@ -56,20 +63,20 @@ export default async function AdminClientSocialMediaPage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string; platform?: string }>;
+  searchParams: Promise<{ tab?: string; platform?: string; edit?: string }>;
 }) {
   const { clientId } = await params;
-  const { tab = "delivery", platform = "instagram" } = await searchParams;
+  const { tab = "delivery", platform = "instagram", edit } = await searchParams;
   const base = `/admin/clients/${clientId}/social-media`;
   const path = base;
   const period = currentPeriod();
-  const activeTab = tab === "performance" ? "performance" : "delivery";
+  const activeTab = tab === "performance" ? "performance" : tab === "goals" ? "goals" : "delivery";
   const activePlatform = (SOCIAL_PLATFORMS.includes(platform as SocialPlatform) ? platform : "instagram") as SocialPlatform;
 
   const [content, targets] = await Promise.all([adminListContent(clientId), adminListContentTargets(clientId, period)]);
 
   const totalTarget = targets.reduce((sum, t) => sum + t.target, 0);
-  const delivered = content.length; // sederhana: semua content bulan ini dihitung delivered (sesuai scope saat ini)
+  const delivered = content.filter((c) => c.status === "published").length; // sesuai brief: HANYA published yang dihitung Delivered
   const deliveryPct = totalTarget > 0 ? Math.min(100, Math.round((delivered / totalTarget) * 100)) : 0;
 
   async function addContent(formData: FormData) {
@@ -82,6 +89,22 @@ export default async function AdminClientSocialMediaPage({
       type: String(formData.get("type")) as never,
       assetUrl: String(formData.get("assetUrl") ?? "").trim() || undefined,
       publishLink: String(formData.get("publishLink") ?? "").trim() || undefined,
+      approvalRequired: formData.get("approvalRequired") === "on",
+    });
+    revalidatePath(path);
+  }
+
+  async function updateContentAction(formData: FormData) {
+    "use server";
+    await adminUpdateContentFull(String(formData.get("id")), {
+      title: String(formData.get("title")),
+      plannedDate: String(formData.get("plannedDate")),
+      status: String(formData.get("status")) as never,
+      platform: String(formData.get("platform")),
+      type: String(formData.get("type")) as never,
+      assetUrl: String(formData.get("assetUrl") ?? "").trim(),
+      publishLink: String(formData.get("publishLink") ?? "").trim(),
+      notes: String(formData.get("notes") ?? "").trim(),
       approvalRequired: formData.get("approvalRequired") === "on",
     });
     revalidatePath(path);
@@ -124,19 +147,47 @@ export default async function AdminClientSocialMediaPage({
     revalidatePath(path);
   }
 
+  async function addGoal(formData: FormData) {
+    "use server";
+    await adminCreateGoal(clientId, {
+      label: String(formData.get("label")),
+      target: Number(formData.get("target") ?? 0),
+      actual: Number(formData.get("actual") ?? 0),
+      unit: String(formData.get("unit") ?? ""),
+      period: String(formData.get("period") ?? period),
+      status: String(formData.get("status") ?? "on_track") as GoalStatus,
+    });
+    revalidatePath(path);
+  }
+
+  async function updateGoalAction(formData: FormData) {
+    "use server";
+    await adminUpdateGoal(String(formData.get("id")), {
+      actual: Number(formData.get("actual") ?? 0),
+      status: String(formData.get("status")) as GoalStatus,
+    });
+    revalidatePath(path);
+  }
+
+  async function deleteGoalAction(formData: FormData) {
+    "use server";
+    await adminDeleteGoal(String(formData.get("id")));
+    revalidatePath(path);
+  }
+
   return (
     <div className="animate-rise space-y-6 p-5 lg:p-8">
       <div className="max-w-2xl">
         <h2 className="text-base font-bold text-ink">How is organic social performing?</h2>
-        <p className="mt-1 text-sm text-muted">Satu rumah untuk semua urusan social media — target & delivery content, plus performance per-platform.</p>
+        <p className="mt-1 text-sm text-muted">Satu rumah untuk semua urusan social media — target & delivery content, performance per-platform, dan goals.</p>
       </div>
 
       <SegmentedNav base={base} active={activeTab} />
 
-      {activeTab === "delivery" ? (
+      {activeTab === "delivery" && (
         <div className="animate-rise space-y-6">
           <Card padding="lg">
-            <SectionHeading title={`Content Delivery — ${period}`} description="Progress dihitung otomatis dari Content List di bawah, bukan diketik manual." />
+            <SectionHeading title={`Content Delivery — ${period}`} description="Progress dihitung otomatis dari Content List (hanya status Published), bukan diketik manual." />
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
               <div>
                 <p className="font-data text-3xl font-bold text-ink">{totalTarget}</p>
@@ -144,7 +195,7 @@ export default async function AdminClientSocialMediaPage({
               </div>
               <div>
                 <p className="font-data text-3xl font-bold text-ink">{delivered}</p>
-                <p className="text-xs text-muted">Delivered</p>
+                <p className="text-xs text-muted">Delivered (Published)</p>
               </div>
               <div>
                 <p className="font-data text-3xl font-bold text-ink">{deliveryPct}%</p>
@@ -177,7 +228,7 @@ export default async function AdminClientSocialMediaPage({
                 ))}
               </select>
               <select name="contentType" className={inputClass}>
-                {Object.entries(CONTENT_TYPES_BY_PLATFORM).flatMap(([, types]) => types).filter((v, i, arr) => arr.indexOf(v) === i).map((t) => (
+                {ALL_CONTENT_TYPES.map((t) => (
                   <option key={t} value={t}>
                     {t}
                   </option>
@@ -185,13 +236,13 @@ export default async function AdminClientSocialMediaPage({
               </select>
               <input name="target" type="number" placeholder="Target" required className={inputClass} />
               <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
-                Set Target
+                Set Target (Create/Edit)
               </button>
             </form>
           </Card>
 
           <Card padding="lg">
-            <SectionHeading title="Content List" description="Semua content yang sudah dimasukkan untuk client ini." />
+            <SectionHeading title="Content List" description="Semua content yang sudah dimasukkan. Klik Edit untuk ubah field apa pun — status Published tetap bisa diedit." />
 
             {content.length === 0 ? (
               <EmptyState title="Belum ada content" description="Tambahkan content pertama lewat form di bawah." />
@@ -205,39 +256,94 @@ export default async function AdminClientSocialMediaPage({
                       <th className="pb-2 font-medium">Type</th>
                       <th className="pb-2 font-medium">Title</th>
                       <th className="pb-2 font-medium">Status</th>
+                      <th className="pb-2 font-medium">Approval</th>
                       <th className="pb-2 font-medium">Link</th>
                       <th className="pb-2"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {content.map((item) => (
-                      <tr key={item.id}>
-                        <td className="py-3 pr-3 font-data text-xs text-muted">{item.plannedDate}</td>
-                        <td className="py-3 pr-3 font-data text-xs capitalize text-muted">{item.platform}</td>
-                        <td className="py-3 pr-3 font-data text-xs capitalize text-muted">{item.type}</td>
-                        <td className="py-3 pr-3 font-medium text-ink">{item.title}</td>
-                        <td className="py-3 pr-3">
-                          <StatusBadge status={item.status} />
-                        </td>
-                        <td className="py-3 pr-3">
-                          {item.publishLink ? (
-                            <a href={item.publishLink} target="_blank" rel="noopener noreferrer" className="font-data text-xs font-semibold text-accent hover:underline">
-                              Open
-                            </a>
-                          ) : (
-                            <span className="text-xs text-muted">—</span>
-                          )}
-                        </td>
-                        <td className="py-3 text-right">
-                          <form action={deleteContentAction}>
-                            <input type="hidden" name="id" value={item.id} />
-                            <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
-                              <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                            </button>
-                          </form>
-                        </td>
-                      </tr>
-                    ))}
+                    {content.map((item) =>
+                      edit === item.id ? (
+                        <tr key={item.id} className="bg-accent-soft/40">
+                          <td colSpan={8} className="py-3">
+                            <form action={updateContentAction} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                              <input type="hidden" name="id" value={item.id} />
+                              <input name="title" defaultValue={item.title} required placeholder="Judul" className="col-span-2 sm:col-span-1 rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink" />
+                              <select name="platform" defaultValue={item.platform} className={inputClass}>
+                                {SOCIAL_PLATFORMS.map((p) => (
+                                  <option key={p} value={p}>
+                                    {p}
+                                  </option>
+                                ))}
+                              </select>
+                              <select name="type" defaultValue={item.type} className={inputClass}>
+                                {ALL_CONTENT_TYPES.map((t) => (
+                                  <option key={t} value={t}>
+                                    {t}
+                                  </option>
+                                ))}
+                              </select>
+                              <input name="plannedDate" type="date" defaultValue={item.plannedDate} required className={inputClass} />
+                              <select name="status" defaultValue={item.status} className={inputClass}>
+                                <option value="draft">draft</option>
+                                <option value="in_production">in_production</option>
+                                <option value="waiting_approval">waiting_approval</option>
+                                <option value="approved">approved</option>
+                                <option value="scheduled">scheduled</option>
+                                <option value="published">published</option>
+                              </select>
+                              <input name="assetUrl" defaultValue={item.assetUrl ?? ""} placeholder="Asset URL" className={inputClass} />
+                              <input name="publishLink" defaultValue={item.publishLink ?? ""} placeholder="Publish link" className={inputClass} />
+                              <label className="flex items-center gap-1.5 text-xs text-ink">
+                                <input type="checkbox" name="approvalRequired" defaultChecked={item.approvalRequired} /> Perlu Approval
+                              </label>
+                              <input name="notes" defaultValue={item.notes ?? ""} placeholder="Notes" className="col-span-2 sm:col-span-3 rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink" />
+                              <div className="flex gap-2">
+                                <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                                  Save
+                                </button>
+                                <Link href={`${base}?tab=delivery`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                                  Cancel
+                                </Link>
+                              </div>
+                            </form>
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr key={item.id}>
+                          <td className="py-3 pr-3 font-data text-xs text-muted">{item.plannedDate}</td>
+                          <td className="py-3 pr-3 font-data text-xs capitalize text-muted">{item.platform}</td>
+                          <td className="py-3 pr-3 font-data text-xs capitalize text-muted">{item.type}</td>
+                          <td className="py-3 pr-3 font-medium text-ink">{item.title}</td>
+                          <td className="py-3 pr-3">
+                            <StatusBadge status={item.status} />
+                          </td>
+                          <td className="py-3 pr-3 font-data text-xs text-muted">{item.approvalRequired ? item.approvalStatus ?? "pending" : "—"}</td>
+                          <td className="py-3 pr-3">
+                            {item.publishLink ? (
+                              <a href={item.publishLink} target="_blank" rel="noopener noreferrer" className="font-data text-xs font-semibold text-accent hover:underline">
+                                Open
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted">—</span>
+                            )}
+                          </td>
+                          <td className="py-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Link href={`${base}?tab=delivery&edit=${item.id}`} className="text-muted hover:text-ink" aria-label="Edit">
+                                <Pencil className="h-4 w-4" strokeWidth={1.75} />
+                              </Link>
+                              <form action={deleteContentAction}>
+                                <input type="hidden" name="id" value={item.id} />
+                                <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
+                                  <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                                </button>
+                              </form>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -253,7 +359,7 @@ export default async function AdminClientSocialMediaPage({
                 ))}
               </select>
               <select name="type" className={inputClass}>
-                {Object.entries(CONTENT_TYPES_BY_PLATFORM).flatMap(([, types]) => types).filter((v, i, arr) => arr.indexOf(v) === i).map((t) => (
+                {ALL_CONTENT_TYPES.map((t) => (
                   <option key={t} value={t}>
                     {t}
                   </option>
@@ -277,9 +383,93 @@ export default async function AdminClientSocialMediaPage({
             </form>
           </Card>
         </div>
-      ) : (
+      )}
+
+      {activeTab === "performance" && (
         <PerformancePanel clientId={clientId} base={base} activePlatform={activePlatform} addMetric={addMetric} deleteMetricAction={deleteMetricAction} />
       )}
+
+      {activeTab === "goals" && (
+        <GoalsPanel clientId={clientId} addGoal={addGoal} updateGoalAction={updateGoalAction} deleteGoalAction={deleteGoalAction} />
+      )}
+    </div>
+  );
+}
+
+async function GoalsPanel({
+  clientId,
+  addGoal,
+  updateGoalAction,
+  deleteGoalAction,
+}: {
+  clientId: string;
+  addGoal: (formData: FormData) => Promise<void>;
+  updateGoalAction: (formData: FormData) => Promise<void>;
+  deleteGoalAction: (formData: FormData) => Promise<void>;
+}) {
+  const goals = await adminListGoals(clientId);
+
+  return (
+    <div className="animate-rise space-y-6">
+      <Card padding="lg">
+        <SectionHeading title="Goals" description="Target bisnis client — Content Goal, Lead Goal, Ad Spend Goal, dsb. Actual diisi manual." />
+
+        {goals.length === 0 ? (
+          <EmptyState icon={Target} title="Belum ada goal" description="Tambahkan goal pertama lewat form di bawah." />
+        ) : (
+          <div className="mb-4 space-y-3">
+            {goals.map((goal) => {
+              const pct = goal.target > 0 ? Math.min(100, Math.round((goal.actual / goal.target) * 100)) : 0;
+              return (
+                <div key={goal.id} className="rounded-[var(--radius-md)] border border-border p-3.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-ink">{goal.label}</p>
+                      <StatusBadge status={goal.status} />
+                    </div>
+                    <form action={deleteGoalAction}>
+                      <input type="hidden" name="id" value={goal.id} />
+                      <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
+                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      </button>
+                    </form>
+                  </div>
+                  <p className="mt-1 font-data text-xs text-muted">
+                    {goal.actual.toLocaleString("id-ID")} / {goal.target.toLocaleString("id-ID")} {goal.unit} · {pct}%
+                  </p>
+                  <div className="mt-2">
+                    <ProgressBar value={pct} />
+                  </div>
+                  <form action={updateGoalAction} className="mt-2 flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="id" value={goal.id} />
+                    <input name="actual" type="number" defaultValue={goal.actual} className={inputClass} />
+                    <select name="status" defaultValue={goal.status} className={inputClass}>
+                      <option value="draft">Draft</option>
+                      <option value="on_track">On Track</option>
+                      <option value="at_risk">At Risk</option>
+                      <option value="completed">Completed</option>
+                      <option value="archived">Archived</option>
+                    </select>
+                    <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                      Update
+                    </button>
+                  </form>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <form action={addGoal} className="grid grid-cols-2 gap-2 border-t border-border pt-4 sm:grid-cols-5">
+          <input name="label" placeholder="Nama goal" required className="col-span-2 rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink" />
+          <input name="target" type="number" placeholder="Target" required className={inputClass} />
+          <input name="actual" type="number" placeholder="Actual" defaultValue={0} className={inputClass} />
+          <input name="unit" placeholder="Unit" className={inputClass} />
+          <button type="submit" className={buttonVariants({ variant: "outline", size: "sm", className: "sm:col-span-5 justify-center" })}>
+            <Plus className="h-3.5 w-3.5" /> Add Goal
+          </button>
+        </form>
+      </Card>
     </div>
   );
 }
@@ -346,7 +536,7 @@ async function PerformancePanel({
       </Card>
 
       <Card padding="lg">
-        <SectionHeading title="Performance History" description={`Snapshot ${activePlatform}, urut terbaru.`} />
+        <SectionHeading title="Performance History" description={`Snapshot ${activePlatform}, urut terbaru. Belum ada Edit di baris history — hapus & tambah ulang kalau salah input.`} />
         {metrics.length === 0 ? (
           <p className="text-xs text-muted">Belum ada data.</p>
         ) : (
