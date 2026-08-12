@@ -109,8 +109,12 @@ export default async function AdminClientsPage({
 
                   <div className="mt-4 space-y-1.5 border-t border-border pt-3 text-xs text-muted">
                     <div className="flex items-center justify-between">
-                      <span>Active Projects</span>
-                      <span className="font-data font-semibold text-ink">{client.activeProjectCount}</span>
+                      <span>Services</span>
+                      <span className="text-right font-medium text-ink">{client.services.length > 0 ? client.services.join(" · ") : "—"}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Overall Progress</span>
+                      <span className="font-data text-base font-bold text-accent">{client.overallProgress != null ? `${client.overallProgress}%` : "—"}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Account Manager</span>

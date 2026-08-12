@@ -89,40 +89,41 @@ export async function adminListClients(): Promise<Client[]> {
 }
 
 export interface ClientOverviewRow extends Client {
-  activeProjectCount: number;
+  services: string[];
+  overallProgress: number | null;
   accountManagerName: string | null;
   lastActivity: string | null;
 }
 
 /**
  * Versi diperkaya dari adminListClients() khusus halaman /admin/clients —
- * menambahkan jumlah project aktif, nama Account Manager yang di-assign,
- * dan waktu aktivitas terakhir. Dipisah dari adminListClients() supaya
- * fungsi lama (dipakai form dropdown dsb di banyak tempat) tetap ringan.
+ * menambahkan daftar Services aktif, Overall Progress (computed, bukan
+ * manual), nama Account Manager yang di-assign, dan waktu aktivitas
+ * terakhir. Dipisah dari adminListClients() supaya fungsi lama (dipakai
+ * form dropdown dsb di banyak tempat) tetap ringan.
  */
 export async function adminListClientsOverview(): Promise<ClientOverviewRow[]> {
   await requireAdmin();
   const clients = await adminListClients();
 
+  const servicesOf = (c: Client) =>
+    [c.socialMediaActive && "Social Media", c.metaAdsActive && "Meta Ads", c.websiteActive && "Website"].filter(Boolean) as string[];
+
   if (!isSupabaseConfigured) {
-    return clients.map((c) => ({ ...c, activeProjectCount: mockProjects.filter((p) => p.clientId === c.id).length, accountManagerName: null, lastActivity: null }));
+    return Promise.all(
+      clients.map(async (c) => ({ ...c, services: servicesOf(c), overallProgress: await adminComputeOverallProgress(c.id), accountManagerName: null, lastActivity: null }))
+    );
   }
 
   const supabase = await createClient();
-  const [{ data: projectRows }, { data: assignmentRows }, { data: activityRows }, users] = await Promise.all([
-    supabase!.from("projects").select("client_id, stage"),
+  const [{ data: assignmentRows }, { data: activityRows }, users, progressByClient] = await Promise.all([
     supabase!.from("client_assignments").select("client_id, user_id"),
     supabase!.rpc("admin_client_last_activity"),
     adminListUsers(),
+    Promise.all(clients.map(async (c) => [c.id, await adminComputeOverallProgress(c.id)] as const)),
   ]);
 
   const userById = new Map(users.map((u) => [u.id, u]));
-  const activeProjectCountByClient = new Map<string, number>();
-  for (const row of projectRows ?? []) {
-    if (row.stage === "active") {
-      activeProjectCountByClient.set(row.client_id, (activeProjectCountByClient.get(row.client_id) ?? 0) + 1);
-    }
-  }
   const accountManagerByClient = new Map<string, string>();
   for (const row of assignmentRows ?? []) {
     const user = userById.get(row.user_id);
@@ -131,10 +132,12 @@ export async function adminListClientsOverview(): Promise<ClientOverviewRow[]> {
     }
   }
   const lastActivityByClient = new Map<string, string>((activityRows ?? []).map((r: Record<string, unknown>) => [r.client_id as string, r.last_activity as string]));
+  const progressMap = new Map(progressByClient);
 
   return clients.map((c) => ({
     ...c,
-    activeProjectCount: activeProjectCountByClient.get(c.id) ?? 0,
+    services: servicesOf(c),
+    overallProgress: progressMap.get(c.id) ?? null,
     accountManagerName: accountManagerByClient.get(c.id) ?? null,
     lastActivity: lastActivityByClient.get(c.id) ?? null,
   }));
@@ -1140,6 +1143,17 @@ function mockArrayForChannel(channel: Channel) {
   return mockWebsite;
 }
 
+/**
+ * CPC & CPL DIHITUNG OTOMATIS dari spend/clicks/leads — admin tidak perlu
+ * (dan tidak boleh) mengetik angka yang sebenarnya bisa dihitung dari data
+ * lain. Kalau clicks/leads 0 atau kosong, hasilnya undefined (bukan 0/Infinity).
+ */
+function computeMetaAdsDerived(input: { spend?: number; clicks?: number; leads?: number }) {
+  const cpc = input.spend && input.clicks ? Math.round(input.spend / input.clicks) : undefined;
+  const cpl = input.spend && input.leads ? Math.round(input.spend / input.leads) : undefined;
+  return { cpc, cpl };
+}
+
 export async function adminListPerformanceMetrics(clientId: string, channel: Channel, platform?: string): Promise<PerformanceMetric[]> {
   await requireAdmin();
   if (!isSupabaseConfigured) {
@@ -1159,8 +1173,12 @@ export async function adminCreatePerformanceMetric(
   input: Partial<Omit<PerformanceMetric, "id" | "clientId" | "channel">> & { date: string }
 ) {
   await requireAdmin();
+  const derived = channel === "meta_ads" ? computeMetaAdsDerived(input) : { cpc: undefined, cpl: undefined };
+  const cpc = derived.cpc ?? input.cpc;
+  const costPerLead = derived.cpl ?? input.costPerLead;
+
   if (!isSupabaseConfigured) {
-    const metric: PerformanceMetric = { id: uid(), clientId, channel, ...input };
+    const metric: PerformanceMetric = { id: uid(), clientId, channel, ...input, cpc, costPerLead };
     mockArrayForChannel(channel).push(metric);
     return metric;
   }
@@ -1178,7 +1196,7 @@ export async function adminCreatePerformanceMetric(
       impressions: input.impressions ?? null,
       clicks: input.clicks ?? null,
       leads: input.leads ?? null,
-      cost_per_lead: input.costPerLead ?? null,
+      cost_per_lead: costPerLead ?? null,
       followers: input.followers ?? null,
       engagement_rate: input.engagementRate ?? null,
       visitors: input.visitors ?? null,
@@ -1188,8 +1206,11 @@ export async function adminCreatePerformanceMetric(
       bounce_rate: input.bounceRate ?? null,
       avg_session_duration: input.avgSessionDuration ?? null,
       ctr: input.ctr ?? null,
-      cpc: input.cpc ?? null,
+      cpc: cpc ?? null,
       roas: input.roas ?? null,
+      target_leads: input.targetLeads ?? null,
+      closing: input.closing ?? null,
+      conversion_rate: input.leads && input.closing ? Math.round((input.closing / input.leads) * 1000) / 10 : null,
     })
     .select()
     .single();
@@ -1203,10 +1224,15 @@ export async function adminUpdatePerformanceMetric(
   input: Partial<Omit<PerformanceMetric, "id" | "clientId" | "channel">>
 ) {
   await requireAdmin();
+  const derived = channel === "meta_ads" ? computeMetaAdsDerived(input) : { cpc: undefined, cpl: undefined };
+  const cpc = derived.cpc ?? input.cpc;
+  const costPerLead = derived.cpl ?? input.costPerLead;
+  const conversionRate = input.leads && input.closing ? Math.round((input.closing / input.leads) * 1000) / 10 : undefined;
+
   if (!isSupabaseConfigured) {
     const arr = mockArrayForChannel(channel);
     const metric = arr.find((m) => m.id === id);
-    if (metric) Object.assign(metric, input);
+    if (metric) Object.assign(metric, input, { cpc, costPerLead, conversionRate });
     return;
   }
 
@@ -1219,7 +1245,7 @@ export async function adminUpdatePerformanceMetric(
   if (input.impressions !== undefined) payload.impressions = input.impressions;
   if (input.clicks !== undefined) payload.clicks = input.clicks;
   if (input.leads !== undefined) payload.leads = input.leads;
-  if (input.costPerLead !== undefined) payload.cost_per_lead = input.costPerLead;
+  if (costPerLead !== undefined) payload.cost_per_lead = costPerLead;
   if (input.followers !== undefined) payload.followers = input.followers;
   if (input.engagementRate !== undefined) payload.engagement_rate = input.engagementRate;
   if (input.visitors !== undefined) payload.visitors = input.visitors;
@@ -1229,9 +1255,11 @@ export async function adminUpdatePerformanceMetric(
   if (input.bounceRate !== undefined) payload.bounce_rate = input.bounceRate;
   if (input.avgSessionDuration !== undefined) payload.avg_session_duration = input.avgSessionDuration;
   if (input.ctr !== undefined) payload.ctr = input.ctr;
-  if (input.cpc !== undefined) payload.cpc = input.cpc;
+  if (cpc !== undefined) payload.cpc = cpc;
   if (input.roas !== undefined) payload.roas = input.roas;
   if (input.targetLeads !== undefined) payload.target_leads = input.targetLeads;
+  if (input.closing !== undefined) payload.closing = input.closing;
+  if (conversionRate !== undefined) payload.conversion_rate = conversionRate;
   await supabase!.from("performance_metrics").update(payload).eq("id", id);
 }
 
@@ -1324,6 +1352,44 @@ export async function adminDeleteGoal(goalId: string) {
 }
 
 // ---------------------------------------------------------------------------
+// OVERALL PROGRESS (Final Workflow Refactor) — dihitung dari SERVICE AKTIF
+// yang PUNYA DATA saja, bukan input manual. Dipakai bareng oleh Client List
+// dan Overview supaya angkanya selalu konsisten (satu sumber kebenaran).
+// ---------------------------------------------------------------------------
+
+export async function adminComputeOverallProgress(clientId: string): Promise<number | null> {
+  const client = await adminGetClient(clientId);
+  if (!client) return null;
+  const period = currentPeriodInternal();
+  const parts: number[] = [];
+
+  if (client.socialMediaActive) {
+    const [targets, content] = await Promise.all([adminListContentTargets(clientId, period), adminListContent(clientId)]);
+    const totalTarget = targets.reduce((sum, t) => sum + t.target, 0);
+    if (totalTarget > 0) {
+      const published = content.filter((c) => c.status === "published").length;
+      parts.push(Math.min(100, Math.round((published / totalTarget) * 100)));
+    }
+  }
+
+  if (client.metaAdsActive) {
+    const metrics = await adminListPerformanceMetrics(clientId, "meta_ads");
+    const latest = metrics[0];
+    if (latest?.targetLeads && latest.targetLeads > 0 && latest.leads != null) {
+      parts.push(Math.min(100, Math.round((latest.leads / latest.targetLeads) * 100)));
+    }
+  }
+
+  if (parts.length === 0) return null; // tidak ada module aktif yang punya target+data — jangan tampilkan angka palsu
+  return Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
+}
+
+function currentPeriodInternal() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+// ---------------------------------------------------------------------------
 // CONTENT TARGETS (Consolidation) — target kontrak per client+period+
 // platform+content_type. Dipakai modul Social Media (Content Delivery) untuk
 // hitung progress delivered/target — TIDAK ada tabel baru di sini, hanya
@@ -1362,6 +1428,21 @@ export async function adminUpsertContentTarget(
     { onConflict: "client_id,period,platform,content_type" }
   );
   if (error) throw new Error(error.message);
+}
+
+export async function adminUpdateContentTargetById(targetId: string, input: { platform: string; contentType: string; target: number }) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const t = mockContentTargets.find((t) => t.id === targetId);
+    if (t) {
+      t.platform = input.platform as never;
+      t.contentType = input.contentType;
+      t.target = input.target;
+    }
+    return;
+  }
+  const supabase = await createClient();
+  await supabase!.from("content_targets").update({ platform: input.platform, content_type: input.contentType, target: input.target }).eq("id", targetId);
 }
 
 export async function adminDeleteContentTarget(targetId: string) {
@@ -1487,4 +1568,19 @@ export async function adminCreateContentFull(
     approval_status: input.approvalRequired ? (input.approvalStatus ?? "pending") : null,
   });
   if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// NOTIFICATIONS (Final Workflow Refactor) — dari EVENT DATABASE NYATA, bukan
+// tabel notification terpisah/fake. "Butuh perhatian admin" = client sudah
+// Request Revision (approval_status='revision') dan admin belum resubmit.
+// ---------------------------------------------------------------------------
+
+export async function adminCountPendingRevisions(): Promise<number> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return mockContentCalendar.filter((c) => c.approvalStatus === "revision").length;
+
+  const supabase = await createClient();
+  const { count } = await supabase!.from("content_items").select("id", { count: "exact", head: true }).eq("approval_status", "revision");
+  return count ?? 0;
 }

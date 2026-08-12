@@ -38,8 +38,8 @@ export default async function AdminClientLayout({
           <DetailTabs
             items={[
               { href: base, label: "Overview", exact: true },
-              { href: `${base}/projects`, label: "Projects" },
-              { href: `${base}/social-media`, label: "Social Media", groupLabel: "Services" },
+              { href: `${base}/services`, label: "Services" },
+              { href: `${base}/social-media`, label: "Social Media" },
               { href: `${base}/meta-ads`, label: "Meta Ads" },
               { href: `${base}/website`, label: "Website" },
               { href: `${base}/files`, label: "Files" },

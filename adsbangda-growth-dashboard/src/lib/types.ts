@@ -108,6 +108,9 @@ export interface PerformanceMetric {
   roas?: number;
   /** Opsional — kalau diisi, Meta Ads bisa tampilkan Goal Achievement %. */
   targetLeads?: number;
+  /** Deal yang benar-benar closing dari leads Meta Ads. */
+  closing?: number;
+  conversionRate?: number;
 }
 
 export interface ChannelSummary {

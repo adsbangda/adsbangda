@@ -325,6 +325,36 @@ export async function getContentCalendar(clientId: string): Promise<ContentItem[
   return (data ?? []).map(mapContentItem);
 }
 
+/**
+ * Client Approve / Request Revision — lewat RPC security-definer
+ * (migration 0010), BUKAN update langsung ke content_items, supaya client
+ * cuma bisa ubah approval_status (tidak bisa ubah field lain) dan cuma
+ * untuk content milik client-nya sendiri (dicek di RPC).
+ */
+export async function respondToApproval(contentId: string, response: "approved" | "revision_requested", note: string = "") {
+  if (!isSupabaseConfigured) {
+    // Mode demo: langsung ubah in-memory supaya UI tetap bisa dicoba.
+    const item = mockContentCalendar.find((c) => c.id === contentId);
+    if (item) item.approvalStatus = response === "approved" ? "approved" : "revision";
+    return;
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase!.rpc("client_respond_to_approval", {
+    target_content_id: contentId,
+    response,
+    response_note: note,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function getApprovalHistory(contentId: string) {
+  if (!isSupabaseConfigured) return [];
+  const supabase = await createClient();
+  const { data } = await supabase!.from("content_approval_history").select("*").eq("content_id", contentId).order("created_at");
+  return data ?? [];
+}
+
 export async function getReports(clientId: string): Promise<ReportItem[]> {
   if (!isSupabaseConfigured) return mockReports;
 

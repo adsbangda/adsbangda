@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Instrument_Sans, IBM_Plex_Mono } from "next/font/google";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -23,6 +24,16 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Growth Dashboard | Adsbangda",
   description: "Pantau perkembangan marketing bisnis Anda secara real-time bersama Adsbangda.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Adsbangda",
+  },
+};
+
+export const viewport = {
+  themeColor: "#1D4ED8",
 };
 
 export default function RootLayout({

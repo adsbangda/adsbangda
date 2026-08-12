@@ -236,7 +236,7 @@ export const mockContentCalendar: ContentItem[] = [
   { id: "c1", clientId: mockClient.id, title: "Proses roasting biji kopi", plannedDate: "2026-08-08", status: "published", platform: "instagram", type: "reel" },
   { id: "c2", clientId: mockClient.id, title: "Promo weekday 20%", plannedDate: "2026-08-11", status: "scheduled", platform: "instagram", type: "carousel" },
   { id: "c3", clientId: mockClient.id, title: "Q&A barista", plannedDate: "2026-08-13", status: "approved", platform: "instagram", type: "story" },
-  { id: "c4", clientId: mockClient.id, title: "Menu musiman baru", plannedDate: "2026-08-15", status: "waiting_approval", platform: "instagram", type: "reel" },
+  { id: "c4", clientId: mockClient.id, title: "Menu musiman baru", plannedDate: "2026-08-15", status: "waiting_approval", platform: "instagram", type: "reel", approvalRequired: true, approvalStatus: "pending", assetUrl: "https://drive.google.com/example-asset", notes: "Gunakan foto menu terbaru dari sesi foto Agustus." },
   { id: "c5", clientId: mockClient.id, title: "Testimoni pelanggan", plannedDate: "2026-08-18", status: "waiting_approval", platform: "facebook", type: "post" },
   { id: "c6", clientId: mockClient.id, title: "Tips menyimpan kopi di rumah", plannedDate: "2026-08-20", status: "in_production", platform: "instagram", type: "carousel" },
   { id: "c7", clientId: mockClient.id, title: "Cerita asal biji kopi lokal", plannedDate: "2026-08-22", status: "draft", platform: "website", type: "article" },

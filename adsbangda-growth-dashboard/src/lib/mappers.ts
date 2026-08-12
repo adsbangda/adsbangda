@@ -93,6 +93,8 @@ export function mapPerformanceMetric(row: Record<string, unknown>): PerformanceM
     cpc: (row.cpc as number | null) ?? undefined,
     roas: (row.roas as number | null) ?? undefined,
     targetLeads: (row.target_leads as number | null) ?? undefined,
+    closing: (row.closing as number | null) ?? undefined,
+    conversionRate: (row.conversion_rate as number | null) ?? undefined,
   };
 }
 

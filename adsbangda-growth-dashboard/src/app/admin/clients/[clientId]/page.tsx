@@ -7,10 +7,10 @@ import { buttonVariants } from "@/components/dashboard/button";
 import {
   adminGetClient,
   adminUpdateClient,
-  adminListProjectsByClient,
   adminListClientTeam,
   adminListContent,
   adminListContentTargets,
+  adminComputeOverallProgress,
   adminListPerformanceMetrics,
   adminListReports,
   adminListWebsiteActivity,
@@ -43,15 +43,11 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
       website: String(formData.get("website") ?? "").trim(),
       description: String(formData.get("description") ?? "").trim(),
       status: String(formData.get("status") ?? currentStatus) as Client["status"],
-      socialMediaActive: formData.get("socialMediaActive") === "on",
-      metaAdsActive: formData.get("metaAdsActive") === "on",
-      websiteActive: formData.get("websiteActive") === "on",
     });
     revalidatePath(path);
   }
 
-  const [projects, team, content, contentTargets, socialMetrics, metaMetrics, websiteMetrics, reports, websiteActivity] = await Promise.all([
-    adminListProjectsByClient(clientId),
+  const [team, content, contentTargets, socialMetrics, metaMetrics, websiteMetrics, reports, websiteActivity, overallProgress] = await Promise.all([
     adminListClientTeam(clientId),
     adminListContent(clientId),
     adminListContentTargets(clientId, period),
@@ -60,9 +56,9 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
     adminListPerformanceMetrics(clientId, "website"),
     adminListReports(clientId),
     adminListWebsiteActivity(clientId),
+    adminComputeOverallProgress(clientId),
   ]);
 
-  const activeProjects = projects.filter((p) => p.stage === "active");
   const contentTargetTotal = contentTargets.reduce((sum, t) => sum + t.target, 0);
   const publishedContent = content.filter((c) => c.status === "published");
   const contentDeliveryPct = contentTargetTotal > 0 ? Math.min(100, Math.round((publishedContent.length / contentTargetTotal) * 100)) : 0;
@@ -70,6 +66,12 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
   const latestWebsite = websiteMetrics[0];
   const latestReport = reports[0];
   const socialByPlatform = SOCIAL_PLATFORMS.map((p) => ({ platform: p, latest: socialMetrics.find((m) => m.platform === p) })).filter((s) => s.latest);
+
+  // Goal per platform+type (Social Media Goals) — actual dihitung dari Content List (published), bukan input manual.
+  const goalBreakdown = contentTargets.map((t) => {
+    const actual = publishedContent.filter((c) => c.platform === t.platform && c.type === t.contentType).length;
+    return { ...t, actual, pct: t.target > 0 ? Math.min(100, Math.round((actual / t.target) * 100)) : 0 };
+  });
 
   // ---- SEMUA di bawah ini READ-ONLY — dibaca dari module masing-masing, TIDAK ada form input di Overview ----
 
@@ -110,17 +112,6 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
             rows={2}
             className={`${inputClass} sm:col-span-2 lg:col-span-3`}
           />
-          <div className="flex flex-wrap items-center gap-4 sm:col-span-2 lg:col-span-1">
-            <label className="flex items-center gap-1.5 text-xs text-ink">
-              <input type="checkbox" name="socialMediaActive" defaultChecked={client.socialMediaActive} /> Social Media
-            </label>
-            <label className="flex items-center gap-1.5 text-xs text-ink">
-              <input type="checkbox" name="metaAdsActive" defaultChecked={client.metaAdsActive} /> Meta Ads
-            </label>
-            <label className="flex items-center gap-1.5 text-xs text-ink">
-              <input type="checkbox" name="websiteActive" defaultChecked={client.websiteActive} /> Website
-            </label>
-          </div>
           <button type="submit" className={buttonVariants({ variant: "primary", className: "justify-center" })}>
             Simpan
           </button>
@@ -129,15 +120,6 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
 
       {/* OVERALL SNAPSHOT — semua read-only, dibaca dari module masing-masing */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="flex items-center gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-            <Briefcase className="h-5 w-5" strokeWidth={1.75} />
-          </div>
-          <div>
-            <p className="font-data text-2xl font-bold text-ink">{activeProjects.length}</p>
-            <p className="text-xs text-muted">Active Projects</p>
-          </div>
-        </Card>
         <Card className="flex items-center gap-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
             <Users className="h-5 w-5" strokeWidth={1.75} />
@@ -161,9 +143,46 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
             </div>
           </Card>
         </Link>
+        <Card className="flex items-center gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+            <Briefcase className="h-5 w-5" strokeWidth={1.75} />
+          </div>
+          <div>
+            <p className="font-data text-2xl font-bold text-accent">{overallProgress != null ? `${overallProgress}%` : "—"}</p>
+            <p className="text-xs text-muted">Overall Progress</p>
+          </div>
+        </Card>
       </div>
 
-      {(client.metaAdsActive || client.websiteActive) && (
+      {/* SOCIAL MEDIA GOALS — Feed 3/12, Reels 1/3, dst. Actual computed dari Content List. */}
+      {client.socialMediaActive && goalBreakdown.length > 0 && (
+        <Card padding="lg">
+          <SectionHeading
+            title="Social Media Goals"
+            description="Actual dihitung otomatis dari Content List (status Published)."
+            action={
+              <Link href={`/admin/clients/${clientId}/social-media?tab=delivery`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                Kelola <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            }
+          />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {goalBreakdown.map((g) => (
+              <div key={g.id} className="rounded-[var(--radius-md)] border border-border p-3">
+                <p className="font-data text-[10px] uppercase tracking-wider text-muted">
+                  {g.platform} · {g.contentType}
+                </p>
+                <p className="mt-1 text-lg font-bold text-ink">
+                  {g.actual} <span className="text-sm font-medium text-muted">/ {g.target}</span>
+                </p>
+                <p className="font-data text-xs text-muted">{g.pct}%</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {(client.metaAdsActive || (client.websiteActive && latestWebsite)) && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {client.metaAdsActive && (
             <Link href={`/admin/clients/${clientId}/meta-ads`}>
@@ -174,16 +193,28 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
                 ) : (
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <p className="font-data text-xl font-bold text-ink">{latestMeta.leads ?? "—"}</p>
+                      <p className="font-data text-lg font-bold text-ink">{latestMeta.leads ?? "—"}</p>
                       <p className="text-[11px] text-muted">Leads</p>
                     </div>
                     <div>
-                      <p className="font-data text-xl font-bold text-ink">{latestMeta.spend != null ? `Rp${(latestMeta.spend / 1000000).toFixed(1)}M` : "—"}</p>
+                      <p className="font-data text-lg font-bold text-ink">{latestMeta.spend != null ? `Rp${(latestMeta.spend / 1000000).toFixed(1)}M` : "—"}</p>
                       <p className="text-[11px] text-muted">Spend</p>
                     </div>
                     <div>
-                      <p className="font-data text-xl font-bold text-ink">{latestMeta.reach != null ? `${Math.round(latestMeta.reach / 1000)}K` : "—"}</p>
-                      <p className="text-[11px] text-muted">Reach</p>
+                      <p className="font-data text-lg font-bold text-ink">{latestMeta.clicks ?? "—"}</p>
+                      <p className="text-[11px] text-muted">Clicks</p>
+                    </div>
+                    <div>
+                      <p className="font-data text-lg font-bold text-ink">{latestMeta.cpc != null ? `Rp${(latestMeta.cpc / 1000).toFixed(1)}K` : "—"}</p>
+                      <p className="text-[11px] text-muted">CPC</p>
+                    </div>
+                    <div>
+                      <p className="font-data text-lg font-bold text-ink">{latestMeta.costPerLead != null ? `Rp${(latestMeta.costPerLead / 1000).toFixed(1)}K` : "—"}</p>
+                      <p className="text-[11px] text-muted">CPL</p>
+                    </div>
+                    <div>
+                      <p className="font-data text-lg font-bold text-ink">{latestMeta.closing ?? "—"}</p>
+                      <p className="text-[11px] text-muted">Closing</p>
                     </div>
                   </div>
                 )}
@@ -191,7 +222,7 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
             </Link>
           )}
 
-          {client.websiteActive && (
+          {client.websiteActive && latestWebsite && (
             <Link href={`/admin/clients/${clientId}/website`}>
               <Card interactive padding="lg" className="h-full">
                 <p className="mb-3 flex items-center gap-1.5 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">

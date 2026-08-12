@@ -11,9 +11,12 @@ import {
   adminListContent,
   adminCreateContentFull,
   adminUpdateContentFull,
+  adminUpdateContentStatus,
   adminDeleteContent,
   adminListContentTargets,
   adminUpsertContentTarget,
+  adminUpdateContentTargetById,
+  adminDeleteContentTarget,
   adminListPerformanceMetrics,
   adminCreatePerformanceMetric,
   adminDeletePerformanceMetric,
@@ -22,7 +25,8 @@ import {
   adminUpdateGoal,
   adminDeleteGoal,
 } from "@/lib/admin-data";
-import { CONTENT_TYPES_BY_PLATFORM, type SocialPlatform, type GoalStatus } from "@/lib/types";
+import { CONTENT_TYPES_BY_PLATFORM, type SocialPlatform, type GoalStatus, type ContentStatus } from "@/lib/types";
+import { QuickStatusSelect } from "@/components/admin/quick-status-select";
 import { formatDateID, cn } from "@/lib/utils";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
@@ -63,10 +67,10 @@ export default async function AdminClientSocialMediaPage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string; platform?: string; edit?: string }>;
+  searchParams: Promise<{ tab?: string; platform?: string; edit?: string; editTarget?: string }>;
 }) {
   const { clientId } = await params;
-  const { tab = "delivery", platform = "instagram", edit } = await searchParams;
+  const { tab = "delivery", platform = "instagram", edit, editTarget } = await searchParams;
   const base = `/admin/clients/${clientId}/social-media`;
   const path = base;
   const period = currentPeriod();
@@ -116,10 +120,32 @@ export default async function AdminClientSocialMediaPage({
     revalidatePath(path);
   }
 
+  async function quickStatusAction(contentId: string, status: ContentStatus) {
+    "use server";
+    await adminUpdateContentStatus(contentId, status);
+    revalidatePath(path);
+  }
+
   async function saveTargetAction(formData: FormData) {
     "use server";
     await adminUpsertContentTarget(clientId, {
       period,
+      platform: String(formData.get("platform")),
+      contentType: String(formData.get("contentType")),
+      target: Number(formData.get("target") ?? 0),
+    });
+    revalidatePath(path);
+  }
+
+  async function deleteTargetAction(formData: FormData) {
+    "use server";
+    await adminDeleteContentTarget(String(formData.get("id")));
+    revalidatePath(path);
+  }
+
+  async function updateTargetAction(formData: FormData) {
+    "use server";
+    await adminUpdateContentTargetById(String(formData.get("targetId")), {
       platform: String(formData.get("platform")),
       contentType: String(formData.get("contentType")),
       target: Number(formData.get("target") ?? 0),
@@ -207,15 +233,60 @@ export default async function AdminClientSocialMediaPage({
             </div>
 
             {targets.length > 0 && (
-              <div className="mt-6 grid grid-cols-2 gap-3 border-t border-border pt-4 sm:grid-cols-4">
-                {targets.map((t) => (
-                  <div key={t.id} className="rounded-[var(--radius-sm)] bg-black/[0.02] p-3">
-                    <p className="font-data text-[10px] uppercase tracking-wider text-muted">
-                      {t.platform} · {t.contentType}
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-ink">Target: {t.target}</p>
-                  </div>
-                ))}
+              <div className="mt-6 grid grid-cols-2 gap-3 border-t border-border pt-4 sm:grid-cols-3 lg:grid-cols-4">
+                {targets.map((t) => {
+                  const actual = content.filter((c) => c.status === "published" && c.platform === t.platform && c.type === t.contentType).length;
+                  const pct = t.target > 0 ? Math.min(100, Math.round((actual / t.target) * 100)) : 0;
+                  return editTarget === t.id ? (
+                    <form key={t.id} action={updateTargetAction} className="col-span-2 space-y-2 rounded-[var(--radius-sm)] border border-accent bg-accent-soft/40 p-3 sm:col-span-1">
+                      <input type="hidden" name="targetId" value={t.id} />
+                      <select name="platform" defaultValue={t.platform} className={`${inputClass} w-full`}>
+                        {SOCIAL_PLATFORMS.map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                      <select name="contentType" defaultValue={t.contentType} className={`${inputClass} w-full`}>
+                        {ALL_CONTENT_TYPES.map((ct) => (
+                          <option key={ct} value={ct}>
+                            {ct}
+                          </option>
+                        ))}
+                      </select>
+                      <input name="target" type="number" defaultValue={t.target} required className={`${inputClass} w-full`} />
+                      <div className="flex gap-1.5">
+                        <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                          Save
+                        </button>
+                        <Link href={`${base}?tab=delivery`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                          Cancel
+                        </Link>
+                      </div>
+                    </form>
+                  ) : (
+                    <div key={t.id} className="rounded-[var(--radius-sm)] bg-black/[0.02] p-3">
+                      <p className="font-data text-[10px] uppercase tracking-wider text-muted">
+                        {t.platform} · {t.contentType}
+                      </p>
+                      <p className="mt-1 text-lg font-bold text-ink">
+                        {actual} <span className="text-sm font-medium text-muted">/ {t.target}</span>
+                      </p>
+                      <p className="font-data text-xs text-muted">{pct}%</p>
+                      <div className="mt-2 flex items-center gap-3">
+                        <Link href={`${base}?tab=delivery&editTarget=${t.id}`} className="font-data text-[11px] font-semibold text-accent hover:underline">
+                          Edit
+                        </Link>
+                        <form action={deleteTargetAction}>
+                          <input type="hidden" name="id" value={t.id} />
+                          <button type="submit" className="font-data text-[11px] font-semibold text-danger hover:underline">
+                            Delete
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -236,7 +307,7 @@ export default async function AdminClientSocialMediaPage({
               </select>
               <input name="target" type="number" placeholder="Target" required className={inputClass} />
               <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
-                Set Target (Create/Edit)
+                <Plus className="h-3.5 w-3.5" /> Add Goal
               </button>
             </form>
           </Card>
@@ -316,7 +387,7 @@ export default async function AdminClientSocialMediaPage({
                           <td className="py-3 pr-3 font-data text-xs capitalize text-muted">{item.type}</td>
                           <td className="py-3 pr-3 font-medium text-ink">{item.title}</td>
                           <td className="py-3 pr-3">
-                            <StatusBadge status={item.status} />
+                            <QuickStatusSelect contentId={item.id} defaultValue={item.status} action={quickStatusAction} />
                           </td>
                           <td className="py-3 pr-3 font-data text-xs text-muted">{item.approvalRequired ? item.approvalStatus ?? "pending" : "—"}</td>
                           <td className="py-3 pr-3">

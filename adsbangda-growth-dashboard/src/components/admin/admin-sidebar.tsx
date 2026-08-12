@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { href: "/admin/team", label: "Team & Akses", icon: Users },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({ pendingRevisions = 0 }: { pendingRevisions?: number }) {
   const pathname = usePathname();
 
   return (
@@ -36,7 +36,12 @@ export function AdminSidebar() {
               )}
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.href === "/admin/clients" && pendingRevisions > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 font-data text-[10px] font-bold text-white" title={`${pendingRevisions} content butuh resubmit setelah revision request`}>
+                  {pendingRevisions}
+                </span>
+              )}
             </Link>
           );
         })}
