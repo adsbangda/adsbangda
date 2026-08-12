@@ -18,6 +18,8 @@ const STATUS_MAP: Record<
   on_track: { label: "On Track", tone: "success" },
   at_risk: { label: "At Risk", tone: "warning" },
   on_hold: { label: "Ditunda", tone: "warning" },
+  planning: { label: "Planning", tone: "muted" },
+  archived: { label: "Archived", tone: "muted" },
   completed: { label: "Selesai", tone: "muted" },
   healthy: { label: "Healthy", tone: "success" },
   watch: { label: "Watch", tone: "warning" },

@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, Users, ArrowUpRight, LogOut } from "lucide-react";
+import { Users, ArrowUpRight, LogOut, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/dashboard/logo";
 import { signOut } from "@/app/(auth)/login/actions";
 
 const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard", icon: LayoutGrid },
+  { href: "/admin/clients", label: "Clients", icon: Building2 },
   { href: "/admin/team", label: "Team & Akses", icon: Users },
 ];
 

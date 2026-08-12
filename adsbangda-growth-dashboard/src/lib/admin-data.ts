@@ -9,6 +9,8 @@ import { isSupabaseConfigured, createClient } from "./supabase/server";
 import { isServiceRoleConfigured, createAdminClient } from "./supabase/admin-client";
 import { requireAdmin } from "./auth";
 import {
+  mapClient,
+  mapProject,
   mapContentItem,
   mapReportItem,
   mapFileEntry,
@@ -19,6 +21,7 @@ import {
 import {
   mockClients,
   mockClient,
+  mockProjects,
   mockContentCalendar,
   mockAttentionItems,
   mockActivity,
@@ -31,6 +34,7 @@ import {
 } from "./mock-data";
 import type {
   Client,
+  Project,
   ContentItem,
   ContentStatus,
   ContentType,
@@ -43,6 +47,7 @@ import type {
   QuickStatIcon,
   ChannelIcon,
   UserRole,
+  TeamMember,
 } from "./types";
 
 const uid = () => crypto.randomUUID();
@@ -61,12 +66,58 @@ export async function adminListClients(): Promise<Client[]> {
 
   const supabase = await createClient();
   const { data } = await supabase!.from("clients").select("*").order("name");
-  return (data ?? []).map((row) => ({
-    id: row.id as string,
-    name: row.name as string,
-    logoUrl: (row.logo_url as string | null) ?? null,
-    industry: row.industry as string,
-    status: row.status as Client["status"],
+  return (data ?? []).map(mapClient);
+}
+
+export interface ClientOverviewRow extends Client {
+  activeProjectCount: number;
+  accountManagerName: string | null;
+  lastActivity: string | null;
+}
+
+/**
+ * Versi diperkaya dari adminListClients() khusus halaman /admin/clients —
+ * menambahkan jumlah project aktif, nama Account Manager yang di-assign,
+ * dan waktu aktivitas terakhir. Dipisah dari adminListClients() supaya
+ * fungsi lama (dipakai form dropdown dsb di banyak tempat) tetap ringan.
+ */
+export async function adminListClientsOverview(): Promise<ClientOverviewRow[]> {
+  await requireAdmin();
+  const clients = await adminListClients();
+
+  if (!isSupabaseConfigured) {
+    return clients.map((c) => ({ ...c, activeProjectCount: mockProjects.filter((p) => p.clientId === c.id).length, accountManagerName: null, lastActivity: null }));
+  }
+
+  const supabase = await createClient();
+  const [{ data: projectRows }, { data: assignmentRows }, { data: activityRows }, users] = await Promise.all([
+    supabase!.from("projects").select("client_id, stage"),
+    supabase!.from("client_assignments").select("client_id, user_id"),
+    supabase!.rpc("admin_client_last_activity"),
+    adminListUsers(),
+  ]);
+
+  const userById = new Map(users.map((u) => [u.id, u]));
+  const activeProjectCountByClient = new Map<string, number>();
+  for (const row of projectRows ?? []) {
+    if (row.stage === "active") {
+      activeProjectCountByClient.set(row.client_id, (activeProjectCountByClient.get(row.client_id) ?? 0) + 1);
+    }
+  }
+  const accountManagerByClient = new Map<string, string>();
+  for (const row of assignmentRows ?? []) {
+    const user = userById.get(row.user_id);
+    if (user && (user.role === "account_manager" || user.role === "admin" || user.role === "super_admin") && !accountManagerByClient.has(row.client_id)) {
+      accountManagerByClient.set(row.client_id, user.fullName || user.email);
+    }
+  }
+  const lastActivityByClient = new Map<string, string>((activityRows ?? []).map((r: Record<string, unknown>) => [r.client_id as string, r.last_activity as string]));
+
+  return clients.map((c) => ({
+    ...c,
+    activeProjectCount: activeProjectCountByClient.get(c.id) ?? 0,
+    accountManagerName: accountManagerByClient.get(c.id) ?? null,
+    lastActivity: lastActivityByClient.get(c.id) ?? null,
   }));
 }
 
@@ -75,10 +126,10 @@ export async function adminGetClient(clientId: string): Promise<Client | null> {
   return clients.find((c) => c.id === clientId) ?? null;
 }
 
-export async function adminCreateClient(input: { name: string; industry: string; status: Client["status"] }) {
+export async function adminCreateClient(input: { name: string; industry: string; status: Client["status"]; website?: string; description?: string }) {
   await requireAdmin();
   if (!isSupabaseConfigured) {
-    const client: Client = { id: uid(), name: input.name, industry: input.industry, status: input.status };
+    const client: Client = { id: uid(), name: input.name, industry: input.industry, status: input.status, website: input.website ?? null, description: input.description ?? null };
     mockClients.push(client);
     return client;
   }
@@ -86,14 +137,17 @@ export async function adminCreateClient(input: { name: string; industry: string;
   const supabase = await createClient();
   const { data, error } = await supabase!
     .from("clients")
-    .insert({ name: input.name, industry: input.industry, status: input.status })
+    .insert({ name: input.name, industry: input.industry, status: input.status, website: input.website || null, description: input.description || null })
     .select()
     .single();
   if (error) throw new Error(error.message);
-  return data;
+  return mapClient(data);
 }
 
-export async function adminUpdateClient(clientId: string, input: Partial<{ name: string; industry: string; status: Client["status"] }>) {
+export async function adminUpdateClient(
+  clientId: string,
+  input: Partial<{ name: string; industry: string; status: Client["status"]; website: string; description: string }>
+) {
   await requireAdmin();
   if (!isSupabaseConfigured) {
     const client = mockClients.find((c) => c.id === clientId);
@@ -741,4 +795,203 @@ export async function adminUnassignClient(userId: string, clientId: string) {
   const supabase = await createClient();
   const { error } = await supabase!.rpc("admin_unassign_client", { target_user_id: userId, target_client_id: clientId });
   if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// PROJECTS (Phase 2 — Admin Client + Project Management)
+// ---------------------------------------------------------------------------
+
+export async function adminListProjectsByClient(clientId: string): Promise<Project[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return mockProjects.filter((p) => p.clientId === clientId);
+
+  const supabase = await createClient();
+  const { data } = await supabase!.from("projects").select("*").eq("client_id", clientId).order("created_at", { ascending: false });
+  return (data ?? []).map(mapProject);
+}
+
+export async function adminGetProject(projectId: string): Promise<Project | null> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return mockProjects.find((p) => p.id === projectId) ?? null;
+
+  const supabase = await createClient();
+  const { data } = await supabase!.from("projects").select("*").eq("id", projectId).maybeSingle();
+  return data ? mapProject(data) : null;
+}
+
+export async function adminCreateProject(
+  clientId: string,
+  input: { name: string; type: string; description?: string; startDate: string; endDate: string; stage: NonNullable<Project["stage"]> }
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const project: Project = {
+      id: uid(),
+      clientId,
+      name: input.name,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      status: "on_track",
+      stage: input.stage,
+      type: input.type,
+      description: input.description ?? null,
+      progressPct: 0,
+    };
+    mockProjects.push(project);
+    return project;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase!
+    .from("projects")
+    .insert({
+      client_id: clientId,
+      name: input.name,
+      type: input.type,
+      description: input.description || null,
+      start_date: input.startDate,
+      end_date: input.endDate,
+      stage: input.stage,
+    })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return mapProject(data);
+}
+
+export async function adminUpdateProject(
+  projectId: string,
+  input: Partial<{ name: string; type: string; description: string; startDate: string; endDate: string; stage: NonNullable<Project["stage"]>; progressPct: number }>
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const project = mockProjects.find((p) => p.id === projectId);
+    if (project) {
+      if (input.name !== undefined) project.name = input.name;
+      if (input.type !== undefined) project.type = input.type;
+      if (input.description !== undefined) project.description = input.description;
+      if (input.startDate !== undefined) project.startDate = input.startDate;
+      if (input.endDate !== undefined) project.endDate = input.endDate;
+      if (input.stage !== undefined) project.stage = input.stage;
+      if (input.progressPct !== undefined) project.progressPct = input.progressPct;
+    }
+    return;
+  }
+
+  const supabase = await createClient();
+  const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (input.name !== undefined) payload.name = input.name;
+  if (input.type !== undefined) payload.type = input.type;
+  if (input.description !== undefined) payload.description = input.description;
+  if (input.startDate !== undefined) payload.start_date = input.startDate;
+  if (input.endDate !== undefined) payload.end_date = input.endDate;
+  if (input.stage !== undefined) payload.stage = input.stage;
+  if (input.progressPct !== undefined) payload.progress_pct = input.progressPct;
+  await supabase!.from("projects").update(payload).eq("id", projectId);
+}
+
+export async function adminArchiveProject(projectId: string) {
+  return adminUpdateProject(projectId, { stage: "archived" });
+}
+
+// ---------------------------------------------------------------------------
+// TEAM ASSIGNMENT (Phase 2) — client_assignments & project_assignments.
+// Role user TIDAK disimpan dobel di sini; selalu dibaca live dari
+// profiles.role lewat adminListUsers(), supaya satu-satunya sumber
+// kebenaran role tetap tabel profiles. Validasi role (Account Manager
+// hanya boleh role account_manager, dst) dilakukan di dua lapis: di sini
+// (pesan error cepat & jelas) DAN di trigger database (migration 0005) —
+// jadi tetap aman meski ada jalur lain yang insert langsung ke tabel ini.
+// ---------------------------------------------------------------------------
+
+/** Staff yang boleh dipilih sebagai Account Manager (client_assignments). */
+export async function adminListAccountManagerCandidates(): Promise<TeamMember[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return [];
+  const users = await adminListUsers();
+  return users.filter((u) => u.role === "account_manager" || u.role === "admin" || u.role === "super_admin");
+}
+
+/** Staff yang boleh dipilih sebagai Creative (project_assignments). */
+export async function adminListCreativeCandidates(): Promise<TeamMember[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return [];
+  const users = await adminListUsers();
+  return users.filter((u) => u.role === "creative" || u.role === "admin" || u.role === "super_admin");
+}
+
+export async function adminListClientTeam(clientId: string): Promise<TeamMember[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return [];
+
+  const supabase = await createClient();
+  const [{ data: rows }, users] = await Promise.all([
+    supabase!.from("client_assignments").select("user_id").eq("client_id", clientId),
+    adminListUsers(),
+  ]);
+  const userById = new Map(users.map((u) => [u.id, u]));
+  return (rows ?? [])
+    .map((r) => userById.get(r.user_id))
+    .filter((u): u is (typeof users)[number] => !!u)
+    .map((u) => ({ id: u.id, email: u.email, fullName: u.fullName, role: u.role }));
+}
+
+export async function adminAssignToClient(clientId: string, userId: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return;
+
+  const users = await adminListUsers();
+  const target = users.find((u) => u.id === userId);
+  if (!target || !["account_manager", "admin", "super_admin"].includes(target.role)) {
+    throw new Error("User ini bukan Account Manager/Admin — tidak bisa di-assign ke client.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase!.from("client_assignments").upsert({ client_id: clientId, user_id: userId }, { onConflict: "client_id,user_id" });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminUnassignFromClient(clientId: string, userId: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return;
+  const supabase = await createClient();
+  await supabase!.from("client_assignments").delete().eq("client_id", clientId).eq("user_id", userId);
+}
+
+export async function adminListProjectTeam(projectId: string): Promise<TeamMember[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return [];
+
+  const supabase = await createClient();
+  const [{ data: rows }, users] = await Promise.all([
+    supabase!.from("project_assignments").select("user_id").eq("project_id", projectId),
+    adminListUsers(),
+  ]);
+  const userById = new Map(users.map((u) => [u.id, u]));
+  return (rows ?? [])
+    .map((r) => userById.get(r.user_id))
+    .filter((u): u is (typeof users)[number] => !!u)
+    .map((u) => ({ id: u.id, email: u.email, fullName: u.fullName, role: u.role }));
+}
+
+export async function adminAssignToProject(projectId: string, userId: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return;
+
+  const users = await adminListUsers();
+  const target = users.find((u) => u.id === userId);
+  if (!target || !["account_manager", "creative", "admin", "super_admin"].includes(target.role)) {
+    throw new Error("User ini tidak punya role staff yang valid — tidak bisa di-assign ke project.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase!.from("project_assignments").upsert({ project_id: projectId, user_id: userId }, { onConflict: "project_id,user_id" });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminUnassignFromProject(projectId: string, userId: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return;
+  const supabase = await createClient();
+  await supabase!.from("project_assignments").delete().eq("project_id", projectId).eq("user_id", userId);
 }

@@ -9,11 +9,13 @@ async function createClientAction(formData: FormData) {
   "use server";
   const name = String(formData.get("name") ?? "").trim();
   const industry = String(formData.get("industry") ?? "").trim();
+  const website = String(formData.get("website") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
   const status = String(formData.get("status") ?? "onboarding") as Client["status"];
   if (!name) return;
 
-  const client = await adminCreateClient({ name, industry, status });
-  revalidatePath("/admin");
+  const client = await adminCreateClient({ name, industry, status, website: website || undefined, description: description || undefined });
+  revalidatePath("/admin/clients");
   redirect(`/admin/clients/${(client as { id: string }).id}`);
 }
 
@@ -45,6 +47,30 @@ export default function NewClientPage() {
               id="industry"
               name="industry"
               placeholder="mis. F&B — Coffee Shop"
+              className="w-full rounded-[var(--radius-md)] border border-border px-3 py-2 text-sm text-ink outline-none focus:border-ink"
+            />
+          </div>
+          <div>
+            <label htmlFor="website" className="mb-1.5 block text-sm font-medium text-ink">
+              Website <span className="font-normal text-muted">(opsional)</span>
+            </label>
+            <input
+              id="website"
+              name="website"
+              type="url"
+              placeholder="https://amaticoffee.com"
+              className="w-full rounded-[var(--radius-md)] border border-border px-3 py-2 text-sm text-ink outline-none focus:border-ink"
+            />
+          </div>
+          <div>
+            <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-ink">
+              Deskripsi <span className="font-normal text-muted">(opsional)</span>
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              rows={3}
+              placeholder="Catatan singkat soal client ini…"
               className="w-full rounded-[var(--radius-md)] border border-border px-3 py-2 text-sm text-ink outline-none focus:border-ink"
             />
           </div>

@@ -40,6 +40,10 @@ export const mockProjects: Project[] = [
     startDate: "2026-08-01",
     endDate: "2026-08-31",
     status: "on_track",
+    stage: "active",
+    type: "social_media",
+    description: "Kampanye konten Instagram & TikTok bulan Agustus.",
+    progressPct: 56,
   },
 ];
 

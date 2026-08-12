@@ -19,7 +19,9 @@ export interface Client {
   name: string;
   logoUrl?: string | null;
   industry: string;
-  status: "active" | "paused" | "onboarding";
+  status: "active" | "paused" | "onboarding" | "archived";
+  website?: string | null;
+  description?: string | null;
   /**
    * Tenant tertinggi (agency-level). Optional di tipe supaya mock-data mode
    * demo tidak wajib mengisinya — di mode live selalu terisi (kolom NOT NULL
@@ -34,7 +36,19 @@ export interface Project {
   name: string;
   startDate: string;
   endDate: string;
+  /** Health indicator dipakai Client Portal (project aktif yang ditampilkan ke client). Jangan disamakan dengan `stage`. */
   status: "on_track" | "at_risk" | "completed" | "on_hold";
+  /**
+   * Lifecycle stage untuk Admin Portal (Phase 2) — orthogonal dari `status`.
+   * Dipakai untuk kelola banyak project per client (list, archive, dsb),
+   * bukan untuk tampilan health indicator di Client Portal.
+   */
+  stage?: "planning" | "active" | "on_hold" | "completed" | "archived";
+  /** Bebas diperluas — nilai umum: social_media, meta_ads, website, branding, other. */
+  type?: string;
+  description?: string | null;
+  /** Progress manual yang di-set admin di Phase 2 — berbeda dari progress per-task di ProjectTask. */
+  progressPct?: number;
 }
 
 export interface ProjectTask {
@@ -224,3 +238,11 @@ export type UserRole = "super_admin" | "admin" | "account_manager" | "creative" 
 
 /** Role apa pun selain 'client' dianggap staff internal Adsbangda. */
 export const STAFF_ROLES: readonly UserRole[] = ["super_admin", "admin", "account_manager", "creative"];
+
+/** Anggota staff yang bisa di-assign ke client/project (Phase 2). */
+export interface TeamMember {
+  id: string;
+  email: string;
+  fullName: string | null;
+  role: UserRole;
+}

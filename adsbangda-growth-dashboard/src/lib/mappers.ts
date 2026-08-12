@@ -26,6 +26,8 @@ export function mapClient(row: Record<string, unknown>): Client {
     logoUrl: (row.logo_url as string | null) ?? null,
     industry: row.industry as string,
     status: row.status as Client["status"],
+    website: (row.website as string | null) ?? null,
+    description: (row.description as string | null) ?? null,
     organizationId: row.organization_id as string | undefined,
   };
 }
@@ -38,6 +40,10 @@ export function mapProject(row: Record<string, unknown>): Project {
     startDate: row.start_date as string,
     endDate: row.end_date as string,
     status: row.status as Project["status"],
+    stage: row.stage as Project["stage"],
+    type: row.type as string | undefined,
+    description: (row.description as string | null) ?? null,
+    progressPct: row.progress_pct as number | undefined,
   };
 }
 
