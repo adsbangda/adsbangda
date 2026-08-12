@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useActionState, useState } from "react";
+import { Suspense, useActionState } from "react";
 import { useSearchParams } from "next/navigation";
-import { signIn, signUp } from "./actions";
+import { signIn } from "./actions";
 import { buttonVariants } from "@/components/dashboard/button";
+import { Logo } from "@/components/dashboard/logo";
 
 function SignInForm({ next }: { next: string | null }) {
   const [state, action, pending] = useActionState(signIn, { error: null });
@@ -20,8 +21,9 @@ function SignInForm({ next }: { next: string | null }) {
           name="email"
           type="email"
           required
+          autoComplete="email"
           placeholder="nama@bisnis.com"
-          className="w-full border-b border-border bg-transparent py-2 text-sm text-ink outline-none transition-colors focus:border-ink"
+          className="w-full rounded-[var(--radius-md)] border border-border bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent-soft"
         />
       </div>
       <div>
@@ -33,160 +35,132 @@ function SignInForm({ next }: { next: string | null }) {
           name="password"
           type="password"
           required
+          autoComplete="current-password"
           placeholder="••••••••"
-          className="w-full border-b border-border bg-transparent py-2 text-sm text-ink outline-none transition-colors focus:border-ink"
+          className="w-full rounded-[var(--radius-md)] border border-border bg-paper px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent-soft"
         />
       </div>
       {state.error && <p className="text-xs font-medium text-danger">{state.error}</p>}
-      <button type="submit" disabled={pending} className={buttonVariants({ variant: "dark", className: "w-full justify-center py-2.5" })}>
-        {pending ? "Memproses…" : "Sign in"}
+      <button type="submit" disabled={pending} className={buttonVariants({ variant: "primary", className: "w-full justify-center py-2.5" })}>
+        {pending ? "Memproses…" : "Masuk"}
       </button>
     </form>
   );
 }
 
-function SignUpForm() {
-  const [state, action, pending] = useActionState(signUp, { error: null, success: false });
-
-  if (state.success) {
-    return (
-      <div className="mt-8 rounded-[var(--radius-md)] border border-success-soft bg-success-soft p-4 text-sm text-success">
-        Akun berhasil dibuat. Jika verifikasi email aktif di project Supabase kamu, cek inbox lalu kembali ke tab Masuk. Kalau tidak, langsung saja masuk lewat tab Masuk.
-      </div>
-    );
-  }
-
-  return (
-    <form action={action} className="mt-8 space-y-5">
-      <div>
-        <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium text-ink">
-          Nama Lengkap
-        </label>
-        <input
-          id="fullName"
-          name="fullName"
-          type="text"
-          required
-          placeholder="Nama kamu"
-          className="w-full border-b border-border bg-transparent py-2 text-sm text-ink outline-none transition-colors focus:border-ink"
-        />
-      </div>
-      <div>
-        <label htmlFor="signup-email" className="mb-1.5 block text-sm font-medium text-ink">
-          Email
-        </label>
-        <input
-          id="signup-email"
-          name="email"
-          type="email"
-          required
-          placeholder="nama@bisnis.com"
-          className="w-full border-b border-border bg-transparent py-2 text-sm text-ink outline-none transition-colors focus:border-ink"
-        />
-      </div>
-      <div>
-        <label htmlFor="signup-password" className="mb-1.5 block text-sm font-medium text-ink">
-          Password
-        </label>
-        <input
-          id="signup-password"
-          name="password"
-          type="password"
-          required
-          minLength={8}
-          placeholder="Minimal 8 karakter"
-          className="w-full border-b border-border bg-transparent py-2 text-sm text-ink outline-none transition-colors focus:border-ink"
-        />
-      </div>
-      {state.error && <p className="text-xs font-medium text-danger">{state.error}</p>}
-      <button type="submit" disabled={pending} className={buttonVariants({ variant: "dark", className: "w-full justify-center py-2.5" })}>
-        {pending ? "Memproses…" : "Buat Akun"}
-      </button>
-      <p className="text-xs leading-relaxed text-muted">
-        Akun baru berperan sebagai client secara default. Admin akan menghubungkan akunmu ke client yang sesuai lewat Admin Portal.
-      </p>
-    </form>
-  );
-}
-
-function LoginTabs() {
+function LoginCard() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
-  const [tab, setTab] = useState<"signin" | "signup">("signin");
 
   return (
     <>
-      <div className="flex items-center gap-1 rounded-[var(--radius-md)] border border-border bg-black/[0.02] p-1">
-        <button
-          type="button"
-          onClick={() => setTab("signin")}
-          className={`flex-1 rounded-[var(--radius-sm)] py-1.5 text-sm font-semibold transition-colors ${
-            tab === "signin" ? "bg-white text-ink shadow-[var(--shadow-xs)]" : "text-muted"
-          }`}
-        >
-          Masuk
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("signup")}
-          className={`flex-1 rounded-[var(--radius-sm)] py-1.5 text-sm font-semibold transition-colors ${
-            tab === "signup" ? "bg-white text-ink shadow-[var(--shadow-xs)]" : "text-muted"
-          }`}
-        >
-          Daftar
-        </button>
-      </div>
+      <Logo tone="dark" height={24} />
 
-      <h2 className="mt-6 font-display text-2xl font-bold tracking-tight text-ink">
-        {tab === "signin" ? "Sign in" : "Buat akun baru"}
-      </h2>
+      <h2 className="mt-8 font-display text-2xl font-bold tracking-tight text-ink">Masuk ke akun kamu</h2>
       <p className="mt-1.5 text-sm text-muted">
-        {tab === "signin" ? "Masuk untuk melihat perkembangan marketing kamu." : "Daftar dulu, admin akan menghubungkan akunmu ke client."}
+        Pantau perkembangan marketing bisnismu di satu tempat.
       </p>
 
-      {tab === "signin" ? <SignInForm next={next} /> : <SignUpForm />}
+      <SignInForm next={next} />
+
+      <p className="mt-6 text-xs leading-relaxed text-muted">
+        Belum punya akun? Hubungi tim Adsbangda — akses akun dibuatkan lewat Admin Portal.
+      </p>
     </>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Brand panel */}
-      <div className="hidden flex-col justify-between bg-ink p-10 text-paper lg:flex">
-        <div className="flex items-center gap-2.5">
-          <div className="brand-gradient flex h-8 w-8 items-center justify-center rounded-md font-display text-sm font-extrabold text-white">
-            A
-          </div>
-          <span className="font-display text-sm font-bold">Adsbangda</span>
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-paper p-4 lg:p-8">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-[var(--radius-xl)] bg-paper-deep shadow-[var(--shadow-md)] lg:grid-cols-2">
+        {/* Brand panel */}
+        <div className="brand-gradient relative hidden flex-col justify-between overflow-hidden p-10 text-white lg:flex">
+          {/* decorative hexagon dots, echoing the reference layout */}
+          <svg
+            aria-hidden
+            className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 text-white/10"
+            viewBox="0 0 100 100"
+            fill="none"
+          >
+            <circle cx="50" cy="50" r="1.5" fill="currentColor" />
+            {Array.from({ length: 24 }).map((_, i) => {
+              const angle = (i / 24) * Math.PI * 2;
+              const r = 38;
+              return <circle key={i} cx={50 + r * Math.cos(angle)} cy={50 + r * Math.sin(angle)} r="1.5" fill="currentColor" />;
+            })}
+          </svg>
+          <svg
+            aria-hidden
+            className="pointer-events-none absolute -bottom-14 -right-14 h-56 w-56 text-white/10"
+            viewBox="0 0 100 100"
+            fill="none"
+          >
+            <circle cx="50" cy="50" r="1.5" fill="currentColor" />
+            {Array.from({ length: 32 }).map((_, i) => {
+              const angle = (i / 32) * Math.PI * 2;
+              const r = 42;
+              return <circle key={i} cx={50 + r * Math.cos(angle)} cy={50 + r * Math.sin(angle)} r="1.5" fill="currentColor" />;
+            })}
+          </svg>
 
-        <div className="max-w-sm">
-          <p className="font-data text-xs uppercase tracking-[0.14em] text-muted-on-dark">Client Portal</p>
-          <h1 className="mt-3 font-display text-3xl font-bold leading-tight tracking-tight">
-            Satu tempat untuk memahami marketing bisnismu.
-          </h1>
-          <p className="mt-4 text-sm leading-relaxed text-muted-on-dark">
-            Progress kerja, campaign, konten, dan approval — semua terhubung, tanpa
-            menunggu laporan manual setiap bulan.
-          </p>
-        </div>
+          <Logo tone="white" height={22} />
 
-        <p className="font-data text-xs text-muted-on-dark">© 2026 Adsbangda</p>
-      </div>
-
-      {/* Sign in / sign up */}
-      <div className="flex items-center justify-center bg-paper px-6 py-16">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
-            <div className="brand-gradient inline-flex h-8 w-8 items-center justify-center rounded-md font-display text-sm font-extrabold text-white">
-              A
+          {/* Abstract dashboard preview mockup */}
+          <div className="relative mx-auto w-full max-w-sm">
+            <div className="rounded-[var(--radius-lg)] border border-white/15 bg-ink-soft/70 p-3 shadow-2xl backdrop-blur-sm">
+              <div className="mb-2.5 flex items-center gap-1.5 px-1">
+                <span className="h-2 w-2 rounded-full bg-white/25" />
+                <span className="h-2 w-2 rounded-full bg-white/25" />
+                <span className="h-2 w-2 rounded-full bg-white/25" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-[var(--radius-sm)] bg-white/10 px-3 py-2.5">
+                  <div className="h-2 w-24 rounded-full bg-white/40" />
+                  <div className="h-2 w-10 rounded-full bg-white/25" />
+                </div>
+                {[72, 45, 88].map((w, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-[var(--radius-sm)] bg-white/[0.06] px-3 py-2.5">
+                    <div className="h-6 w-6 shrink-0 rounded-full bg-white/20" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-1.5 rounded-full bg-white/30" style={{ width: `${w}%` }} />
+                      <div className="h-1.5 w-1/3 rounded-full bg-white/15" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="absolute -bottom-6 -right-6 w-44 rounded-[var(--radius-md)] border border-white/15 bg-ink-soft/80 p-3 shadow-2xl backdrop-blur-sm">
+              <div className="mb-2 h-1.5 w-16 rounded-full bg-white/30" />
+              <div className="flex items-end gap-1">
+                {[40, 65, 30, 80, 55, 90].map((h, i) => (
+                  <div key={i} className="w-full rounded-t-sm bg-accent-2/70" style={{ height: `${h * 0.4}px` }} />
+                ))}
+              </div>
             </div>
           </div>
 
-          <Suspense fallback={<div className="h-10 animate-pulse rounded-[var(--radius-md)] bg-black/[0.04]" />}>
-            <LoginTabs />
-          </Suspense>
+          <div className="max-w-sm">
+            <p className="text-lg font-semibold leading-snug">
+              Progress kerja, campaign, konten, dan approval — semua dalam satu dashboard.
+            </p>
+            <p className="mt-3 text-sm font-bold leading-snug">
+              Tanpa menunggu laporan manual setiap bulan.
+            </p>
+          </div>
+        </div>
+
+        {/* Sign in */}
+        <div className="flex items-center justify-center px-6 py-14 sm:px-12 lg:px-14">
+          <div className="w-full max-w-sm">
+            <div className="mb-8 lg:hidden">
+              <Logo tone="dark" height={22} />
+            </div>
+
+            <Suspense fallback={<div className="h-10 animate-pulse rounded-[var(--radius-md)] bg-black/[0.04]" />}>
+              <LoginCard />
+            </Suspense>
+          </div>
         </div>
       </div>
     </div>

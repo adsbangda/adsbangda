@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InstagramGlyph } from "./platform-icons";
+import { Logo } from "./logo";
 import { signOut } from "@/app/(auth)/login/actions";
 
 const NAV_ITEMS = [
@@ -40,11 +41,8 @@ export function Sidebar({ clientName, isAdmin = false, onNavigate }: { clientNam
     <div className="flex h-full w-64 flex-col border-r border-border bg-surface">
       <div className="flex items-center justify-between px-5 py-6">
         <div>
-          <div className="font-display text-lg font-extrabold leading-none tracking-tight">
-            <span className="text-accent">ADS</span>
-            <span className="text-ink">BANGDA</span>
-          </div>
-          <div className="mt-1.5 font-data text-[10px] uppercase tracking-wider text-muted">Client Portal</div>
+          <Logo tone="dark" height={18} />
+          <div className="mt-2 font-data text-[10px] uppercase tracking-wider text-muted">Client Portal</div>
         </div>
         {onNavigate && (
           <button onClick={onNavigate} aria-label="Tutup menu" className="text-muted lg:hidden">

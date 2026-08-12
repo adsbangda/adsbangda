@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, Users, ArrowUpRight, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/dashboard/logo";
 import { signOut } from "@/app/(auth)/login/actions";
 
 const NAV_ITEMS = [
@@ -17,11 +18,8 @@ export function AdminSidebar() {
   return (
     <div className="flex h-full w-64 flex-col border-r border-border bg-surface">
       <div className="px-5 py-6">
-        <div className="font-display text-lg font-extrabold leading-none tracking-tight">
-          <span className="text-accent">ADS</span>
-          <span className="text-ink">BANGDA</span>
-        </div>
-        <div className="mt-1.5 font-data text-[10px] uppercase tracking-wider text-muted">Admin Portal</div>
+        <Logo tone="dark" height={18} />
+        <div className="mt-2 font-data text-[10px] uppercase tracking-wider text-muted">Admin Portal</div>
       </div>
 
       <nav className="flex-1 space-y-0.5 px-3 py-2">
