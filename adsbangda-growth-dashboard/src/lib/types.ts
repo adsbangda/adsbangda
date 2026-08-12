@@ -109,6 +109,21 @@ export interface ReportItem {
   summary: string;
 }
 
+export type GoalStatus = "draft" | "on_track" | "at_risk" | "completed" | "archived";
+
+export interface Goal {
+  id: string;
+  clientId: string;
+  label: string;
+  description?: string | null;
+  target: number;
+  actual: number;
+  unit: string;
+  period: string;
+  status: GoalStatus;
+  notes?: string | null;
+}
+
 export interface AttentionItem {
   id: string;
   icon: "approval" | "budget" | "meeting";

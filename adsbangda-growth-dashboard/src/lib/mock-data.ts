@@ -18,6 +18,7 @@ import type {
   UpcomingEvent,
   WeeklyCalendar,
   FileEntry,
+  Goal,
 } from "./types";
 
 export const mockClient: Client = {
@@ -31,6 +32,45 @@ export const mockClient: Client = {
 // baru yang dibuat admin lewat UI akan di-push ke array ini saat runtime —
 // tapi karena ini array in-memory biasa, isinya reset setiap server restart.
 export const mockClients: Client[] = [mockClient];
+
+export const mockGoals: Goal[] = [
+  {
+    id: "goal_content",
+    clientId: mockClient.id,
+    label: "Content Goal",
+    description: "Konsistensi produksi content bulanan untuk menjaga awareness.",
+    target: 20,
+    actual: 15,
+    unit: "content/month",
+    period: "2026-08",
+    status: "on_track",
+    notes: null,
+  },
+  {
+    id: "goal_leads",
+    clientId: mockClient.id,
+    label: "Lead Goal",
+    description: "Target leads dari kombinasi Meta Ads & organic social.",
+    target: 150,
+    actual: 120,
+    unit: "leads",
+    period: "2026-08",
+    status: "at_risk",
+    notes: "Perlu naikkan budget minggu terakhir untuk kejar target.",
+  },
+  {
+    id: "goal_spend",
+    clientId: mockClient.id,
+    label: "Ad Spend Goal",
+    description: "Efisiensi budget iklan bulanan sesuai kontrak.",
+    target: 5000000,
+    actual: 4800000,
+    unit: "Rp",
+    period: "2026-08",
+    status: "on_track",
+    notes: null,
+  },
+];
 
 export const mockProjects: Project[] = [
   {

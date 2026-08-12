@@ -17,6 +17,8 @@ import {
   mapAttentionItem,
   mapActivityEntry,
   mapDeliveryItem,
+  mapPerformanceMetric,
+  mapGoal,
 } from "./mappers";
 import {
   mockClients,
@@ -31,6 +33,10 @@ import {
   mockQuickStats,
   mockChannelOverview,
   mockUpcomingEvents,
+  mockPerformance,
+  mockSocial,
+  mockWebsite,
+  mockGoals,
 } from "./mock-data";
 import type {
   Client,
@@ -48,6 +54,10 @@ import type {
   ChannelIcon,
   UserRole,
   TeamMember,
+  Channel,
+  PerformanceMetric,
+  Goal,
+  GoalStatus,
 } from "./types";
 
 const uid = () => crypto.randomUUID();
@@ -994,4 +1004,159 @@ export async function adminUnassignFromProject(projectId: string, userId: string
   if (!isSupabaseConfigured) return;
   const supabase = await createClient();
   await supabase!.from("project_assignments").delete().eq("project_id", projectId).eq("user_id", userId);
+}
+
+// ---------------------------------------------------------------------------
+// PERFORMANCE METRICS (Phase 3A) — Social Media & Meta Ads.
+// REUSE tabel `performance_metrics` yang sudah ada sejak migration 0001
+// (dibaca Client Portal lewat lib/data.ts) — TIDAK ada tabel baru, cuma
+// fungsi tulis yang sebelumnya belum ada (README lama: "masih perlu diisi
+// lewat SQL/Table editor Supabase langsung"). Sengaja generik per `channel`
+// supaya satu set fungsi ini melayani baik tab Social Media (channel=social)
+// maupun Meta Ads (channel=meta_ads) — struktur yang sama juga yang nanti
+// dipakai kalau datanya diisi otomatis lewat API, bukan manual lagi.
+// ---------------------------------------------------------------------------
+
+function mockArrayForChannel(channel: Channel) {
+  if (channel === "meta_ads") return mockPerformance;
+  if (channel === "social") return mockSocial;
+  return mockWebsite;
+}
+
+export async function adminListPerformanceMetrics(clientId: string, channel: Channel): Promise<PerformanceMetric[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return mockArrayForChannel(channel).filter((m) => m.clientId === clientId);
+
+  const supabase = await createClient();
+  const { data } = await supabase!
+    .from("performance_metrics")
+    .select("*")
+    .eq("client_id", clientId)
+    .eq("channel", channel)
+    .order("date", { ascending: false });
+  return (data ?? []).map(mapPerformanceMetric);
+}
+
+export async function adminCreatePerformanceMetric(
+  clientId: string,
+  channel: Channel,
+  input: Partial<Omit<PerformanceMetric, "id" | "clientId" | "channel">> & { date: string }
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const metric: PerformanceMetric = { id: uid(), clientId, channel, ...input };
+    mockArrayForChannel(channel).push(metric);
+    return metric;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase!
+    .from("performance_metrics")
+    .insert({
+      client_id: clientId,
+      channel,
+      date: input.date,
+      spend: input.spend ?? null,
+      reach: input.reach ?? null,
+      impressions: input.impressions ?? null,
+      clicks: input.clicks ?? null,
+      leads: input.leads ?? null,
+      cost_per_lead: input.costPerLead ?? null,
+      followers: input.followers ?? null,
+      engagement_rate: input.engagementRate ?? null,
+      visitors: input.visitors ?? null,
+      conversions: input.conversions ?? null,
+    })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return mapPerformanceMetric(data);
+}
+
+export async function adminDeletePerformanceMetric(id: string, channel: Channel) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const arr = mockArrayForChannel(channel);
+    const idx = arr.findIndex((m) => m.id === id);
+    if (idx >= 0) arr.splice(idx, 1);
+    return;
+  }
+  const supabase = await createClient();
+  await supabase!.from("performance_metrics").delete().eq("id", id);
+}
+
+// ---------------------------------------------------------------------------
+// GOALS (Phase 3A) — target & pencapaian client. `actual` untuk sekarang
+// diisi manual oleh admin; disiapkan supaya bisa dihitung otomatis dari
+// modul lain (Content/Meta Ads) di fase berikutnya tanpa migrasi ulang
+// skema (kolom label/target/actual/unit/period sudah generik).
+// ---------------------------------------------------------------------------
+
+export async function adminListGoals(clientId: string): Promise<Goal[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return mockGoals.filter((g) => g.clientId === clientId);
+
+  const supabase = await createClient();
+  const { data } = await supabase!.from("client_goals").select("*").eq("client_id", clientId).order("created_at");
+  return (data ?? []).map(mapGoal);
+}
+
+export async function adminCreateGoal(
+  clientId: string,
+  input: { label: string; description?: string; target: number; actual: number; unit: string; period: string; status: GoalStatus }
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const goal: Goal = { id: uid(), clientId, description: input.description ?? null, notes: null, ...input };
+    mockGoals.push(goal);
+    return goal;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase!
+    .from("client_goals")
+    .insert({
+      client_id: clientId,
+      label: input.label,
+      description: input.description || null,
+      target: input.target,
+      actual: input.actual,
+      unit: input.unit,
+      period: input.period,
+      status: input.status,
+    })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return mapGoal(data);
+}
+
+export async function adminUpdateGoal(
+  goalId: string,
+  input: Partial<{ actual: number; status: GoalStatus; notes: string; description: string }>
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const goal = mockGoals.find((g) => g.id === goalId);
+    if (goal) {
+      if (input.actual !== undefined) goal.actual = input.actual;
+      if (input.status !== undefined) goal.status = input.status;
+      if (input.notes !== undefined) goal.notes = input.notes;
+      if (input.description !== undefined) goal.description = input.description;
+    }
+    return;
+  }
+  const supabase = await createClient();
+  await supabase!.from("client_goals").update(input).eq("id", goalId);
+}
+
+export async function adminDeleteGoal(goalId: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const idx = mockGoals.findIndex((g) => g.id === goalId);
+    if (idx >= 0) mockGoals.splice(idx, 1);
+    return;
+  }
+  const supabase = await createClient();
+  await supabase!.from("client_goals").delete().eq("id", goalId);
 }

@@ -17,6 +17,7 @@ import type {
   QuickStat,
   ChannelOverviewRow,
   UpcomingEvent,
+  Goal,
 } from "./types";
 
 export function mapClient(row: Record<string, unknown>): Client {
@@ -77,6 +78,21 @@ export function mapPerformanceMetric(row: Record<string, unknown>): PerformanceM
     engagementRate: (row.engagement_rate as number | null) ?? undefined,
     visitors: (row.visitors as number | null) ?? undefined,
     conversions: (row.conversions as number | null) ?? undefined,
+  };
+}
+
+export function mapGoal(row: Record<string, unknown>): Goal {
+  return {
+    id: row.id as string,
+    clientId: row.client_id as string,
+    label: row.label as string,
+    description: (row.description as string | null) ?? null,
+    target: Number(row.target ?? 0),
+    actual: Number(row.actual ?? 0),
+    unit: (row.unit as string) ?? "",
+    period: (row.period as string) ?? "",
+    status: (row.status as Goal["status"]) ?? "on_track",
+    notes: (row.notes as string | null) ?? null,
   };
 }
 
