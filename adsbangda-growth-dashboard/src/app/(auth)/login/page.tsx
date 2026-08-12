@@ -6,6 +6,8 @@ import { signIn } from "./actions";
 import { buttonVariants } from "@/components/dashboard/button";
 import { Logo } from "@/components/dashboard/logo";
 
+const SUPPORT_EMAIL = "support@adsbangda.com";
+
 function SignInForm({ next }: { next: string | null }) {
   const [state, action, pending] = useActionState(signIn, { error: null });
 
@@ -27,9 +29,14 @@ function SignInForm({ next }: { next: string | null }) {
         />
       </div>
       <div>
-        <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-ink">
-          Password
-        </label>
+        <div className="mb-1.5 flex items-center justify-between">
+          <label htmlFor="password" className="block text-sm font-medium text-ink">
+            Password
+          </label>
+          <a href={`mailto:${SUPPORT_EMAIL}?subject=Lupa%20Password`} className="text-xs font-medium text-accent hover:underline">
+            Lupa password?
+          </a>
+        </div>
         <input
           id="password"
           name="password"
@@ -66,48 +73,52 @@ function LoginCard() {
       <p className="mt-6 text-xs leading-relaxed text-muted">
         Belum punya akun? Hubungi tim Adsbangda — akses akun dibuatkan lewat Admin Portal.
       </p>
+      <p className="mt-2 text-xs leading-relaxed text-muted">
+        Butuh bantuan?{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="font-medium text-accent hover:underline">
+          {SUPPORT_EMAIL}
+        </a>
+      </p>
     </>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-paper p-4 lg:p-8">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-[var(--radius-xl)] bg-paper-deep shadow-[var(--shadow-md)] lg:grid-cols-2">
-        {/* Brand panel */}
-        <div className="brand-gradient relative hidden flex-col justify-between overflow-hidden p-10 text-white lg:flex">
-          {/* decorative hexagon dots, echoing the reference layout */}
-          <svg
-            aria-hidden
-            className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 text-white/10"
-            viewBox="0 0 100 100"
-            fill="none"
-          >
-            <circle cx="50" cy="50" r="1.5" fill="currentColor" />
-            {Array.from({ length: 24 }).map((_, i) => {
-              const angle = (i / 24) * Math.PI * 2;
-              const r = 38;
-              return <circle key={i} cx={50 + r * Math.cos(angle)} cy={50 + r * Math.sin(angle)} r="1.5" fill="currentColor" />;
-            })}
-          </svg>
-          <svg
-            aria-hidden
-            className="pointer-events-none absolute -bottom-14 -right-14 h-56 w-56 text-white/10"
-            viewBox="0 0 100 100"
-            fill="none"
-          >
-            <circle cx="50" cy="50" r="1.5" fill="currentColor" />
-            {Array.from({ length: 32 }).map((_, i) => {
-              const angle = (i / 32) * Math.PI * 2;
-              const r = 42;
-              return <circle key={i} cx={50 + r * Math.cos(angle)} cy={50 + r * Math.sin(angle)} r="1.5" fill="currentColor" />;
-            })}
-          </svg>
+    <div className="grid min-h-screen lg:grid-cols-2">
+      {/* Brand panel */}
+      <div className="brand-gradient relative hidden flex-col items-center justify-center overflow-hidden p-10 text-white lg:flex xl:p-16">
+        {/* decorative hexagon dots, echoing the reference layout */}
+        <svg
+          aria-hidden
+          className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 text-white/10"
+          viewBox="0 0 100 100"
+          fill="none"
+        >
+          <circle cx="50" cy="50" r="1.5" fill="currentColor" />
+          {Array.from({ length: 24 }).map((_, i) => {
+            const angle = (i / 24) * Math.PI * 2;
+            const r = 38;
+            return <circle key={i} cx={50 + r * Math.cos(angle)} cy={50 + r * Math.sin(angle)} r="1.5" fill="currentColor" />;
+          })}
+        </svg>
+        <svg
+          aria-hidden
+          className="pointer-events-none absolute -bottom-14 -right-14 h-56 w-56 text-white/10"
+          viewBox="0 0 100 100"
+          fill="none"
+        >
+          <circle cx="50" cy="50" r="1.5" fill="currentColor" />
+          {Array.from({ length: 32 }).map((_, i) => {
+            const angle = (i / 32) * Math.PI * 2;
+            const r = 42;
+            return <circle key={i} cx={50 + r * Math.cos(angle)} cy={50 + r * Math.sin(angle)} r="1.5" fill="currentColor" />;
+          })}
+        </svg>
 
-          <Logo tone="white" height={22} />
-
+        <div className="relative flex w-full max-w-md flex-col items-center gap-10">
           {/* Abstract dashboard preview mockup */}
-          <div className="relative mx-auto w-full max-w-sm">
+          <div className="relative w-full">
             <div className="rounded-[var(--radius-lg)] border border-white/15 bg-ink-soft/70 p-3 shadow-2xl backdrop-blur-sm">
               <div className="mb-2.5 flex items-center gap-1.5 px-1">
                 <span className="h-2 w-2 rounded-full bg-white/25" />
@@ -140,7 +151,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="max-w-sm">
+          <div className="text-center">
             <p className="text-lg font-semibold leading-snug">
               Progress kerja, campaign, konten, dan approval — semua dalam satu dashboard.
             </p>
@@ -149,18 +160,18 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
+      </div>
 
-        {/* Sign in */}
-        <div className="flex items-center justify-center px-6 py-14 sm:px-12 lg:px-14">
-          <div className="w-full max-w-sm">
-            <div className="mb-8 lg:hidden">
-              <Logo tone="dark" height={22} />
-            </div>
-
-            <Suspense fallback={<div className="h-10 animate-pulse rounded-[var(--radius-md)] bg-black/[0.04]" />}>
-              <LoginCard />
-            </Suspense>
+      {/* Sign in */}
+      <div className="flex items-center justify-center bg-paper-deep px-6 py-14 sm:px-12 lg:px-16">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 lg:hidden">
+            <Logo tone="dark" height={22} />
           </div>
+
+          <Suspense fallback={<div className="h-10 animate-pulse rounded-[var(--radius-md)] bg-black/[0.04]" />}>
+            <LoginCard />
+          </Suspense>
         </div>
       </div>
     </div>
