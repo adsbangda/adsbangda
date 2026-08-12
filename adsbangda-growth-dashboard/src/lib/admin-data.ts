@@ -19,6 +19,8 @@ import {
   mapDeliveryItem,
   mapPerformanceMetric,
   mapGoal,
+  mapContentTarget,
+  mapWebsiteActivity,
 } from "./mappers";
 import {
   mockClients,
@@ -37,6 +39,8 @@ import {
   mockSocial,
   mockWebsite,
   mockGoals,
+  mockContentTargets,
+  mockWebsiteActivity,
 } from "./mock-data";
 import type {
   Client,
@@ -58,6 +62,8 @@ import type {
   PerformanceMetric,
   Goal,
   GoalStatus,
+  ContentTarget,
+  WebsiteActivityEntry,
 } from "./types";
 
 const uid = () => crypto.randomUUID();
@@ -1023,17 +1029,16 @@ function mockArrayForChannel(channel: Channel) {
   return mockWebsite;
 }
 
-export async function adminListPerformanceMetrics(clientId: string, channel: Channel): Promise<PerformanceMetric[]> {
+export async function adminListPerformanceMetrics(clientId: string, channel: Channel, platform?: string): Promise<PerformanceMetric[]> {
   await requireAdmin();
-  if (!isSupabaseConfigured) return mockArrayForChannel(channel).filter((m) => m.clientId === clientId);
+  if (!isSupabaseConfigured) {
+    return mockArrayForChannel(channel).filter((m) => m.clientId === clientId && (!platform || m.platform === platform));
+  }
 
   const supabase = await createClient();
-  const { data } = await supabase!
-    .from("performance_metrics")
-    .select("*")
-    .eq("client_id", clientId)
-    .eq("channel", channel)
-    .order("date", { ascending: false });
+  let query = supabase!.from("performance_metrics").select("*").eq("client_id", clientId).eq("channel", channel);
+  if (platform) query = query.eq("platform", platform);
+  const { data } = await query.order("date", { ascending: false });
   return (data ?? []).map(mapPerformanceMetric);
 }
 
@@ -1056,6 +1061,7 @@ export async function adminCreatePerformanceMetric(
       client_id: clientId,
       channel,
       date: input.date,
+      platform: input.platform ?? null,
       spend: input.spend ?? null,
       reach: input.reach ?? null,
       impressions: input.impressions ?? null,
@@ -1066,6 +1072,13 @@ export async function adminCreatePerformanceMetric(
       engagement_rate: input.engagementRate ?? null,
       visitors: input.visitors ?? null,
       conversions: input.conversions ?? null,
+      page_views: input.pageViews ?? null,
+      sessions: input.sessions ?? null,
+      bounce_rate: input.bounceRate ?? null,
+      avg_session_duration: input.avgSessionDuration ?? null,
+      ctr: input.ctr ?? null,
+      cpc: input.cpc ?? null,
+      roas: input.roas ?? null,
     })
     .select()
     .single();
@@ -1159,4 +1172,149 @@ export async function adminDeleteGoal(goalId: string) {
   }
   const supabase = await createClient();
   await supabase!.from("client_goals").delete().eq("id", goalId);
+}
+
+// ---------------------------------------------------------------------------
+// CONTENT TARGETS (Consolidation) — target kontrak per client+period+
+// platform+content_type. Dipakai modul Social Media (Content Delivery) untuk
+// hitung progress delivered/target — TIDAK ada tabel baru di sini, hanya
+// akses ke `content_targets` (migration 0008).
+// ---------------------------------------------------------------------------
+
+export async function adminListContentTargets(clientId: string, period: string): Promise<ContentTarget[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return mockContentTargets.filter((t) => t.clientId === clientId && t.period === period);
+
+  const supabase = await createClient();
+  const { data } = await supabase!.from("content_targets").select("*").eq("client_id", clientId).eq("period", period);
+  return (data ?? []).map(mapContentTarget);
+}
+
+export async function adminUpsertContentTarget(
+  clientId: string,
+  input: { period: string; platform: string; contentType: string; target: number }
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const existing = mockContentTargets.find(
+      (t) => t.clientId === clientId && t.period === input.period && t.platform === input.platform && t.contentType === input.contentType
+    );
+    if (existing) {
+      existing.target = input.target;
+    } else {
+      mockContentTargets.push({ id: uid(), clientId, period: input.period, platform: input.platform as never, contentType: input.contentType, target: input.target });
+    }
+    return;
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase!.from("content_targets").upsert(
+    { client_id: clientId, period: input.period, platform: input.platform, content_type: input.contentType, target: input.target },
+    { onConflict: "client_id,period,platform,content_type" }
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function adminDeleteContentTarget(targetId: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const idx = mockContentTargets.findIndex((t) => t.id === targetId);
+    if (idx >= 0) mockContentTargets.splice(idx, 1);
+    return;
+  }
+  const supabase = await createClient();
+  await supabase!.from("content_targets").delete().eq("id", targetId);
+}
+
+// ---------------------------------------------------------------------------
+// WEBSITE ACTIVITY (Consolidation) — activity feed khusus modul Website.
+// ---------------------------------------------------------------------------
+
+export async function adminListWebsiteActivity(clientId: string): Promise<WebsiteActivityEntry[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return mockWebsiteActivity.filter((a) => a.clientId === clientId);
+
+  const supabase = await createClient();
+  const { data } = await supabase!.from("website_activity").select("*").eq("client_id", clientId).order("activity_date", { ascending: false });
+  return (data ?? []).map(mapWebsiteActivity);
+}
+
+export async function adminCreateWebsiteActivity(clientId: string, input: { date: string; title: string; description: string; status: WebsiteActivityEntry["status"] }) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const entry: WebsiteActivityEntry = { id: uid(), clientId, ...input };
+    mockWebsiteActivity.unshift(entry);
+    return entry;
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase!
+    .from("website_activity")
+    .insert({ client_id: clientId, activity_date: input.date, title: input.title, description: input.description, status: input.status });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminDeleteWebsiteActivity(activityId: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const idx = mockWebsiteActivity.findIndex((a) => a.id === activityId);
+    if (idx >= 0) mockWebsiteActivity.splice(idx, 1);
+    return;
+  }
+  const supabase = await createClient();
+  await supabase!.from("website_activity").delete().eq("id", activityId);
+}
+
+// ---------------------------------------------------------------------------
+// CONTENT ITEM — perluasan input (Consolidation): asset/publish link/approval.
+// Fungsi lama adminCreateContent() tetap ada (dipakai halaman lama) — ini
+// versi baru yang dipakai form Content Entry konsolidasi di Social Media.
+// ---------------------------------------------------------------------------
+
+export async function adminCreateContentFull(
+  clientId: string,
+  input: {
+    title: string;
+    plannedDate: string;
+    status: ContentStatus;
+    platform: string;
+    type: ContentType;
+    assetUrl?: string;
+    publishLink?: string;
+    approvalRequired: boolean;
+    approvalStatus?: "pending" | "approved" | "revision" | null;
+  }
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    mockContentCalendar.push({
+      id: uid(),
+      clientId,
+      title: input.title,
+      plannedDate: input.plannedDate,
+      status: input.status,
+      platform: input.platform as never,
+      type: input.type,
+      assetUrl: input.assetUrl ?? null,
+      publishLink: input.publishLink ?? null,
+      approvalRequired: input.approvalRequired,
+      approvalStatus: input.approvalStatus ?? null,
+    });
+    return;
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase!.from("content_items").insert({
+    client_id: clientId,
+    title: input.title,
+    planned_date: input.plannedDate,
+    status: input.status,
+    platform: input.platform,
+    type: input.type,
+    asset_url: input.assetUrl || null,
+    publish_link: input.publishLink || null,
+    approval_required: input.approvalRequired,
+    approval_status: input.approvalRequired ? (input.approvalStatus ?? "pending") : null,
+  });
+  if (error) throw new Error(error.message);
 }

@@ -19,6 +19,8 @@ import type {
   WeeklyCalendar,
   FileEntry,
   Goal,
+  ContentTarget,
+  WebsiteActivityEntry,
 } from "./types";
 
 export const mockClient: Client = {
@@ -189,27 +191,28 @@ export const mockWeeklyCalendar: WeeklyCalendar = {
 
 // Snapshot mingguan — dipakai untuk chart trend & perbandingan periode.
 export const mockPerformance: PerformanceMetric[] = [
-  { id: "m1", clientId: mockClient.id, date: "2026-07-06", channel: "meta_ads", spend: 3200000, reach: 42000, impressions: 61000, clicks: 980, leads: 41, costPerLead: 78048 },
-  { id: "m2", clientId: mockClient.id, date: "2026-07-13", channel: "meta_ads", spend: 3400000, reach: 45500, impressions: 66000, clicks: 1040, leads: 47, costPerLead: 72340 },
-  { id: "m3", clientId: mockClient.id, date: "2026-07-20", channel: "meta_ads", spend: 3350000, reach: 44200, impressions: 63500, clicks: 1005, leads: 44, costPerLead: 76136 },
-  { id: "m4", clientId: mockClient.id, date: "2026-07-27", channel: "meta_ads", spend: 3600000, reach: 49800, impressions: 71200, clicks: 1150, leads: 53, costPerLead: 67924 },
-  { id: "m5", clientId: mockClient.id, date: "2026-08-03", channel: "meta_ads", spend: 3750000, reach: 52100, impressions: 74800, clicks: 1210, leads: 58, costPerLead: 64655 },
+  { id: "m1", clientId: mockClient.id, date: "2026-07-06", channel: "meta_ads", spend: 3200000, reach: 42000, impressions: 61000, clicks: 980, leads: 41, costPerLead: 78048, ctr: 1.61, cpc: 3265, roas: 2.4 },
+  { id: "m2", clientId: mockClient.id, date: "2026-07-13", channel: "meta_ads", spend: 3400000, reach: 45500, impressions: 66000, clicks: 1040, leads: 47, costPerLead: 72340, ctr: 1.58, cpc: 3269, roas: 2.6 },
+  { id: "m3", clientId: mockClient.id, date: "2026-07-20", channel: "meta_ads", spend: 3350000, reach: 44200, impressions: 63500, clicks: 1005, leads: 44, costPerLead: 76136, ctr: 1.58, cpc: 3333, roas: 2.5 },
+  { id: "m4", clientId: mockClient.id, date: "2026-07-27", channel: "meta_ads", spend: 3600000, reach: 49800, impressions: 71200, clicks: 1150, leads: 53, costPerLead: 67924, ctr: 1.62, cpc: 3130, roas: 2.8 },
+  { id: "m5", clientId: mockClient.id, date: "2026-08-03", channel: "meta_ads", spend: 3750000, reach: 52100, impressions: 74800, clicks: 1210, leads: 58, costPerLead: 64655, ctr: 1.62, cpc: 3099, roas: 3.2 },
 ];
 
 export const mockSocial: PerformanceMetric[] = [
-  { id: "s1", clientId: mockClient.id, date: "2026-07-06", channel: "social", followers: 18200, engagementRate: 3.1, reach: 38000 },
-  { id: "s2", clientId: mockClient.id, date: "2026-07-13", channel: "social", followers: 18450, engagementRate: 3.4, reach: 40500 },
-  { id: "s3", clientId: mockClient.id, date: "2026-07-20", channel: "social", followers: 18700, engagementRate: 3.2, reach: 39800 },
-  { id: "s4", clientId: mockClient.id, date: "2026-07-27", channel: "social", followers: 19050, engagementRate: 3.8, reach: 44200 },
-  { id: "s5", clientId: mockClient.id, date: "2026-08-03", channel: "social", followers: 19400, engagementRate: 4.1, reach: 47600 },
+  { id: "s1", clientId: mockClient.id, date: "2026-07-06", channel: "social", platform: "instagram", followers: 18200, engagementRate: 3.1, reach: 38000 },
+  { id: "s2", clientId: mockClient.id, date: "2026-07-13", channel: "social", platform: "instagram", followers: 18450, engagementRate: 3.4, reach: 40500 },
+  { id: "s3", clientId: mockClient.id, date: "2026-07-20", channel: "social", platform: "instagram", followers: 18700, engagementRate: 3.2, reach: 39800 },
+  { id: "s4", clientId: mockClient.id, date: "2026-07-27", channel: "social", platform: "instagram", followers: 19050, engagementRate: 3.8, reach: 44200 },
+  { id: "s5", clientId: mockClient.id, date: "2026-08-03", channel: "social", platform: "instagram", followers: 19400, engagementRate: 4.1, reach: 47600 },
+  { id: "s6", clientId: mockClient.id, date: "2026-08-03", channel: "social", platform: "tiktok", followers: 8200, engagementRate: 5.2, reach: 30000 },
 ];
 
 export const mockWebsite: PerformanceMetric[] = [
-  { id: "w1", clientId: mockClient.id, date: "2026-07-06", channel: "website", visitors: 5200, conversions: 61 },
-  { id: "w2", clientId: mockClient.id, date: "2026-07-13", channel: "website", visitors: 5600, conversions: 68 },
-  { id: "w3", clientId: mockClient.id, date: "2026-07-20", channel: "website", visitors: 5450, conversions: 63 },
-  { id: "w4", clientId: mockClient.id, date: "2026-07-27", channel: "website", visitors: 6100, conversions: 79 },
-  { id: "w5", clientId: mockClient.id, date: "2026-08-03", channel: "website", visitors: 6480, conversions: 88 },
+  { id: "w1", clientId: mockClient.id, date: "2026-07-06", channel: "website", visitors: 5200, conversions: 61, pageViews: 11800, sessions: 6200, bounceRate: 44, avgSessionDuration: "1m 58s" },
+  { id: "w2", clientId: mockClient.id, date: "2026-07-13", channel: "website", visitors: 5600, conversions: 68, pageViews: 12600, sessions: 6700, bounceRate: 43, avgSessionDuration: "2m 02s" },
+  { id: "w3", clientId: mockClient.id, date: "2026-07-20", channel: "website", visitors: 5450, conversions: 63, pageViews: 12100, sessions: 6500, bounceRate: 45, avgSessionDuration: "1m 55s" },
+  { id: "w4", clientId: mockClient.id, date: "2026-07-27", channel: "website", visitors: 6100, conversions: 79, pageViews: 13800, sessions: 7300, bounceRate: 41, avgSessionDuration: "2m 10s" },
+  { id: "w5", clientId: mockClient.id, date: "2026-08-03", channel: "website", visitors: 6480, conversions: 88, pageViews: 14700, sessions: 7800, bounceRate: 40, avgSessionDuration: "2m 15s" },
 ];
 
 export const mockChannelSummary: ChannelSummary[] = [
@@ -233,6 +236,18 @@ export const mockContentCalendar: ContentItem[] = [
   { id: "c5", clientId: mockClient.id, title: "Testimoni pelanggan", plannedDate: "2026-08-18", status: "waiting_approval", platform: "facebook", type: "post" },
   { id: "c6", clientId: mockClient.id, title: "Tips menyimpan kopi di rumah", plannedDate: "2026-08-20", status: "in_production", platform: "instagram", type: "carousel" },
   { id: "c7", clientId: mockClient.id, title: "Cerita asal biji kopi lokal", plannedDate: "2026-08-22", status: "draft", platform: "website", type: "article" },
+];
+
+export const mockContentTargets: ContentTarget[] = [
+  { id: "ct1", clientId: mockClient.id, period: "2026-08", platform: "instagram", contentType: "feed", target: 10 },
+  { id: "ct2", clientId: mockClient.id, period: "2026-08", platform: "instagram", contentType: "reels", target: 10 },
+  { id: "ct3", clientId: mockClient.id, period: "2026-08", platform: "instagram", contentType: "story", target: 5 },
+  { id: "ct4", clientId: mockClient.id, period: "2026-08", platform: "tiktok", contentType: "video", target: 5 },
+];
+
+export const mockWebsiteActivity: WebsiteActivityEntry[] = [
+  { id: "wa1", clientId: mockClient.id, date: "2026-08-12", title: "Homepage updated", description: "Ganti hero banner promo Agustus.", status: "done" },
+  { id: "wa2", clientId: mockClient.id, date: "2026-08-10", title: "Website backup completed", description: "Backup rutin bulanan.", status: "done" },
 ];
 
 export const mockReports: ReportItem[] = [

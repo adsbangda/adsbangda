@@ -8,6 +8,19 @@ export type Channel = "meta_ads" | "social" | "website";
 export type Platform = "instagram" | "facebook" | "tiktok" | "website";
 export type ContentType = "reel" | "carousel" | "story" | "post" | "article";
 
+/** Platform social media yang didukung modul Social Media (konsolidasi). */
+export type SocialPlatform = "instagram" | "facebook" | "tiktok" | "x" | "linkedin" | "threads";
+
+/** Jenis content per platform — platform berbeda punya pilihan berbeda. */
+export const CONTENT_TYPES_BY_PLATFORM: Record<SocialPlatform, string[]> = {
+  instagram: ["feed", "reels", "story"],
+  facebook: ["feed", "reels", "story"],
+  tiktok: ["video"],
+  x: ["post"],
+  linkedin: ["post"],
+  threads: ["post"],
+};
+
 export interface Organization {
   id: string;
   name: string;
@@ -68,6 +81,8 @@ export interface PerformanceMetric {
   clientId: string;
   date: string; // ISO date, snapshot mingguan
   channel: Channel;
+  /** Hanya relevan untuk channel='social' — platform mana snapshot ini. */
+  platform?: SocialPlatform;
   spend?: number;
   reach?: number;
   impressions?: number;
@@ -78,6 +93,15 @@ export interface PerformanceMetric {
   engagementRate?: number;
   visitors?: number;
   conversions?: number;
+  // Website-specific
+  pageViews?: number;
+  sessions?: number;
+  bounceRate?: number;
+  avgSessionDuration?: string;
+  // Meta Ads-specific — input manual admin, BUKAN dihitung otomatis.
+  ctr?: number;
+  cpc?: number;
+  roas?: number;
 }
 
 export interface ChannelSummary {
@@ -98,6 +122,28 @@ export interface ContentItem {
   platform: Platform;
   type: ContentType;
   notes?: string;
+  assetUrl?: string | null;
+  publishLink?: string | null;
+  approvalRequired?: boolean;
+  approvalStatus?: "pending" | "approved" | "revision" | null;
+}
+
+export interface ContentTarget {
+  id: string;
+  clientId: string;
+  period: string;
+  platform: SocialPlatform;
+  contentType: string;
+  target: number;
+}
+
+export interface WebsiteActivityEntry {
+  id: string;
+  clientId: string;
+  date: string;
+  title: string;
+  description: string;
+  status: "done" | "in_progress" | "planned";
 }
 
 export interface ReportItem {

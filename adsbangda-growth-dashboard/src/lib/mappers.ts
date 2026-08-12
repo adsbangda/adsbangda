@@ -18,6 +18,8 @@ import type {
   ChannelOverviewRow,
   UpcomingEvent,
   Goal,
+  ContentTarget,
+  WebsiteActivityEntry,
 } from "./types";
 
 export function mapClient(row: Record<string, unknown>): Client {
@@ -68,6 +70,7 @@ export function mapPerformanceMetric(row: Record<string, unknown>): PerformanceM
     clientId: row.client_id as string,
     date: row.date as string,
     channel: row.channel as PerformanceMetric["channel"],
+    platform: (row.platform as PerformanceMetric["platform"]) ?? undefined,
     spend: (row.spend as number | null) ?? undefined,
     reach: (row.reach as number | null) ?? undefined,
     impressions: (row.impressions as number | null) ?? undefined,
@@ -78,6 +81,13 @@ export function mapPerformanceMetric(row: Record<string, unknown>): PerformanceM
     engagementRate: (row.engagement_rate as number | null) ?? undefined,
     visitors: (row.visitors as number | null) ?? undefined,
     conversions: (row.conversions as number | null) ?? undefined,
+    pageViews: (row.page_views as number | null) ?? undefined,
+    sessions: (row.sessions as number | null) ?? undefined,
+    bounceRate: (row.bounce_rate as number | null) ?? undefined,
+    avgSessionDuration: (row.avg_session_duration as string | null) ?? undefined,
+    ctr: (row.ctr as number | null) ?? undefined,
+    cpc: (row.cpc as number | null) ?? undefined,
+    roas: (row.roas as number | null) ?? undefined,
   };
 }
 
@@ -106,6 +116,32 @@ export function mapContentItem(row: Record<string, unknown>): ContentItem {
     platform: row.platform as ContentItem["platform"],
     type: row.type as ContentItem["type"],
     notes: (row.notes as string | null) ?? undefined,
+    assetUrl: (row.asset_url as string | null) ?? null,
+    publishLink: (row.publish_link as string | null) ?? null,
+    approvalRequired: (row.approval_required as boolean | null) ?? false,
+    approvalStatus: (row.approval_status as ContentItem["approvalStatus"]) ?? null,
+  };
+}
+
+export function mapContentTarget(row: Record<string, unknown>): ContentTarget {
+  return {
+    id: row.id as string,
+    clientId: row.client_id as string,
+    period: row.period as string,
+    platform: row.platform as ContentTarget["platform"],
+    contentType: row.content_type as string,
+    target: Number(row.target ?? 0),
+  };
+}
+
+export function mapWebsiteActivity(row: Record<string, unknown>): WebsiteActivityEntry {
+  return {
+    id: row.id as string,
+    clientId: row.client_id as string,
+    date: row.activity_date as string,
+    title: row.title as string,
+    description: (row.description as string) ?? "",
+    status: (row.status as WebsiteActivityEntry["status"]) ?? "done",
   };
 }
 

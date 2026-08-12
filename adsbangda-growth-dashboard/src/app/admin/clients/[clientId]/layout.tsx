@@ -39,10 +39,9 @@ export default async function AdminClientLayout({
             items={[
               { href: base, label: "Overview", exact: true },
               { href: `${base}/projects`, label: "Projects" },
-              { href: `${base}/content`, label: "Content" },
               { href: `${base}/social-media`, label: "Social Media" },
               { href: `${base}/meta-ads`, label: "Meta Ads" },
-              { href: `${base}/goals`, label: "Goals" },
+              { href: `${base}/website`, label: "Website" },
               { href: `${base}/files`, label: "Files" },
               { href: `${base}/reports`, label: "Reports" },
               { href: `${base}/team`, label: "Team" },

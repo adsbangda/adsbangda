@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache";
-import { Trash2, Plus, Wallet, Eye, Target, Megaphone } from "lucide-react";
+import { Trash2, Plus, Wallet, Eye, Target, Megaphone, MousePointerClick } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -23,20 +23,6 @@ function MetricCard({ icon: Icon, label, value }: { icon: React.ElementType; lab
   );
 }
 
-function NotAvailableCard({ label }: { label: string }) {
-  return (
-    <Card className="flex items-center gap-4 border-dashed">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/[0.04] text-muted">
-        <span className="font-data text-xs">—</span>
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-medium text-muted">Belum tersedia</p>
-        <p className="text-xs text-muted">{label}</p>
-      </div>
-    </Card>
-  );
-}
-
 export default async function AdminClientMetaAdsPage({ params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = await params;
   const path = `/admin/clients/${clientId}/meta-ads`;
@@ -47,12 +33,15 @@ export default async function AdminClientMetaAdsPage({ params }: { params: Promi
     "use server";
     await adminCreatePerformanceMetric(clientId, "meta_ads", {
       date: String(formData.get("date")),
+      leads: Number(formData.get("leads") ?? 0) || undefined,
       spend: Number(formData.get("spend") ?? 0) || undefined,
       reach: Number(formData.get("reach") ?? 0) || undefined,
       impressions: Number(formData.get("impressions") ?? 0) || undefined,
       clicks: Number(formData.get("clicks") ?? 0) || undefined,
-      leads: Number(formData.get("leads") ?? 0) || undefined,
+      ctr: Number(formData.get("ctr") ?? 0) || undefined,
+      cpc: Number(formData.get("cpc") ?? 0) || undefined,
       costPerLead: Number(formData.get("costPerLead") ?? 0) || undefined,
+      roas: Number(formData.get("roas") ?? 0) || undefined,
     });
     revalidatePath(path);
   }
@@ -64,56 +53,54 @@ export default async function AdminClientMetaAdsPage({ params }: { params: Promi
   }
 
   return (
-    <div className="space-y-6 p-5 lg:p-8">
+    <div className="animate-rise space-y-6 p-5 lg:p-8">
       <div className="max-w-2xl">
         <h2 className="text-base font-bold text-ink">How are paid campaigns performing?</h2>
-        <p className="mt-1 text-sm text-muted">
-          Data Meta Ads client ini. Sekarang diisi manual per snapshot — struktur ini yang sama nantinya dipakai kalau
-          datanya diisi otomatis lewat Meta Marketing API.
-        </p>
+        <p className="mt-1 text-sm text-muted">Input data harian sesederhana: tanggal, metric, save. Field ini yang sama nantinya dipakai kalau data diisi otomatis lewat Meta Marketing API.</p>
       </div>
 
-      {/* PERFORMANCE OVERVIEW */}
       <div>
-        <p className="mb-3 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Performance Overview</p>
+        <p className="mb-3 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Latest Snapshot</p>
         {!latest ? (
           <Card>
-            <EmptyState icon={Megaphone} title="Belum ada data performance" description="Tambahkan snapshot pertama lewat form di bawah untuk melihat ringkasan di sini." />
+            <EmptyState icon={Megaphone} title="Belum ada data performance" description="Tambahkan snapshot pertama lewat form di bawah." />
           </Card>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard icon={Wallet} label="Spend" value={latest.spend != null ? `Rp${latest.spend.toLocaleString("id-ID")}` : null} />
+            <MetricCard icon={Target} label="Leads" value={latest.leads != null ? latest.leads.toLocaleString("id-ID") : null} />
+            <MetricCard icon={Wallet} label="Ad Spend" value={latest.spend != null ? `Rp${latest.spend.toLocaleString("id-ID")}` : null} />
             <MetricCard icon={Eye} label="Reach" value={latest.reach != null ? latest.reach.toLocaleString("id-ID") : null} />
-            <MetricCard icon={Target} label="Results (Leads)" value={latest.leads != null ? latest.leads.toLocaleString("id-ID") : null} />
-            <MetricCard
-              icon={Wallet}
-              label="Cost per Lead"
-              value={latest.costPerLead != null ? `Rp${latest.costPerLead.toLocaleString("id-ID")}` : null}
-            />
+            <MetricCard icon={MousePointerClick} label="Clicks" value={latest.clicks != null ? latest.clicks.toLocaleString("id-ID") : null} />
+            <MetricCard icon={MousePointerClick} label="CTR" value={latest.ctr != null ? `${latest.ctr}%` : null} />
+            <MetricCard icon={Wallet} label="CPC" value={latest.cpc != null ? `Rp${latest.cpc.toLocaleString("id-ID")}` : null} />
+            <MetricCard icon={Wallet} label="CPL" value={latest.costPerLead != null ? `Rp${latest.costPerLead.toLocaleString("id-ID")}` : null} />
+            <MetricCard icon={Target} label="ROAS" value={latest.roas != null ? `${latest.roas}x` : null} />
           </div>
         )}
-
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <NotAvailableCard label="CTR — belum ada field di database" />
-          <NotAvailableCard label="CPC — belum ada field di database" />
-          <NotAvailableCard label="ROAS — belum ada field di database" />
-        </div>
         {latest && <p className="mt-2 text-xs text-muted">Snapshot terbaru: {formatDateID(latest.date)}</p>}
       </div>
 
-      {/* CAMPAIGN PERFORMANCE */}
       <Card padding="lg">
-        <SectionHeading title="Campaign Performance" description="Breakdown performa per-campaign." />
-        <EmptyState
-          icon={Megaphone}
-          title="Belum ada data campaign"
-          description="Data yang tercatat sekarang masih agregat per-tanggal, belum per-campaign. Struktur tabel campaign direncanakan untuk fase berikutnya — bukan fake data."
-        />
+        <SectionHeading title="Add Performance Data" description="Satu form, satu tanggal, langsung save." />
+        <form action={addMetric} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          <input name="date" type="date" required className={inputClass} />
+          <input name="leads" type="number" placeholder="Leads" className={inputClass} />
+          <input name="spend" type="number" placeholder="Ad Spend (Rp)" className={inputClass} />
+          <input name="reach" type="number" placeholder="Reach" className={inputClass} />
+          <input name="impressions" type="number" placeholder="Impressions" className={inputClass} />
+          <input name="clicks" type="number" placeholder="Clicks" className={inputClass} />
+          <input name="ctr" type="number" step="0.01" placeholder="CTR (%)" className={inputClass} />
+          <input name="cpc" type="number" placeholder="CPC (Rp)" className={inputClass} />
+          <input name="costPerLead" type="number" placeholder="CPL (Rp)" className={inputClass} />
+          <input name="roas" type="number" step="0.1" placeholder="ROAS (x)" className={inputClass} />
+          <button type="submit" className={buttonVariants({ variant: "primary", size: "sm", className: "sm:col-span-3 lg:col-span-5 justify-center" })}>
+            <Plus className="h-3.5 w-3.5" /> Save Data
+          </button>
+        </form>
       </Card>
 
-      {/* PERFORMANCE DETAIL */}
       <Card padding="lg">
-        <SectionHeading title="Performance Detail" description="Semua snapshot yang tercatat, urut dari terbaru." />
+        <SectionHeading title="Performance History" description="Semua snapshot yang tercatat, urut dari terbaru." />
         {metrics.length === 0 ? (
           <p className="text-xs text-muted">Belum ada data.</p>
         ) : (
@@ -123,12 +110,10 @@ export default async function AdminClientMetaAdsPage({ params }: { params: Promi
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-ink">{formatDateID(m.date)}</p>
                   <p className="font-data text-xs text-muted">
-                    {m.spend != null && `Rp${m.spend.toLocaleString("id-ID")} spend · `}
                     {m.leads != null && `${m.leads} leads · `}
-                    {m.costPerLead != null && `Rp${m.costPerLead.toLocaleString("id-ID")} CPL · `}
-                    {m.reach != null && `${m.reach.toLocaleString("id-ID")} reach · `}
-                    {m.impressions != null && `${m.impressions.toLocaleString("id-ID")} impressions · `}
-                    {m.clicks != null && `${m.clicks} clicks`}
+                    {m.spend != null && `Rp${m.spend.toLocaleString("id-ID")} spend · `}
+                    {m.ctr != null && `${m.ctr}% CTR · `}
+                    {m.roas != null && `${m.roas}x ROAS`}
                   </p>
                 </div>
                 <form action={deleteMetricAction}>
@@ -141,19 +126,6 @@ export default async function AdminClientMetaAdsPage({ params }: { params: Promi
             ))}
           </div>
         )}
-
-        <form action={addMetric} className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4 sm:grid-cols-6">
-          <input name="date" type="date" required className={inputClass} />
-          <input name="spend" type="number" placeholder="Ad Spend (Rp)" className={inputClass} />
-          <input name="leads" type="number" placeholder="Leads" className={inputClass} />
-          <input name="costPerLead" type="number" placeholder="Cost per Lead" className={inputClass} />
-          <input name="reach" type="number" placeholder="Reach" className={inputClass} />
-          <input name="impressions" type="number" placeholder="Impressions" className={inputClass} />
-          <input name="clicks" type="number" placeholder="Clicks" className={inputClass} />
-          <button type="submit" className={buttonVariants({ variant: "outline", size: "sm", className: "sm:col-span-6 justify-center" })}>
-            <Plus className="h-3.5 w-3.5" /> Add Performance Data
-          </button>
-        </form>
       </Card>
     </div>
   );

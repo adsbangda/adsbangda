@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { Briefcase, Users, FileText, ArrowRight, Trash2, Plus, Check, Target, TrendingUp, Megaphone } from "lucide-react";
+import { Briefcase, Users, FileText, ArrowRight, Trash2, Plus, Check, Target, TrendingUp, Megaphone, Globe } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { ProgressBar } from "@/components/dashboard/progress-bar";
 import { buttonVariants } from "@/components/dashboard/button";
 import {
   adminGetClient,
@@ -10,8 +12,13 @@ import {
   adminListProjectsByClient,
   adminListClientTeam,
   adminListContent,
+  adminListContentTargets,
   adminListGoals,
+  adminCreateGoal,
+  adminUpdateGoal,
+  adminDeleteGoal,
   adminListPerformanceMetrics,
+  adminListReports,
   adminGetDelivery,
   adminUpsertDeliveryMeta,
   adminAddDeliveryItem,
@@ -30,7 +37,9 @@ import {
   adminCreateUpcomingEvent,
   adminDeleteUpcomingEvent,
 } from "@/lib/admin-data";
-import type { Client } from "@/lib/types";
+import type { Client, GoalStatus, SocialPlatform } from "@/lib/types";
+
+const SOCIAL_PLATFORMS: SocialPlatform[] = ["instagram", "facebook", "tiktok", "x", "linkedin", "threads"];
 
 const inputClass = "w-full rounded-[var(--radius-md)] border border-border px-3 py-2 text-sm text-ink outline-none focus:border-ink";
 const smallInputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
@@ -64,10 +73,11 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
     revalidatePath(path);
   }
 
-  const [projects, team, content, delivery, attention, activity, highlights, goals, socialMetrics, metaMetrics] = await Promise.all([
+  const [projects, team, content, contentTargets, delivery, attention, activity, highlights, goals, socialMetrics, metaMetrics, websiteMetrics, reports] = await Promise.all([
     adminListProjectsByClient(clientId),
     adminListClientTeam(clientId),
     adminListContent(clientId),
+    adminListContentTargets(clientId, period),
     adminGetDelivery(clientId, period),
     adminListAttention(clientId),
     adminListActivity(clientId),
@@ -75,13 +85,46 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
     adminListGoals(clientId),
     adminListPerformanceMetrics(clientId, "social"),
     adminListPerformanceMetrics(clientId, "meta_ads"),
+    adminListPerformanceMetrics(clientId, "website"),
+    adminListReports(clientId),
   ]);
 
   const activeProjects = projects.filter((p) => p.stage === "active");
-  const goalsOnTrack = goals.filter((g) => g.status === "on_track" || g.status === "completed").length;
-  const goalsAtRisk = goals.filter((g) => g.status === "at_risk").length;
-  const latestSocial = socialMetrics[0];
+  const contentTargetTotal = contentTargets.reduce((sum, t) => sum + t.target, 0);
+  const contentDelivered = content.length;
+  const contentDeliveryPct = contentTargetTotal > 0 ? Math.min(100, Math.round((contentDelivered / contentTargetTotal) * 100)) : 0;
   const latestMeta = metaMetrics[0];
+  const latestWebsite = websiteMetrics[0];
+  const latestReport = reports[0];
+  const socialByPlatform = SOCIAL_PLATFORMS.map((p) => ({ platform: p, latest: socialMetrics.find((m) => m.platform === p) })).filter((s) => s.latest);
+
+  async function addGoal(formData: FormData) {
+    "use server";
+    await adminCreateGoal(clientId, {
+      label: String(formData.get("label")),
+      target: Number(formData.get("target") ?? 0),
+      actual: Number(formData.get("actual") ?? 0),
+      unit: String(formData.get("unit") ?? ""),
+      period: String(formData.get("period") ?? period),
+      status: String(formData.get("status") ?? "on_track") as GoalStatus,
+    });
+    revalidatePath(path);
+  }
+
+  async function updateGoalAction(formData: FormData) {
+    "use server";
+    await adminUpdateGoal(String(formData.get("id")), {
+      actual: Number(formData.get("actual") ?? 0),
+      status: String(formData.get("status")) as GoalStatus,
+    });
+    revalidatePath(path);
+  }
+
+  async function deleteGoalAction(formData: FormData) {
+    "use server";
+    await adminDeleteGoal(String(formData.get("id")));
+    revalidatePath(path);
+  }
 
   // ---- Server actions dipindah dari halaman Content lama (Phase 3A) ----
 
@@ -210,7 +253,7 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
   }
 
   return (
-    <div className="space-y-6 p-5 lg:p-8">
+    <div className="animate-rise space-y-6 p-5 lg:p-8">
       <Card padding="lg">
         <SectionHeading title="Client Information" description="Edit detail client — status Archived menyembunyikan client ini dari daftar aktif tanpa menghapus datanya." />
         <form action={updateClientAction} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -255,73 +298,172 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
             <p className="text-xs text-muted">Team Members</p>
           </div>
         </Card>
-        <Card className="flex items-center gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-            <FileText className="h-5 w-5" strokeWidth={1.75} />
-          </div>
-          <div>
-            <p className="font-data text-2xl font-bold text-ink">{content.length}</p>
-            <p className="text-xs text-muted">Content Items</p>
-          </div>
-        </Card>
-      </div>
-
-      {/* CLIENT SNAPSHOT — aggregation dari Goals/Social Media/Meta Ads (Phase 3B), tidak menyimpan data baru. */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Link href={`/admin/clients/${clientId}/goals`}>
-          <Card interactive className="flex items-center gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-              <Target className="h-5 w-5" strokeWidth={1.75} />
-            </div>
-            <div className="min-w-0">
-              {goals.length === 0 ? (
-                <p className="text-xs text-muted">Belum ada goal</p>
-              ) : (
-                <>
-                  <p className="font-data text-sm font-bold text-ink">
-                    {goalsOnTrack}/{goals.length} on track
-                  </p>
-                  <p className="text-xs text-muted">{goalsAtRisk > 0 ? `${goalsAtRisk} goal butuh perhatian` : "Semua goal sesuai rencana"}</p>
-                </>
-              )}
-            </div>
-          </Card>
-        </Link>
         <Link href={`/admin/clients/${clientId}/social-media`}>
           <Card interactive className="flex items-center gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-              <TrendingUp className="h-5 w-5" strokeWidth={1.75} />
+              <FileText className="h-5 w-5" strokeWidth={1.75} />
             </div>
-            <div className="min-w-0">
-              {!latestSocial ? (
-                <p className="text-xs text-muted">Belum ada data Social Media</p>
-              ) : (
-                <>
-                  <p className="font-data text-sm font-bold text-ink">{latestSocial.followers?.toLocaleString("id-ID") ?? "—"} followers</p>
-                  <p className="text-xs text-muted">Snapshot {latestSocial.date}</p>
-                </>
-              )}
-            </div>
-          </Card>
-        </Link>
-        <Link href={`/admin/clients/${clientId}/meta-ads`}>
-          <Card interactive className="flex items-center gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-              <Megaphone className="h-5 w-5" strokeWidth={1.75} />
-            </div>
-            <div className="min-w-0">
-              {!latestMeta ? (
-                <p className="text-xs text-muted">Belum ada data Meta Ads</p>
-              ) : (
-                <>
-                  <p className="font-data text-sm font-bold text-ink">{latestMeta.leads ?? 0} leads</p>
-                  <p className="text-xs text-muted">{latestMeta.spend != null ? `Rp${latestMeta.spend.toLocaleString("id-ID")} spend` : `Snapshot ${latestMeta.date}`}</p>
-                </>
-              )}
+            <div>
+              <p className="font-data text-2xl font-bold text-ink">
+                {contentDelivered}
+                {contentTargetTotal > 0 && <span className="text-base font-medium text-muted"> / {contentTargetTotal}</span>}
+              </p>
+              <p className="text-xs text-muted">Social Media Delivery{contentTargetTotal > 0 ? ` · ${contentDeliveryPct}%` : ""}</p>
             </div>
           </Card>
         </Link>
       </div>
+
+      {/* AGGREGATION — Overview membaca data dari Social Media/Meta Ads/Website/Goals/Reports, tidak menyimpan data baru. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Link href={`/admin/clients/${clientId}/meta-ads`}>
+          <Card interactive padding="lg" className="h-full">
+            <p className="mb-3 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Meta Ads</p>
+            {!latestMeta ? (
+              <p className="text-xs text-muted">Belum ada data Meta Ads.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <p className="font-data text-xl font-bold text-ink">{latestMeta.leads ?? "—"}</p>
+                  <p className="text-[11px] text-muted">Leads</p>
+                </div>
+                <div>
+                  <p className="font-data text-xl font-bold text-ink">{latestMeta.spend != null ? `Rp${(latestMeta.spend / 1000000).toFixed(1)}M` : "—"}</p>
+                  <p className="text-[11px] text-muted">Spend</p>
+                </div>
+                <div>
+                  <p className="font-data text-xl font-bold text-ink">{latestMeta.reach != null ? `${Math.round(latestMeta.reach / 1000)}K` : "—"}</p>
+                  <p className="text-[11px] text-muted">Reach</p>
+                </div>
+              </div>
+            )}
+          </Card>
+        </Link>
+
+        <Link href={`/admin/clients/${clientId}/website`}>
+          <Card interactive padding="lg" className="h-full">
+            <p className="mb-3 flex items-center gap-1.5 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
+              <Globe className="h-3.5 w-3.5" /> Website
+            </p>
+            {!latestWebsite ? (
+              <p className="text-xs text-muted">Belum ada data Website.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <p className="font-data text-xl font-bold text-ink">{latestWebsite.visitors != null ? `${(latestWebsite.visitors / 1000).toFixed(1)}K` : "—"}</p>
+                  <p className="text-[11px] text-muted">Visitors</p>
+                </div>
+                <div>
+                  <p className="font-data text-xl font-bold text-ink">{latestWebsite.sessions != null ? `${(latestWebsite.sessions / 1000).toFixed(1)}K` : "—"}</p>
+                  <p className="text-[11px] text-muted">Sessions</p>
+                </div>
+                <div>
+                  <p className="font-data text-xl font-bold text-ink">{latestWebsite.conversions ?? "—"}</p>
+                  <p className="text-[11px] text-muted">Leads</p>
+                </div>
+              </div>
+            )}
+          </Card>
+        </Link>
+      </div>
+
+      <Card padding="lg">
+        <SectionHeading
+          title="Social Media Performance"
+          description={socialByPlatform.length === 0 ? "Belum ada data performance." : "Snapshot terbaru per platform."}
+          action={
+            <Link href={`/admin/clients/${clientId}/social-media?tab=performance`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              Kelola <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          }
+        />
+        {socialByPlatform.length === 0 ? (
+          <p className="text-xs text-muted">Belum ada data Social Media untuk client ini.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {socialByPlatform.map(({ platform, latest }) => (
+              <div key={platform}>
+                <p className="font-data text-[10px] uppercase tracking-wider text-muted">{platform}</p>
+                <p className="mt-1 text-sm font-bold text-ink">{latest?.followers != null ? `${(latest.followers / 1000).toFixed(1)}K` : "—"}</p>
+                <p className="text-[11px] text-muted">followers</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* GOALS — bukan top-level menu lagi, dikelola langsung di sini (Overview). */}
+      <Card padding="lg">
+        <SectionHeading title="Goals" description="Target bisnis client. Actual untuk sekarang diisi manual." />
+        {goals.length === 0 ? (
+          <p className="mb-4 text-xs text-muted">Belum ada goal.</p>
+        ) : (
+          <div className="mb-4 space-y-3">
+            {goals.map((goal) => {
+              const pct = goal.target > 0 ? Math.min(100, Math.round((goal.actual / goal.target) * 100)) : 0;
+              return (
+                <div key={goal.id} className="rounded-[var(--radius-md)] border border-border p-3.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-ink">{goal.label}</p>
+                      <StatusBadge status={goal.status} />
+                    </div>
+                    <form action={deleteGoalAction}>
+                      <input type="hidden" name="id" value={goal.id} />
+                      <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
+                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      </button>
+                    </form>
+                  </div>
+                  <p className="mt-1 font-data text-xs text-muted">
+                    {goal.actual.toLocaleString("id-ID")} / {goal.target.toLocaleString("id-ID")} {goal.unit} · {pct}%
+                  </p>
+                  <div className="mt-2">
+                    <ProgressBar value={pct} />
+                  </div>
+                  <form action={updateGoalAction} className="mt-2 flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="id" value={goal.id} />
+                    <input name="actual" type="number" defaultValue={goal.actual} className={smallInputClass} />
+                    <select name="status" defaultValue={goal.status} className={smallInputClass}>
+                      <option value="draft">Draft</option>
+                      <option value="on_track">On Track</option>
+                      <option value="at_risk">At Risk</option>
+                      <option value="completed">Completed</option>
+                      <option value="archived">Archived</option>
+                    </select>
+                    <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                      Update
+                    </button>
+                  </form>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <form action={addGoal} className="grid grid-cols-2 gap-2 border-t border-border pt-4 sm:grid-cols-5">
+          <input name="label" placeholder="Nama goal" required className={cn2()} />
+          <input name="target" type="number" placeholder="Target" required className={smallInputClass} />
+          <input name="actual" type="number" placeholder="Actual" defaultValue={0} className={smallInputClass} />
+          <input name="unit" placeholder="Unit" className={smallInputClass} />
+          <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Plus className="h-3.5 w-3.5" /> Add Goal
+          </button>
+        </form>
+      </Card>
+
+      {latestReport && (
+        <Link href={`/admin/clients/${clientId}/reports`}>
+          <Card interactive className="flex items-center gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+              <FileText className="h-5 w-5" strokeWidth={1.75} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-ink">Latest Report</p>
+              <p className="text-xs text-muted">{latestReport.periodMonth}</p>
+            </div>
+          </Card>
+        </Link>
+      )}
 
       <Card padding="lg">
         <SectionHeading
