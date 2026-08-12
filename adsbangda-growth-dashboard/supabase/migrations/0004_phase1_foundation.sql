@@ -47,8 +47,19 @@ update profiles set organization_id = (select id from organizations where slug =
 
 alter table clients alter column organization_id set not null;
 alter table profiles alter column organization_id set not null;
-alter table clients alter column organization_id set default (select id from organizations where slug = 'adsbangda');
-alter table profiles alter column organization_id set default (select id from organizations where slug = 'adsbangda');
+
+-- PostgreSQL tidak mengizinkan subquery langsung di DEFAULT expression —
+-- perlu dibungkus fungsi dulu.
+create or replace function default_organization_id()
+returns uuid
+language sql
+stable
+as $$
+  select id from organizations where slug = 'adsbangda' limit 1;
+$$;
+
+alter table clients alter column organization_id set default default_organization_id();
+alter table profiles alter column organization_id set default default_organization_id();
 
 alter table organizations enable row level security;
 
