@@ -40,6 +40,9 @@ export async function GET() {
     "layanan-digital-growth-consulting.html",
     "blog.html",
     "kontak.html",
+    // Versi EN -- baru homepage yang sudah ada (lihat src/pages/en/index.astro).
+    // Tambahkan path EN halaman lain ke sini begitu halaman itu juga diterjemahkan.
+    "en.html",
   ];
 
   const today = new Date().toISOString().split("T")[0];

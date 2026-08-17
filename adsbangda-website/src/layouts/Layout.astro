@@ -69,6 +69,10 @@ interface Props {
                                     // digabung ke DALAM @graph yang sama (bukan <script> terpisah),
                                     // supaya referensi @id (mis. provider -> #organization) valid
                                     // dan tidak mengandalkan asumsi merge lintas-<script>.
+  lang?: "id" | "en";      // bahasa HALAMAN INI (server-rendered) -- default "id". Beda dari toggle
+                            // client-side lama: ini menentukan apa yang benar-benar dikirim ke Googlebot.
+  hreflangEn?: string;      // diisi di halaman ID kalau versi EN-nya sudah ada, contoh: "en/index.html"
+  hreflangId?: string;      // diisi di halaman EN, path versi ID-nya, contoh: "" (root) atau "kontak.html"
 }
 
 const {
@@ -86,6 +90,9 @@ const {
   datePublished,
   dateModified,
   extraSchema,
+  lang = "id",
+  hreflangEn,
+  hreflangId,
 } = Astro.props;
 
 // ---------------------------------------------------------------------------
@@ -105,14 +112,79 @@ const canonical = canonicalURL.href;
 
 const ogImageURL = new URL(ogImage, SITE_URL_OBJ).href + "?v=2";
 
+// path "telanjang" tanpa prefix bahasa EN -- dipakai untuk derive navKey & breadcrumb
+// biar halaman EN (/en.html untuk home, /en/xxx.html untuk halaman lain -- lihat
+// catatan di src/pages/en/index.astro soal kenapa homepage EN jadi "en.html" bukan
+// "en/index.html", konsekuensi dari astro.config.mjs build.format:"file") tetap
+// kena logic yang sama seperti versi ID-nya.
+const bareNavPath = path === "en.html" ? "index.html" : path.replace(/^en\//, "");
+
 // dipakai untuk kasih class="active" ke menu yang sesuai
-const navKey = path === "index.html" ? "home"
-  : path.startsWith("layanan") ? "layanan"
-  : path.startsWith("portofolio") ? "portofolio"
-  : path.startsWith("artikel") || path === "blog.html" ? "blog"
-  : path === "tentang.html" ? "tentang"
-  : path === "kontak.html" ? "kontak"
+const navKey = bareNavPath === "index.html" ? "home"
+  : bareNavPath.startsWith("layanan") ? "layanan"
+  : bareNavPath.startsWith("portofolio") ? "portofolio"
+  : bareNavPath.startsWith("artikel") || bareNavPath === "blog.html" ? "blog"
+  : bareNavPath === "tentang.html" ? "tentang"
+  : bareNavPath === "kontak.html" ? "kontak"
   : "";
+
+// ---------------------------------------------------------------------------
+// hreflang: hanya diemit kalau counterpart bahasa lain BENERAN ada (dikirim
+// eksplisit lewat prop hreflangEn/hreflangId dari halaman pemanggil) -- supaya
+// nggak pernah nunjuk ke URL yang belum dibuat.
+// ---------------------------------------------------------------------------
+const enAltURL = hreflangEn ? new URL(hreflangEn, SITE_URL_OBJ).href : null;
+const idAltURL = hreflangId !== undefined
+  ? new URL(hreflangId === "index.html" || hreflangId === "" ? "" : hreflangId, SITE_URL_OBJ).href
+  : null;
+const hreflangPairs: { hreflang: string; href: string }[] = [];
+if (lang === "id" && enAltURL) {
+  hreflangPairs.push({ hreflang: "id", href: canonical });
+  hreflangPairs.push({ hreflang: "en", href: enAltURL });
+  hreflangPairs.push({ hreflang: "x-default", href: canonical });
+} else if (lang === "en" && idAltURL) {
+  hreflangPairs.push({ hreflang: "en", href: canonical });
+  hreflangPairs.push({ hreflang: "id", href: idAltURL });
+  hreflangPairs.push({ hreflang: "x-default", href: idAltURL });
+}
+
+// Teks nav & footer per bahasa -- satu-satunya sumber untuk elemen yang di-render
+// SERVER-SIDE sesuai prop `lang`. Untuk halaman lama (lang="id", belum ada versi EN),
+// atribut data-i18n-nav tetap disertakan supaya toggle client-side lama (main.js)
+// masih berfungsi persis seperti sebelumnya -- TIDAK ADA regresi ke 24 halaman lain.
+const NAV = {
+  home: { id: "Home", en: "Home" },
+  tentang: { id: "Tentang", en: "About" },
+  portofolio: { id: "Portofolio", en: "Portfolio" },
+  layanan: { id: "Layanan", en: "Services" },
+  blog: { id: "Blog", en: "Blog" },
+  kontak: { id: "Kontak", en: "Contact" },
+  kontak_h: { id: "Kontak", en: "Contact" },
+  cta: { id: "Mulai Proyek", en: "Start a Project" },
+  client_dashboard: { id: "Client Dashboard", en: "Client Dashboard" },
+  menu: { id: "Menu", en: "Menu" },
+  lokasi: { id: "Jakarta, Indonesia", en: "Jakarta, Indonesia" },
+  foot_tagline: {
+    id: "Partner branding, website & digital marketing yang bantu bisnis tumbuh lewat strategi branding, website, konten, dan iklan yang terukur.",
+    en: "A branding, website & digital marketing partner helping businesses grow through measurable branding, website, content, and ad strategies.",
+  },
+  copy: {
+    id: "© 2026 adsbangda. Semua konten dibikin, bukan dicomot.",
+    en: "© 2026 adsbangda. All content made, not copied.",
+  },
+  made: { id: "Dibuat dengan adsbangda", en: "Made with adsbangda" },
+  semua_layanan: { id: "Semua Layanan \u2192", en: "All Services \u2192" },
+  skip_link: { id: "Langsung ke konten utama", en: "Skip to main content" },
+  search_alt: { id: "Pratinjau gambar", en: "Image preview" },
+  close_preview: { id: "Tutup preview", en: "Close preview" },
+};
+function t(key: keyof typeof NAV): string {
+  return NAV[key][lang];
+}
+// atribut data-i18n-nav hanya untuk halaman ID lama yang masih pakai toggle
+// client-side (belum punya counterpart EN) -- di halaman EN atau halaman ID
+// yang sudah py counterpart, dihilangkan supaya main.js tidak menimpanya balik.
+const legacyToggle = lang === "id" && !hreflangEn;
 
 // ---------------------------------------------------------------------------
 // JSON-LD: Organization + WebSite + WebPage + BreadcrumbList
@@ -185,8 +257,10 @@ const websiteSchema = {
   "@id": WEBSITE_ID,
   url: `${SITE_URL}/`,
   name: SITE_NAME,
-  description: "Branding, Website & Digital Marketing Agency di Indonesia.",
-  inLanguage: "id-ID",
+  description: lang === "en"
+    ? "Branding, Website & Digital Marketing Agency in Indonesia."
+    : "Branding, Website & Digital Marketing Agency di Indonesia.",
+  inLanguage: lang === "en" ? "en-US" : "id-ID",
   publisher: { "@id": ORG_ID },
   // SearchAction: TIDAK LAGI menghasilkan rich result apa pun di Google Search
   // (Sitelinks Search Box resmi di-deprecate Google per 21 Nov 2024).
@@ -212,7 +286,7 @@ const webPageSchema = {
   url: canonical,
   name: title,
   description,
-  inLanguage: "id-ID",
+  inLanguage: lang === "en" ? "en-US" : "id-ID",
   isPartOf: { "@id": WEBSITE_ID },
   about: { "@id": ORG_ID },
   primaryImageOfPage: { "@id": `${canonical}#primaryimage` },
@@ -264,9 +338,9 @@ const robotsContent = noindex
   : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
 ---
 <!DOCTYPE html>
-<html lang="id">
+<html lang={lang}>
 <head>
-<script is:inline>try{if(localStorage.getItem('adsbangda_lang')==='en'){document.documentElement.style.visibility='hidden';}}catch(e){}</script>
+{legacyToggle && <script is:inline>try{if(localStorage.getItem('adsbangda_lang')==='en'){document.documentElement.style.visibility='hidden';}}catch(e){}</script>}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -277,8 +351,10 @@ const robotsContent = noindex
 
 <meta name="author" content={SITE_NAME}>
 <meta name="publisher" content={SITE_NAME}>
-<meta name="language" content="Indonesian">
-<meta http-equiv="content-language" content="id">
+<meta name="language" content={lang === "en" ? "English" : "Indonesian"}>
+<meta http-equiv="content-language" content={lang}>
+
+{hreflangPairs.map((h) => <link rel="alternate" hreflang={h.hreflang} href={h.href} />)}
 
 <!-- Geo (agency berbasis Jakarta, layanan remote se-Indonesia) -->
 <meta name="geo.region" content="ID-JK">
@@ -315,8 +391,8 @@ const robotsContent = noindex
 <meta property="og:image:width" content={String(ogImageWidth)}>
 <meta property="og:image:height" content={String(ogImageHeight)}>
 <meta property="og:image:alt" content={ogImageAlt}>
-<meta property="og:locale" content="id_ID">
-<meta property="og:locale:alternate" content="en_US">
+<meta property="og:locale" content={lang === "en" ? "en_US" : "id_ID"}>
+<meta property="og:locale:alternate" content={lang === "en" ? "id_ID" : "en_US"}>
 
 <!-- Twitter / X Card -->
 <meta name="twitter:card" content="summary_large_image">
@@ -393,19 +469,19 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
 </head>
 <body>
 
-<a href="#main-content" class="skip-link">Langsung ke konten utama</a>
+<a href="#main-content" class="skip-link">{t("skip_link")}</a>
 
 <header>
 <nav aria-label="Navigasi utama">
   <div class="nav-inner">
     <a href="/" class="logo"><img src="/assets/img/logo-header.png" alt="Adsbangda" width="133" height="26" fetchpriority="high"></a>
     <div class="nav-links">
-      <a href="/" data-i18n-nav="home" class={navKey==="home" ? "active" : ""}>Home</a>
-      <a href="/tentang.html" data-i18n-nav="tentang" class={navKey==="tentang" ? "active" : ""}>Tentang</a>
-      <a href="/portofolio.html" data-i18n-nav="portofolio" class={navKey==="portofolio" ? "active" : ""}>Portofolio</a>
+      <a href="/" data-i18n-nav={legacyToggle ? "home" : undefined} class={navKey==="home" ? "active" : ""}>{t("home")}</a>
+      <a href="/tentang.html" data-i18n-nav={legacyToggle ? "tentang" : undefined} class={navKey==="tentang" ? "active" : ""}>{t("tentang")}</a>
+      <a href="/portofolio.html" data-i18n-nav={legacyToggle ? "portofolio" : undefined} class={navKey==="portofolio" ? "active" : ""}>{t("portofolio")}</a>
       <div class="nav-item-dropdown">
         <a href="/layanan.html" class="nav-drop-trigger" aria-haspopup="true">
-          <span data-i18n-nav="layanan">Layanan</span><svg class="chevron" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span data-i18n-nav={legacyToggle ? "layanan" : undefined}>{t("layanan")}</span><svg class="chevron" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
         <div class="nav-dropdown">
           <div class="nav-dropdown-inner">
@@ -417,23 +493,23 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
           <a href="/layanan-website-landing-page.html">Website &amp; Landing Page</a>
           <a href="/layanan-creative-design.html">Creative Design</a>
           <a href="/layanan-digital-growth-consulting.html">Digital Growth Consulting</a>
-          <a href="/layanan.html" class="nav-dropdown-all">Semua Layanan &rarr;</a>
+          <a href="/layanan.html" class="nav-dropdown-all">{t("semua_layanan")}</a>
           </div>
         </div>
       </div>
-      <a href="/blog.html" data-i18n-nav="blog" class={navKey==="blog" ? "active" : ""}>Blog</a>
-      <a href="/kontak.html" data-i18n-nav="kontak" class={navKey==="kontak" ? "active" : ""}>Kontak</a>
-      <a href="https://dashboard.adsbangda.com/login" data-i18n-nav="client_dashboard">Client Dashboard</a>
+      <a href="/blog.html" data-i18n-nav={legacyToggle ? "blog" : undefined} class={navKey==="blog" ? "active" : ""}>{t("blog")}</a>
+      <a href="/kontak.html" data-i18n-nav={legacyToggle ? "kontak" : undefined} class={navKey==="kontak" ? "active" : ""}>{t("kontak")}</a>
+      <a href="https://dashboard.adsbangda.com/login" data-i18n-nav={legacyToggle ? "client_dashboard" : undefined}>{t("client_dashboard")}</a>
     </div>
     <div class="nav-right">
       <button class="lang-toggle" id="langToggle" aria-label="Switch language">
-        <span class="lang-opt active" data-lang="id">ID</span><span class="lang-sep">/</span><span class="lang-opt" data-lang="en">EN</span>
+        <span class={`lang-opt ${lang==="id" ? "active" : ""}`} data-lang="id">ID</span><span class="lang-sep">/</span><span class={`lang-opt ${lang==="en" ? "active" : ""}`} data-lang="en">EN</span>
       </button>
-      <a href="#" target="_blank" rel="noopener" class="nav-cta wa-cta" data-wa-phone="6282289348724" data-i18n-nav="cta">Mulai Proyek</a>
+      <a href="#" target="_blank" rel="noopener" class="nav-cta wa-cta" data-wa-phone="6282289348724" data-i18n-nav={legacyToggle ? "cta" : undefined}>{t("cta")}</a>
     </div>
     <div class="mobile-nav-group">
       <button class="lang-toggle lang-toggle-mobile-header" id="langToggleMobile" aria-label="Switch language">
-        <span class="lang-opt active" data-lang="id">ID</span><span class="lang-sep">/</span><span class="lang-opt" data-lang="en">EN</span>
+        <span class={`lang-opt ${lang==="id" ? "active" : ""}`} data-lang="id">ID</span><span class="lang-sep">/</span><span class={`lang-opt ${lang==="en" ? "active" : ""}`} data-lang="en">EN</span>
       </button>
       <button class="burger" id="burgerBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mobileMenu"><span></span><span></span><span></span></button>
     </div>
@@ -442,14 +518,14 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
 </header>
 
 <div class="mobile-menu" id="mobileMenu">
-  <a href="/" data-i18n-nav="home" class={navKey==="home" ? "active" : ""}>Home</a>
-  <a href="/tentang.html" data-i18n-nav="tentang" class={navKey==="tentang" ? "active" : ""}>Tentang</a>
-  <a href="/portofolio.html" data-i18n-nav="portofolio" class={navKey==="portofolio" ? "active" : ""}>Portofolio</a>
-  <a href="/layanan.html" data-i18n-nav="layanan" class={navKey==="layanan" ? "active" : ""}>Layanan</a>
-  <a href="/blog.html" data-i18n-nav="blog" class={navKey==="blog" ? "active" : ""}>Blog</a>
-  <a href="/kontak.html" data-i18n-nav="kontak" class={navKey==="kontak" ? "active" : ""}>Kontak</a>
-  <a href="https://dashboard.adsbangda.com/login" data-i18n-nav="client_dashboard">Client Dashboard</a>
-  <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6282289348724" data-i18n-nav="cta">Mulai Proyek</a>
+  <a href="/" data-i18n-nav={legacyToggle ? "home" : undefined} class={navKey==="home" ? "active" : ""}>{t("home")}</a>
+  <a href="/tentang.html" data-i18n-nav={legacyToggle ? "tentang" : undefined} class={navKey==="tentang" ? "active" : ""}>{t("tentang")}</a>
+  <a href="/portofolio.html" data-i18n-nav={legacyToggle ? "portofolio" : undefined} class={navKey==="portofolio" ? "active" : ""}>{t("portofolio")}</a>
+  <a href="/layanan.html" data-i18n-nav={legacyToggle ? "layanan" : undefined} class={navKey==="layanan" ? "active" : ""}>{t("layanan")}</a>
+  <a href="/blog.html" data-i18n-nav={legacyToggle ? "blog" : undefined} class={navKey==="blog" ? "active" : ""}>{t("blog")}</a>
+  <a href="/kontak.html" data-i18n-nav={legacyToggle ? "kontak" : undefined} class={navKey==="kontak" ? "active" : ""}>{t("kontak")}</a>
+  <a href="https://dashboard.adsbangda.com/login" data-i18n-nav={legacyToggle ? "client_dashboard" : undefined}>{t("client_dashboard")}</a>
+  <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6282289348724" data-i18n-nav={legacyToggle ? "cta" : undefined}>{t("cta")}</a>
 </div>
 
 <main id="main-content">
@@ -461,7 +537,7 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
     <div class="footer-top">
       <div class="foot-brand">
           <a href="/" class="logo"><img src="/assets/img/logo-header.png" alt="Adsbangda" width="133" height="26"></a>
-          <p class="foot-tagline" data-i18n-nav="foot_tagline">Partner branding, website & digital marketing yang bantu bisnis tumbuh lewat strategi branding, website, konten, dan iklan yang terukur.</p>
+          <p class="foot-tagline" data-i18n-nav={legacyToggle ? "foot_tagline" : undefined}>{t("foot_tagline")}</p>
         <div class="foot-social">
           <a href="https://www.instagram.com/adsbangda/" target="_blank" rel="noopener" aria-label="Instagram adsbangda"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1"/></svg></a>
           <a href="https://www.linkedin.com/company/adsbangda/posts/?feedView=all" target="_blank" rel="noopener" aria-label="LinkedIn adsbangda"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 8.98h4V21H3V8.98zM9 8.98h3.6v1.71h.05c.5-.95 1.73-1.95 3.56-1.95 3.81 0 4.51 2.51 4.51 5.78V21h-4v-5.6c0-1.34-.02-3.06-1.87-3.06-1.87 0-2.16 1.46-2.16 2.96V21H9V8.98z"/></svg></a>
@@ -469,16 +545,16 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
         </div>
       <div class="foot-links">
         <div class="foot-col">
-          <h3 data-i18n-nav="menu">Menu</h3>
-          <a href="/" data-i18n-nav="home">Home</a>
-          <a href="/tentang.html" data-i18n-nav="tentang">Tentang</a>
-          <a href="/portofolio.html" data-i18n-nav="portofolio">Portofolio</a>
-          <a href="/layanan.html" data-i18n-nav="layanan">Layanan</a>
-          <a href="/blog.html" data-i18n-nav="blog">Blog</a>
-          <a href="/kontak.html" data-i18n-nav="kontak">Kontak</a>
+          <h3 data-i18n-nav={legacyToggle ? "menu" : undefined}>{t("menu")}</h3>
+          <a href="/" data-i18n-nav={legacyToggle ? "home" : undefined}>{t("home")}</a>
+          <a href="/tentang.html" data-i18n-nav={legacyToggle ? "tentang" : undefined}>{t("tentang")}</a>
+          <a href="/portofolio.html" data-i18n-nav={legacyToggle ? "portofolio" : undefined}>{t("portofolio")}</a>
+          <a href="/layanan.html" data-i18n-nav={legacyToggle ? "layanan" : undefined}>{t("layanan")}</a>
+          <a href="/blog.html" data-i18n-nav={legacyToggle ? "blog" : undefined}>{t("blog")}</a>
+          <a href="/kontak.html" data-i18n-nav={legacyToggle ? "kontak" : undefined}>{t("kontak")}</a>
         </div>
         <div class="foot-col foot-col-layanan">
-          <h3 data-i18n-nav="layanan">Layanan</h3>
+          <h3 data-i18n-nav={legacyToggle ? "layanan" : undefined}>{t("layanan")}</h3>
           <div class="foot-layanan-list">
             <a href="/layanan-sosial-media-management.html">Social Media Management</a>
             <a href="/layanan-content-strategy.html">Content Strategy</a>
@@ -491,18 +567,18 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
           </div>
         </div>
         <div class="foot-col foot-col-kontak">
-          <h3 data-i18n-nav="kontak_h">Kontak</h3>
+          <h3 data-i18n-nav={legacyToggle ? "kontak_h" : undefined}>{t("kontak_h")}</h3>
           <a href="mailto:info@adsbangda.com">info@adsbangda.com</a>
           <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6282289348724">+62 822 8934 8724</a>
           <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6281282262002">+62 812 8226 2002</a>
           <a href="#" target="_blank" rel="noopener" class="wa-cta" data-wa-phone="6285713644514">+62 857 1364 4514</a>
-          <a href="https://www.google.com/maps/search/?api=1&query=Jakarta%2C+Indonesia" target="_blank" rel="noopener" data-i18n-nav="lokasi">Jakarta, Indonesia</a>
+          <a href="https://www.google.com/maps/search/?api=1&query=Jakarta%2C+Indonesia" target="_blank" rel="noopener" data-i18n-nav={legacyToggle ? "lokasi" : undefined}>{t("lokasi")}</a>
         </div>
       </div>
     </div>
     <div class="footer-bottom">
-      <span data-i18n-nav="copy">&copy; 2026 adsbangda. Semua konten dibikin, bukan dicomot.</span>
-      <span data-i18n-nav="made">Dibuat dengan adsbangda</span>
+      <span data-i18n-nav={legacyToggle ? "copy" : undefined}>{t("copy")}</span>
+      <span data-i18n-nav={legacyToggle ? "made" : undefined}>{t("made")}</span>
     </div>
   </div>
 </footer>
@@ -513,8 +589,8 @@ src="https://www.facebook.com/tr?id=906543718460297&ev=PageView&noscript=1"
 
 <slot name="page-scripts" />
 
-<div class="lightbox-overlay" id="lightboxOverlay" role="dialog" aria-modal="true" aria-label="Pratinjau gambar">
-  <button class="lightbox-close" id="lightboxClose" aria-label="Tutup preview">&times;</button>
+<div class="lightbox-overlay" id="lightboxOverlay" role="dialog" aria-modal="true" aria-label={t("search_alt")}>
+  <button class="lightbox-close" id="lightboxClose" aria-label={t("close_preview")}>&times;</button>
   <img id="lightboxImg" src="" alt="" loading="lazy">
 </div>
 
