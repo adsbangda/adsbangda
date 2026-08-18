@@ -8,6 +8,7 @@ import { isSupabaseConfigured, createClient } from "./supabase/server";
 import { ClientNotAssignedError, getSessionUserId } from "./auth";
 import { formatDateID } from "./utils";
 import {
+  mapClient,
   mapProject,
   mapProjectTask,
   mapPerformanceMetric,
@@ -68,13 +69,16 @@ export async function getCurrentClient(): Promise<Client> {
   const row = (data as unknown as { clients: Record<string, unknown> } | null)?.clients;
   if (!row) throw new ClientNotAssignedError();
 
-  return {
-    id: row.id as string,
-    name: row.name as string,
-    logoUrl: (row.logo_url as string | null) ?? null,
-    industry: row.industry as string,
-    status: row.status as Client["status"],
-  };
+  // PENTING: pakai mapClient() yang sama dipakai Admin Portal — jangan
+  // konstruksi object manual di sini lagi. Versi manual sebelumnya cuma
+  // ambil id/name/logoUrl/industry/status, diam-diam MENGABAIKAN
+  // socialMediaActive/metaAdsActive/websiteActive — akibatnya Overview
+  // (dan halaman client lain manapun) tidak akan PERNAH melihat service
+  // yang diaktifkan admin di halaman Services, walau datanya di database
+  // sudah benar. Bug ini sudah ada dari awal, baru ketahuan sekarang
+  // karena baru ada fitur (Overview dinamis) yang benar-benar bergantung
+  // ke field-field itu.
+  return mapClient(row);
 }
 
 export async function getActiveProject(clientId: string): Promise<{
