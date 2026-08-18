@@ -13,7 +13,7 @@ interface Heading {
 
 interface RelatedPost {
   id: string;
-  data: { title: string; category: string };
+  data: { title: string; category: string; title_en?: string; category_en?: string; body_en?: string };
 }
 
 interface Props {
@@ -30,16 +30,29 @@ interface Props {
   categoryEn?: string;
   readTimeEn?: string;
   bodyEn?: string;
+  // --- dipakai untuk halaman EN BENERAN (src/pages/en/artikel-[article].astro) ---
+  // Beda dari titleEn/categoryEn/dst di atas (yang cuma buat toggle client-side lama
+  // di halaman ID) -- kalau lang="en", title/description/category/readTime yang
+  // dikirim SUDAH versi Inggris langsung, dan rawBodyHtml dipakai gantiin <slot/>
+  // (karena versi EN nggak lewat compile Markdown Astro, cuma HTML mentah dari body_en).
+  lang?: "id" | "en";
+  hreflangEnPath?: string; // dikirim dari artikel ID kalau versi EN-nya sudah ada
+  hreflangIdPath?: string; // dikirim dari artikel EN, path balik ke versi ID-nya
+  rawBodyHtml?: string;
 }
 
 const {
   title, metaTitle, description, category, date, readTime, path,
   headings = [], relatedPosts = [],
   titleEn, categoryEn, readTimeEn, bodyEn,
+  lang = "id", hreflangEnPath, hreflangIdPath, rawBodyHtml,
 } = Astro.props;
 const pageTitle = metaTitle || title;
 const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
-const hasEn = !!bodyEn; // artikel ini punya versi Inggris atau nggak
+// toggle client-side lama HANYA relevan di halaman ID yang BELUM punya URL EN
+// sendiri -- begitu hreflangEnPath dikirim (URL EN beneran sudah ada), matiin
+// toggle in-place ini supaya nggak dobel/bentrok sama navigasi ke URL asli.
+const hasEn = lang === "id" && !hreflangEnPath && !!bodyEn;
 // key unik per artikel biar nggak bentrok sama translations object halaman lain
 const slugKey = path.replace(/[^a-zA-Z0-9]/g, "_");
 
@@ -58,28 +71,56 @@ const articleSchema = {
   headline: title, // headline schema tetap pakai judul lengkap (bukan versi pendek title tag)
   description,
   articleSection: category,
-  inLanguage: "id-ID",
+  inLanguage: lang === "en" ? "en-US" : "id-ID",
   ...(isoDate ? { datePublished: isoDate, dateModified: isoDate } : {}),
   image: { "@id": `${articleURL}#primaryimage` },
   author: { "@id": `${SITE_URL}/#organization` },
   publisher: { "@id": `${SITE_URL}/#organization` },
 };
+
+// teks statis di sidebar/CTA yang bukan dari data-i18n-nav biasa (khusus komponen
+// ini) -- di-render server-side sesuai `lang`, sama pola kayak Layout.astro.
+const tt = (key: "blog" | "tim_adsbangda" | "layanan" | "kontak_h" | "lokasi" | "ikuti_kami" | "artikel_terkait" | "blog_cta_h" | "blog_cta_p" | "blog_cta_btn") => {
+  const dict = {
+    blog: { id: "Blog", en: "Blog" },
+    tim_adsbangda: { id: "Tim adsbangda", en: "Adsbangda Team" },
+    layanan: { id: "Layanan", en: "Services" },
+    kontak_h: { id: "Kontak", en: "Contact" },
+    lokasi: { id: "Jakarta, Indonesia", en: "Jakarta, Indonesia" },
+    ikuti_kami: { id: "Ikuti Kami", en: "Follow Us" },
+    artikel_terkait: { id: "Artikel Terkait", en: "Related Articles" },
+    blog_cta_h: { id: "Butuh Bantuan Mengelola Sosial Media Bisnis Kamu?", en: "Need Help Managing Your Business Social Media?" },
+    blog_cta_p: { id: "Tim kami bisa bantu susun strategi, produksi konten, sampai laporan performa bulanan.", en: "Our team can help with strategy, content production, and monthly performance reports." },
+    blog_cta_btn: { id: "Konsultasi Gratis \u2192", en: "Free Consultation \u2192" },
+  };
+  return dict[key][lang];
+};
+// link internal di sidebar harus nunjuk ke versi EN kalau halaman ini EN
+const linkPrefix = lang === "en" ? "/en" : "";
+// artikel terkait: di halaman EN, cuma tampilin artikel lain yang JUGA punya versi EN
+// (body_en terisi) -- biar nggak nge-link ke halaman yang belum diterjemahkan.
+const visibleRelatedPosts = lang === "en"
+  ? relatedPosts.filter((p) => !!p.data.body_en)
+  : relatedPosts;
 ---
 <Layout
   title={`${pageTitle} | Adsbangda`}
   description={description}
   path={path}
   type="article"
+  lang={lang}
+  hreflangEn={hreflangEnPath}
+  hreflangId={hreflangIdPath}
   datePublished={isoDate ?? undefined}
   dateModified={isoDate ?? undefined}
   extraSchema={articleSchema}
 >
 <section class="article-header">
   <div class="wrap">
-    <div class="breadcrumb"><a href="/blog.html" data-i18n-nav="blog">Blog</a> / <span data-i18n={hasEn ? `${slugKey}_cat` : undefined}>{category}</span></div>
+    <div class="breadcrumb"><a href={`${linkPrefix}/blog.html`}>{tt("blog")}</a> / <span data-i18n={hasEn ? `${slugKey}_cat` : undefined}>{category}</span></div>
     <h1 data-i18n={hasEn ? `${slugKey}_title` : undefined}>{title}</h1>
     <div class="article-meta-row">
-      <span data-i18n-nav="tim_adsbangda">Tim adsbangda</span>
+      <span>{tt("tim_adsbangda")}</span>
       <span>&middot;</span>
       <span>{date}</span>
       <span>&middot;</span>
@@ -96,34 +137,36 @@ const articleSchema = {
   <div class="article-layout">
     <div class="article-main">
       <div class="article-body">
-        <div id="body-id"><slot /></div>
+        {lang === "en" && rawBodyHtml
+          ? <div id="body-id" set:html={rawBodyHtml} />
+          : <div id="body-id"><slot /></div>}
         {hasEn && <div id="body-en" style="display:none" set:html={bodyEn} />}
 
         <div class="article-cta">
-          <h3 data-i18n-nav="blog_cta_h">Butuh Bantuan Mengelola Sosial Media Bisnis Kamu?</h3>
-          <p data-i18n-nav="blog_cta_p">Tim kami bisa bantu susun strategi, produksi konten, sampai laporan performa bulanan.</p>
-          <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n-nav="blog_cta_btn" style="background:var(--yellow);color:var(--ink);">Konsultasi Gratis &rarr;</a>
+          <h3>{tt("blog_cta_h")}</h3>
+          <p>{tt("blog_cta_p")}</p>
+          <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" style="background:var(--yellow);color:var(--ink);">{tt("blog_cta_btn")}</a>
         </div>
       </div>
     </div>
 
     <aside class="article-sidebar">
       <div class="sidebar-card">
-        <h4 data-i18n-nav="layanan">Layanan</h4>
+        <h4>{tt("layanan")}</h4>
         <div class="sidebar-links">
-          <a href="/layanan-sosial-media-management.html">Social Media Management<span class="link-arrow">&rarr;</span></a>
-          <a href="/layanan-content-strategy.html">Content Strategy<span class="link-arrow">&rarr;</span></a>
-          <a href="/layanan-meta-ads.html">Meta Ads Performance<span class="link-arrow">&rarr;</span></a>
-          <a href="/layanan-kol-management.html">KOL &amp; Influencer Management<span class="link-arrow">&rarr;</span></a>
-          <a href="/layanan-branding-visual-identity.html">Branding &amp; Visual Identity<span class="link-arrow">&rarr;</span></a>
-          <a href="/layanan-website-landing-page.html">Website &amp; Landing Page<span class="link-arrow">&rarr;</span></a>
-          <a href="/layanan-creative-design.html">Creative Design<span class="link-arrow">&rarr;</span></a>
-          <a href="/layanan-digital-growth-consulting.html">Digital Growth Consulting<span class="link-arrow">&rarr;</span></a>
+          <a href={`${linkPrefix}/layanan-sosial-media-management.html`}>Social Media Management<span class="link-arrow">&rarr;</span></a>
+          <a href={`${linkPrefix}/layanan-content-strategy.html`}>Content Strategy<span class="link-arrow">&rarr;</span></a>
+          <a href={`${linkPrefix}/layanan-meta-ads.html`}>Meta Ads Performance<span class="link-arrow">&rarr;</span></a>
+          <a href={`${linkPrefix}/layanan-kol-management.html`}>KOL &amp; Influencer Management<span class="link-arrow">&rarr;</span></a>
+          <a href={`${linkPrefix}/layanan-branding-visual-identity.html`}>Branding &amp; Visual Identity<span class="link-arrow">&rarr;</span></a>
+          <a href={`${linkPrefix}/layanan-website-landing-page.html`}>Website &amp; Landing Page<span class="link-arrow">&rarr;</span></a>
+          <a href={`${linkPrefix}/layanan-creative-design.html`}>Creative Design<span class="link-arrow">&rarr;</span></a>
+          <a href={`${linkPrefix}/layanan-digital-growth-consulting.html`}>Digital Growth Consulting<span class="link-arrow">&rarr;</span></a>
         </div>
       </div>
 
       <div class="sidebar-card">
-        <h4 data-i18n-nav="kontak_h">Kontak</h4>
+        <h4>{tt("kontak_h")}</h4>
         <div class="sidebar-contact">
           <a href="mailto:info@adsbangda.com" class="sidebar-contact-item">
             <span class="sc-icon"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F0ECE2" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 6l8 7 8-7"/></svg></span>
@@ -141,15 +184,15 @@ const articleSchema = {
             <span class="sc-icon"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 32 32" fill="#F0ECE2"><path d="M16.004 3C9.086 3 3.5 8.58 3.5 15.5c0 2.36.65 4.57 1.78 6.46L3 29l7.24-2.25a12.4 12.4 0 0 0 5.76 1.42h.01c6.92 0 12.5-5.58 12.5-12.5S22.93 3 16.004 3zm0 22.86h-.01a10.3 10.3 0 0 1-5.26-1.44l-.38-.22-3.9 1.21 1.24-3.8-.25-.39a10.32 10.32 0 0 1-1.58-5.5c0-5.7 4.64-10.34 10.35-10.34 2.76 0 5.36 1.08 7.32 3.03a10.27 10.27 0 0 1 3.03 7.31c0 5.71-4.64 10.34-10.36 10.34zm5.68-7.74c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.21.31-.81 1.02-.99 1.23-.18.21-.37.23-.68.08-.31-.16-1.31-.48-2.49-1.54-.92-.82-1.54-1.83-1.72-2.14-.18-.31-.02-.48.14-.63.14-.14.31-.37.47-.55.16-.19.21-.31.31-.52.1-.21.05-.39-.03-.55-.08-.16-.71-1.71-.97-2.34-.26-.62-.52-.53-.71-.54h-.6c-.21 0-.55.08-.84.39-.29.31-1.1 1.08-1.1 2.63s1.13 3.05 1.29 3.26c.16.21 2.22 3.39 5.38 4.75.75.32 1.34.52 1.8.66.76.24 1.44.21 1.99.13.61-.09 1.85-.75 2.11-1.48.26-.73.26-1.36.18-1.48-.08-.13-.29-.21-.6-.36z"/></svg></span>
             <span>+62 857 1364 4514</span>
           </a>
-          <a href="/kontak.html" class="sidebar-contact-item">
+          <a href={`${linkPrefix}/kontak.html`} class="sidebar-contact-item">
             <span class="sc-icon"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F0ECE2" stroke-width="1.8"><path d="M12 21s-7-5-7-11a7 7 0 0114 0c0 6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
-            <span data-i18n-nav="lokasi">Jakarta, Indonesia</span>
+            <span>{tt("lokasi")}</span>
           </a>
         </div>
       </div>
 
       <div class="sidebar-card">
-        <h4 data-i18n-nav="ikuti_kami">Ikuti Kami</h4>
+        <h4>{tt("ikuti_kami")}</h4>
         <div class="sidebar-socials">
           <a href="https://www.instagram.com/adsbangda/" target="_blank" rel="noopener" class="sidebar-social-item">
             <span class="sc-icon"><svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F0ECE2" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1"/></svg></span>
@@ -162,14 +205,14 @@ const articleSchema = {
         </div>
       </div>
 
-      {relatedPosts.length > 0 && (
+      {visibleRelatedPosts.length > 0 && (
         <div class="sidebar-card">
-          <h4 data-i18n-nav="artikel_terkait">Artikel Terkait</h4>
+          <h4>{tt("artikel_terkait")}</h4>
           <div class="related-list">
-            {relatedPosts.map((p) => (
-              <a href={`/artikel-${p.id}.html`} class="related-item">
-                <div class="rel-cat">{p.data.category}</div>
-                <div class="rel-title">{p.data.title}</div>
+            {visibleRelatedPosts.map((p) => (
+              <a href={`${linkPrefix}/artikel-${p.id}.html`} class="related-item">
+                <div class="rel-cat">{lang === "en" ? (p.data.category_en || p.data.category) : p.data.category}</div>
+                <div class="rel-title">{lang === "en" ? (p.data.title_en || p.data.title) : p.data.title}</div>
               </a>
             ))}
           </div>

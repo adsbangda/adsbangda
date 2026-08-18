@@ -1,7 +1,7 @@
 ---
-import Layout from "../layouts/Layout.astro";
-const title = 'Jasa Digital Growth Consulting | Adsbangda';
-const description = 'Konsultasi strategis untuk bisnis yang mau tumbuh lebih terarah di dunia digital -- audit kondisi saat ini, lalu susun roadmap berbasis data.';
+import Layout from "../../layouts/Layout.astro";
+const title = 'Digital Growth Consulting Services | Adsbangda';
+const description = 'Strategic consulting for businesses that want to grow more purposefully online -- audit your current state, then build a data-driven roadmap.';
 
 const serviceSchema = {
   "@type": "Service",
@@ -25,7 +25,7 @@ const serviceSchema = {
   },
 };
 ---
-<Layout title={title} description={description} path="layanan-digital-growth-consulting.html" lang="id" hreflangEn="en/layanan-digital-growth-consulting.html" portfolioCss={false} extraSchema={serviceSchema}>
+<Layout title={title} description={description} path="en/layanan-digital-growth-consulting.html" lang="id" lang="en" hreflangId="layanan-digital-growth-consulting.html" portfolioCss={false} extraSchema={serviceSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 
 
@@ -35,7 +35,7 @@ const serviceSchema = {
     <div class="breadcrumb"><a href="layanan.html" data-i18n-nav="layanan">Layanan</a> / <span data-i18n="svc_name">Digital Growth Consulting</span></div>
     <div class="service-icon"><svg aria-hidden="true" focusable="false" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
     <h1 data-i18n="hero_h1">Digital Growth Consulting</h1>
-    <p class="lede" data-i18n="hero_p">Konsultasi strategis buat bisnis yang mau tumbuh lebih terarah di dunia digital. Kami bantu audit kondisi digital kamu sekarang, dan susun roadmap pertumbuhan berdasarkan data, bukan tebak-tebakan.</p>
+    <p class="lede" data-i18n="hero_p">Strategic consulting for businesses that want more focused growth in the digital world. We help audit your current digital condition and build a growth roadmap based on data, not guesswork.</p>
     <div class="tag-row"><span data-i18n="tag1">Digital Audit</span><span data-i18n="tag2">Growth Roadmap</span><span data-i18n="tag3">Data-Driven Strategy</span><span data-i18n="tag4">Cross-Channel</span></div>
   </div>
 </section>
@@ -44,16 +44,16 @@ const serviceSchema = {
   <div class="wrap">
     <div class="service-detail-grid">
       <div class="reveal">
-        <h2 style="font-size:22px;margin-bottom:14px;" data-i18n="cocok_h">Cocok Buat Siapa?</h2>
-        <p style="font-size:15px;line-height:1.75;color:#3b3d3a;text-align:justify;" data-i18n="cocok_p">Cocok buat bisnis yang udah jalanin beberapa upaya digital marketing tapi belum punya arah strategis yang jelas dan terukur.</p>
+        <h2 style="font-size:22px;margin-bottom:14px;" data-i18n="cocok_h">Who Is This For?</h2>
+        <p style="font-size:15px;line-height:1.75;color:#3b3d3a;text-align:justify;" data-i18n="cocok_p">A great fit for businesses that have already run some digital marketing efforts but don't yet have a clear, measurable strategic direction.</p>
       </div>
       <div class="reveal">
-        <h2 style="font-size:22px;margin-bottom:16px;" data-i18n="dapat_h">Yang Kamu Dapat</h2>
+        <h2 style="font-size:22px;margin-bottom:16px;" data-i18n="dapat_h">What You Get</h2>
         <ul class="include-list">
-          <li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc1">Audit menyeluruh kehadiran digital bisnis kamu saat ini</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc2">Analisis kompetitor &amp; peluang pasar</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc3">Roadmap pertumbuhan digital jangka pendek &amp; panjang</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc4">Rekomendasi prioritas channel &amp; budget</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc5">Sesi konsultasi berkala buat evaluasi progres</span></li>
+          <li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc1">A thorough audit of your business's current digital presence</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc2">Competitor analysis &amp; market opportunities</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc3">Short- and long-term digital growth roadmap</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc4">Channel &amp; budget priority recommendations</span></li><li><svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF4A3D" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg> <span data-i18n="inc5">Regular consultation sessions to evaluate progress</span></li>
         </ul>
         <div class="service-cta-row">
-          <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Konsultasi Layanan Ini &rarr;</a>
+          <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Consult About This Service &rarr;</a>
         </div>
       </div>
     </div>
@@ -63,24 +63,24 @@ const serviceSchema = {
 <section class="section section-tint">
   <div class="wrap">
     <div class="section-head reveal">
-      <h2 style="font-size:24px;" data-i18n="other_h2">Butuh yang lain juga?</h2>
+      <h2 style="font-size:24px;" data-i18n="other_h2">Need Something Else Too?</h2>
     </div>
     <div class="service-simple-grid">
       <a href="layanan-sosial-media-management.html" class="service-simple-card reveal">
         <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M17 10l4-2v8l-4-2"/></svg></div>
         <h3>Social Media Management</h3>
-        <p data-i18n="other1_p">Produksi konten harian/mingguan — dari naskah, syuting, sampai desain feed yang konsisten ...</p>
-        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+        <p data-i18n="other1_p">Daily/weekly content production — from scripting and filming to consistent feed design ...</p>
+        <div class="link-more" data-i18n="link_more">See Details &rarr;</div>
       </a><a href="layanan-content-strategy.html" class="service-simple-card reveal">
         <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><path d="M4 19V10M12 19V5M20 19v-7"/></svg></div>
         <h3>Content Strategy</h3>
-        <p data-i18n="other2_p">Riset tren, kalender konten, dan hook 3 detik pertama yang bikin orang berhenti scroll. Ka...</p>
-        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+        <p data-i18n="other2_p">Trend research, content calendars, and 3-second hooks that stop people from scrolling. We...</p>
+        <div class="link-more" data-i18n="link_more">See Details &rarr;</div>
       </a><a href="layanan-meta-ads.html" class="service-simple-card reveal">
         <div class="service-icon"><svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171B" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6" fill="#15171B"/></svg></div>
         <h3>Meta Ads Performance</h3>
-        <p data-i18n="other3_p">Naikin konten organic terbaik jadi campaign ads yang terarah dan performing di Instagram &...</p>
-        <div class="link-more" data-i18n="link_more">Lihat Detail &rarr;</div>
+        <p data-i18n="other3_p">Turn your best organic content into targeted, high-performing ad campaigns on Instagram &...</p>
+        <div class="link-more" data-i18n="link_more">See Details &rarr;</div>
       </a>
     </div>
   </div>

@@ -1,0 +1,40 @@
+---
+// Versi EN dari halaman artikel -- HANYA di-generate untuk post yang field
+// `body_en` (dan idealnya title_en/description_en) sudah diisi di frontmatter
+// Markdown-nya (lihat src/content.config.ts). Post yang belum diterjemahkan
+// otomatis TIDAK dapat halaman EN -- tetap aman, tidak ada broken link/halaman
+// kosong, dan begitu field-nya diisi di masa depan, halaman ini otomatis muncul
+// di build berikutnya tanpa perlu ubah kode apa pun di sini.
+import { getCollection, render } from "astro:content";
+import BlogPost from "../../layouts/BlogPost.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  const translatedPosts = posts.filter((p) => !!p.data.body_en);
+  return translatedPosts.map((post) => ({
+    params: { article: post.id },
+    props: { post, allPosts: posts },
+  }));
+}
+
+const { post, allPosts } = Astro.props;
+const { headings } = await render(post); // headings dari body ID -- cukup buat referensi struktur, tidak dipakai untuk teks
+
+// artikel terkait: ambil sampai 3 artikel lain (bukan artikel ini sendiri) --
+// BlogPost.astro sendiri yang nge-filter cuma yang punya body_en buat halaman EN ini.
+const relatedPosts = allPosts.filter((p) => p.id !== post.id).slice(0, 3);
+---
+<BlogPost
+  title={post.data.title_en || post.data.title}
+  metaTitle={post.data.title_en || post.data.metaTitle}
+  description={post.data.description_en || post.data.description}
+  category={post.data.category_en || post.data.category}
+  date={post.data.date}
+  readTime={post.data.readTime_en || post.data.readTime}
+  path={`en/artikel-${post.id}.html`}
+  headings={headings}
+  relatedPosts={relatedPosts}
+  lang="en"
+  hreflangIdPath={`artikel-${post.id}.html`}
+  rawBodyHtml={post.data.body_en}
+/>

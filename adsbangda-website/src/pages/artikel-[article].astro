@@ -33,6 +33,7 @@ const relatedPosts = allPosts.filter((p) => p.id !== post.id).slice(0, 3);
   categoryEn={post.data.category_en}
   readTimeEn={post.data.readTime_en}
   bodyEn={post.data.body_en}
+  hreflangEnPath={post.data.body_en ? `en/artikel-${post.id}.html` : undefined}
 >
   <Content />
 </BlogPost>

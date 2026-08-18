@@ -1,7 +1,7 @@
 ---
-import Layout from "../layouts/Layout.astro";
-const title = 'Portofolio Klien Kami | Adsbangda';
-const description = 'Lihat portofolio dan hasil kerja adsbangda bersama berbagai klien di bidang F&B, properti, edukasi, dan lainnya.';
+import Layout from "../../layouts/Layout.astro";
+const title = 'Our Client Portfolio | Adsbangda';
+const description = 'See Adsbangda\'s portfolio and results working with various clients in F&B, property, education, and more.';
 
 const SITE_URL = "https://www.adsbangda.com";
 const portfolioItems = [
@@ -27,7 +27,7 @@ const portfolioListSchema = {
   })),
 };
 ---
-<Layout title={title} description={description} path="portofolio.html" lang="id" hreflangEn="en/portofolio.html" portfolioCss={false} extraSchema={portfolioListSchema}>
+<Layout title={title} description={description} path="en/portofolio.html" lang="id" lang="en" hreflangId="portofolio.html" portfolioCss={false} extraSchema={portfolioListSchema}>
 { /* head-style slot: CSS khusus halaman ini (kalau ada) */ }
 <Fragment slot="head-style">
 <style>
@@ -42,8 +42,8 @@ const portfolioListSchema = {
 
 <section class="page-hero">
   <div class="wrap">
-    <h1 data-i18n="hero_h1">Brand yang udah kita garap bareng</h1>
-    <p data-i18n="hero_p">Sebagian portofolio dari klien yang kita pegang &mdash; geser buat lihat semua, klik kartunya buat lihat detail.</p>
+    <h1 data-i18n="hero_h1">Brands we've worked on together</h1>
+    <p data-i18n="hero_p">A selection of portfolio pieces from clients we've worked with &mdash; scroll to see them all, click a card to see the details.</p>
   </div>
 </section>
 
@@ -64,9 +64,9 @@ const portfolioListSchema = {
 
 <section class="cta">
   <div class="wrap">
-    <h2 data-i18n="cta_h2">Mau Jadi Portofolio Berikutnya?</h2>
-    <p data-i18n="cta_p">Ceritain bisnis kamu, kita bantu rancang strategi digital yang paling pas.</p>
-    <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Mulai Proyek &rarr;</a>
+    <h2 data-i18n="cta_h2">Want to Be Our Next Portfolio Piece?</h2>
+    <p data-i18n="cta_p">Tell us about your business, and we'll help design the digital strategy that fits best.</p>
+    <a href="#" target="_blank" rel="noopener" class="btn-primary wa-cta" data-wa-phone="6282289348724" data-i18n="cta_btn">Start a Project &rarr;</a>
   </div>
 </section>
 
@@ -81,7 +81,7 @@ const portfolioListSchema = {
 <Fragment slot="page-scripts">
 <script is:inline>
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-var currentLang = localStorage.getItem('adsbangda_lang') || 'id';
+var currentLang = 'en'; // halaman EN -- selalu mulai dari Inggris, jangan biarkan localStorage lama membalikkannya
 
 
 

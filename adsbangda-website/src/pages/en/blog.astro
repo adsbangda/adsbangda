@@ -1,0 +1,50 @@
+---
+// Versi EN dari /blog.html -- cuma nampilin artikel yang punya body_en (jadi
+// cuma nge-link ke artikel yang beneran punya halaman EN, lihat
+// src/pages/en/artikel-[article].astro). Server-rendered langsung, nggak
+// perlu toggle client-side lagi karena ini halaman baru bukan hasil swap.
+import Layout from "../../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+
+const allPosts = await getCollection("blog");
+allPosts.reverse();
+const posts = allPosts.filter((p) => !!p.data.body_en);
+---
+<Layout
+  title="Branding & Digital Marketing Blog | Adsbangda"
+  description="Insights, tips, and practical strategies from the Adsbangda team -- branding, websites, social media, Meta Ads, and digital marketing."
+  path="en/blog.html"
+  lang="en"
+  hreflangId="blog.html"
+>
+<section class="page-hero">
+  <div class="wrap">
+    <h1>Insights on social media &amp; digital marketing</h1>
+    <p>Practical tips, strategies, and discussions you can apply to your business right away.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="wrap">
+    <h2 class="sr-only">Article List</h2>
+    <div class="blog-grid">
+      {posts.map((post) => (
+        <a href={`/en/artikel-${post.id}.html`} class="blog-card reveal" style="text-decoration:none;color:inherit;">
+          <div class="blog-thumb" style={`background:${post.data.thumbGradient};`}>
+            <span style={`color:${post.data.thumbTextColor};`}>{post.data.thumbText_en || post.data.thumbText}</span>
+          </div>
+          <div class="blog-body">
+            <div class="blog-cat">{post.data.category_en || post.data.category}</div>
+            <h3>{post.data.title_en || post.data.title}</h3>
+            <p>{post.data.description_en || post.data.description}</p>
+            <div class="blog-meta">
+              <span>{post.data.date} &middot; {post.data.readTime_en || post.data.readTime}</span>
+              <span class="read-more">Read &rarr;</span>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+</Layout>
