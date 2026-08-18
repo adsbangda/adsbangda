@@ -34,8 +34,13 @@ Admin Portal-nya juga, tanpa perlu login di mode demo.
 ### 1. Buat project Supabase
 
 Buat project baru di [supabase.com](https://supabase.com), lalu jalankan
-KEDUA migration ini secara berurutan lewat **SQL Editor** (paste isi
-filenya satu-satu, klik Run):
+**SEMUA file migration secara berurutan** (0001, 0002, 0003, dst — ikuti
+urutan nomornya) lewat **SQL Editor** (paste isi filenya satu-satu, klik
+Run). Jangan skip satu pun, termasuk `0011_realtime.sql` — tanpa itu, Live
+Sync (lihat bagian "Live Sync" di bawah) akan terpasang tapi diam saja,
+tidak ada event yang pernah sampai.
+
+Dua yang paling penting untuk fungsi dasar:
 
 1. `supabase/migrations/0001_init.sql`
 2. `supabase/migrations/0002_admin_portal.sql`
@@ -109,6 +114,29 @@ Settings → Environment Variables, deploy. Jangan lupa tambahkan URL
 production ke **Supabase → Authentication → URL Configuration** (Site URL +
 Redirect URLs) supaya auth berfungsi di production.
 
+## Live Sync — Admin Portal ↔ Client Portal tanpa refresh
+
+Client Portal dan halaman detail client di Admin Portal saling terhubung
+lewat **Supabase Realtime**: begitu ada perubahan data untuk satu client —
+dari sisi manapun (admin update Content List, client approve/request
+revision, dsb) — semua tab yang sedang terbuka untuk client yang sama
+otomatis narik data terbaru sendiri, tanpa siapa pun perlu menekan reload.
+
+- Komponennya: `src/components/realtime-refresh.tsx` — dipasang sekali di
+  `src/app/(app)/layout.tsx` (Client Portal) dan
+  `src/app/admin/clients/[clientId]/layout.tsx` (Admin Portal, per client).
+- Prasyaratnya: `supabase/migrations/0011_realtime.sql` sudah dijalankan
+  (mengaktifkan Realtime publication untuk semua tabel client-scoped).
+  **Kalau lupa jalankan ini, portal tetap jalan normal tapi kembali terasa
+  perlu refresh manual** — tidak ada error yang muncul, jadi gampang
+  kelewat kalau sedang setup project baru.
+- Keamanannya tetap dipegang RLS yang sudah ada sejak migration 0001/0002 —
+  Realtime cuma broadcast baris yang memang boleh dibaca subscriber-nya.
+  Filter `client_id=eq.<id>` di channel murni buat efisiensi, bukan lapisan
+  keamanan tambahan.
+- Mode Demo: no-op total (tidak ada Supabase = tidak ada apa pun untuk
+  didengar), jadi aman dipasang tanpa syarat di kedua layout.
+
 ## Yang diperbaiki dari MVP sebelumnya
 
 Waktu bikin migration 0002, ditemukan beberapa mismatch antara skema 0001
@@ -140,7 +168,8 @@ src/
 │       └── team/                  Kelola role & akses client per user
 ├── components/
 │   ├── dashboard/             Komponen shared Client Portal
-│   └── admin/                 Komponen shared Admin Portal
+│   ├── admin/                 Komponen shared Admin Portal
+│   └── realtime-refresh.tsx   Live Sync (Supabase Realtime -> router.refresh())
 └── lib/
     ├── data.ts                 Data access CLIENT (mock <-> Supabase, transparan)
     ├── admin-data.ts            Data access + mutasi ADMIN (mock <-> Supabase)

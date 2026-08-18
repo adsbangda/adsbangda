@@ -3,6 +3,7 @@
 // begitu env Supabase di-isi, fungsi di bawah otomatis pindah ke query
 // database asli tanpa mengubah satu pun komponen halaman.
 
+import { revalidatePath } from "next/cache";
 import { isSupabaseConfigured, createClient } from "./supabase/server";
 import { ClientNotAssignedError, getSessionUserId } from "./auth";
 import {
@@ -330,6 +331,13 @@ export async function getContentCalendar(clientId: string): Promise<ContentItem[
  * (migration 0010), BUKAN update langsung ke content_items, supaya client
  * cuma bisa ubah approval_status (tidak bisa ubah field lain) dan cuma
  * untuk content milik client-nya sendiri (dicek di RPC).
+ *
+ * Revalidate DUA path sekaligus — path Client Portal-nya sendiri (biar
+ * halaman yang baru submit langsung update) dan path Admin Portal untuk
+ * client ini (biar tim yang sedang lihat Content List di Admin Portal juga
+ * langsung lihat status approval terbaru, tanpa refresh manual). Ini
+ * pelengkap Supabase Realtime (lihat RealtimeRefresh) — tetap berguna
+ * sebagai fallback kalau koneksi realtime browser admin sedang putus.
  */
 export async function respondToApproval(contentId: string, response: "approved" | "revision_requested", note: string = "") {
   if (!isSupabaseConfigured) {
@@ -346,6 +354,17 @@ export async function respondToApproval(contentId: string, response: "approved" 
     response_note: note,
   });
   if (error) throw new Error(error.message);
+
+  revalidatePath("/content-calendar");
+  try {
+    const client = await getCurrentClient();
+    revalidatePath(`/admin/clients/${client.id}/social-media`);
+    revalidatePath(`/admin/clients/${client.id}`);
+  } catch {
+    // getCurrentClient() gagal (edge case sesi aneh) — approval-nya sendiri
+    // sudah tersimpan lewat RPC di atas, jadi ini aman diabaikan; Realtime
+    // tetap jadi jalur utama buat sisi Admin, ini cuma pelengkap.
+  }
 }
 
 export async function getApprovalHistory(contentId: string) {

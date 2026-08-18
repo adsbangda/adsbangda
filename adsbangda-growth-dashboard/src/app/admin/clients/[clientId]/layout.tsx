@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { DemoModeBanner } from "@/components/admin/demo-banner";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { DetailTabs } from "@/components/admin/detail-tabs";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { adminGetClient } from "@/lib/admin-data";
 
 export default async function AdminClientLayout({
@@ -19,6 +20,7 @@ export default async function AdminClientLayout({
 
   return (
     <div className="min-h-screen">
+      <RealtimeRefresh clientId={clientId} />
       <DemoModeBanner />
       <div className="bg-surface px-5 pt-6 print:hidden lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4 pb-5">
