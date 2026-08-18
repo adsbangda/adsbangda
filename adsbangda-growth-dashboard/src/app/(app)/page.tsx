@@ -8,6 +8,9 @@ import { ActionItem } from "@/components/dashboard/action-item";
 import { ChannelOverview } from "@/components/dashboard/channel-overview";
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { WeeklyContentCalendar } from "@/components/dashboard/weekly-content-calendar";
+import { SocialMediaPerformance } from "@/components/dashboard/social-media-performance";
+import { MetaAdsSummary } from "@/components/dashboard/meta-ads-summary";
+import { WebsiteSummary } from "@/components/dashboard/website-summary";
 import { MomentumBanner } from "@/components/dashboard/momentum-banner";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import {
@@ -19,18 +22,29 @@ import {
   getChannelOverview,
   getUpcomingEvents,
   getWeeklyCalendar,
+  getSocialMediaBreakdown,
+  getPerformanceSummary,
 } from "@/lib/data";
 
 export default async function OverviewPage() {
   const client = await getCurrentClient();
-  const [delivery, quickStats, attentionItems, activity, channelRows, upcomingEvents, weeklyCalendar] = await Promise.all([
+
+  // Setiap fetch di bawah HANYA dipanggil kalau service terkait aktif untuk
+  // client ini (client.socialMediaActive/metaAdsActive/websiteActive —
+  // kolom yang sudah ada di tabel `clients` sejak migration 0009, dipakai
+  // dengan cara sama persis oleh Admin Portal sendiri). Ini satu-satunya
+  // sumber kebenaran "service aktif" — tidak ada konfigurasi baru, tidak
+  // ada hardcode per-client.
+  const [delivery, quickStats, attentionItems, activity, channelRows, upcomingEvents, weeklyCalendar, socialBreakdown, performanceSummary] = await Promise.all([
     getMonthlyDelivery(client.id),
     getQuickStats(client.id),
     getAttentionItems(client.id),
     getRecentActivity(client.id),
-    getChannelOverview(client.id),
+    getChannelOverview(client),
     getUpcomingEvents(client.id),
     getWeeklyCalendar(client.id),
+    client.socialMediaActive ? getSocialMediaBreakdown(client.id) : Promise.resolve([]),
+    client.metaAdsActive || client.websiteActive ? getPerformanceSummary(client.id) : Promise.resolve(null),
   ]);
 
   return (
@@ -44,6 +58,59 @@ export default async function OverviewPage() {
             <MonthlyDeliveryHero {...delivery} />
 
             <QuickStats stats={quickStats} />
+
+            {/* Social Media Performance — HANYA render kalau service-nya aktif
+                DAN memang ada platform yang pernah dikonfigurasi (content_targets).
+                Platform per-item (Instagram/TikTok/Facebook dst) sudah ter-filter
+                sendiri di dalam getSocialMediaBreakdown — tidak perlu toggle
+                tambahan di sini. */}
+            {client.socialMediaActive && socialBreakdown.length > 0 && (
+              <Card>
+                <SectionHeading
+                  title="Social Media Performance"
+                  action={
+                    <a href="/social-media" className="font-data text-xs font-semibold text-accent hover:underline">
+                      Lihat detail
+                    </a>
+                  }
+                />
+                <SocialMediaPerformance platforms={socialBreakdown} />
+              </Card>
+            )}
+
+            {/* Meta Ads & Website Performance — berdampingan kalau dua-duanya
+                aktif, masing-masing full width kalau cuma satu yang aktif,
+                dan section-nya hilang total kalau dua-duanya tidak aktif. */}
+            {(client.metaAdsActive || client.websiteActive) && (
+              <div className={`grid grid-cols-1 gap-6 ${client.metaAdsActive && client.websiteActive ? "xl:grid-cols-2" : ""}`}>
+                {client.metaAdsActive && (
+                  <Card>
+                    <SectionHeading
+                      title="Meta Ads Performance"
+                      action={
+                        <a href="/meta-ads" className="font-data text-xs font-semibold text-accent hover:underline">
+                          Lihat laporan
+                        </a>
+                      }
+                    />
+                    <MetaAdsSummary metrics={performanceSummary?.metaAds ?? []} />
+                  </Card>
+                )}
+                {client.websiteActive && (
+                  <Card>
+                    <SectionHeading
+                      title="Website Performance"
+                      action={
+                        <a href="/performance" className="font-data text-xs font-semibold text-accent hover:underline">
+                          Lihat laporan
+                        </a>
+                      }
+                    />
+                    <WebsiteSummary metrics={performanceSummary?.website ?? []} />
+                  </Card>
+                )}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
               <Card>
@@ -80,10 +147,12 @@ export default async function OverviewPage() {
               </a>
             </Card>
 
-            <Card>
-              <SectionHeading title="Channel Overview (This Month)" action={<a href="/reports" className="font-data text-xs font-semibold text-accent hover:underline">Lihat laporan</a>} />
-              <ChannelOverview rows={channelRows} />
-            </Card>
+            {channelRows.length > 0 && (
+              <Card>
+                <SectionHeading title="Channel Overview (This Month)" action={<a href="/reports" className="font-data text-xs font-semibold text-accent hover:underline">Lihat laporan</a>} />
+                <ChannelOverview rows={channelRows} />
+              </Card>
+            )}
 
             <Card>
               <SectionHeading title="Upcoming This Month" action={<a href="/reports" className="font-data text-xs font-semibold text-accent hover:underline">Lihat kalender</a>} />

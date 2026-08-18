@@ -16,7 +16,7 @@ export default async function SocialMediaPage() {
   const client = await getCurrentClient();
   const [{ social, topContent }, channelRows] = await Promise.all([
     getPerformanceSummary(client.id),
-    getChannelOverview(client.id),
+    getChannelOverview(client),
   ]);
 
   const latest = social.at(-1);

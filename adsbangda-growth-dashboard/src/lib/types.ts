@@ -146,6 +146,18 @@ export interface ContentTarget {
   target: number;
 }
 
+/**
+ * Breakdown per-platform buat card "Social Media Performance" di Overview —
+ * satu entri per platform yang PERNAH punya content_targets (lihat
+ * getSocialMediaBreakdown di lib/data.ts). Platform yang belum pernah
+ * dikonfigurasi tidak akan pernah muncul di array ini — bukan filter di
+ * level komponen, tapi memang tidak pernah ke-query.
+ */
+export interface SocialPlatformSummary {
+  platform: SocialPlatform;
+  items: { contentType: string; completed: number; target: number }[];
+}
+
 export interface WebsiteActivityEntry {
   id: string;
   clientId: string;
@@ -254,7 +266,7 @@ export interface ActivityEntry {
   thumbnailCount?: number;
 }
 
-export type ChannelIcon = "instagram" | "facebook" | "tiktok" | "reach";
+export type ChannelIcon = "instagram" | "facebook" | "tiktok" | "reach" | "meta_ads" | "website";
 
 export interface ChannelOverviewRow {
   id: string;

@@ -1,4 +1,4 @@
-import { Users, Music2 } from "lucide-react";
+import { Users, Music2, Infinity as InfinityIcon, Globe } from "lucide-react";
 import { InstagramGlyph, FacebookGlyph } from "./platform-icons";
 import { Sparkline } from "./sparkline";
 import type { ChannelIcon, ChannelOverviewRow } from "@/lib/types";
@@ -8,6 +8,8 @@ const ICON_MAP: Record<ChannelIcon, { Icon: React.ComponentType<{ className?: st
   facebook: { Icon: FacebookGlyph, iconClass: "text-blue-600", bgClass: "bg-blue-50" },
   tiktok: { Icon: Music2, iconClass: "text-ink", bgClass: "bg-black/5" },
   reach: { Icon: Users, iconClass: "text-accent", bgClass: "bg-accent-soft" },
+  meta_ads: { Icon: InfinityIcon, iconClass: "text-accent", bgClass: "bg-accent-soft" },
+  website: { Icon: Globe, iconClass: "text-emerald-600", bgClass: "bg-emerald-50" },
 };
 
 export function ChannelOverview({ rows }: { rows: ChannelOverviewRow[] }) {

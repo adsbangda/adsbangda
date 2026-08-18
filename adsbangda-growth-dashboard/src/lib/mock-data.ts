@@ -20,6 +20,7 @@ import type {
   FileEntry,
   Goal,
   ContentTarget,
+  SocialPlatformSummary,
   WebsiteActivityEntry,
   ApprovalHistoryEntry,
 } from "./types";
@@ -164,7 +165,23 @@ export const mockChannelOverview: ChannelOverviewRow[] = [
   { id: "co1", icon: "instagram", label: "Instagram", metricLabel: "Engagement Rate", value: "3.82%", deltaLabel: "↑ 12.5%", sparkline: [4, 5, 4.5, 6, 5.5, 7, 6.8] },
   { id: "co2", icon: "facebook", label: "Facebook", metricLabel: "Engagement Rate", value: "2.45%", deltaLabel: "↑ 10.3%", sparkline: [3, 3.2, 2.8, 3.5, 3.1, 3.8, 3.6] },
   { id: "co3", icon: "tiktok", label: "TikTok", metricLabel: "Engagement Rate", value: "5.12%", deltaLabel: "↑ 18.6%", sparkline: [4, 4.5, 5, 4.8, 5.5, 6, 5.8] },
-  { id: "co4", icon: "reach", label: "Total Reach", metricLabel: "Seluruh Platform", value: "128.430", deltaLabel: "↑ 16.2%", sparkline: [90, 95, 100, 98, 110, 120, 128] },
+  { id: "co4", icon: "meta_ads", label: "Meta Ads", metricLabel: "Lead Masuk", value: "58", deltaLabel: "↑ 9.4%", sparkline: [41, 47, 44, 53, 58, 58, 58] },
+  { id: "co5", icon: "website", label: "Website", metricLabel: "Pengunjung", value: "6.480", deltaLabel: "↑ 6.2%", sparkline: [5200, 5600, 5450, 6100, 6480, 6480, 6480] },
+];
+
+export const mockSocialMediaBreakdown: SocialPlatformSummary[] = [
+  {
+    platform: "instagram",
+    items: [
+      { contentType: "feed", completed: 2, target: 20 },
+      { contentType: "story", completed: 8, target: 15 },
+      { contentType: "reels", completed: 4, target: 5 },
+    ],
+  },
+  {
+    platform: "tiktok",
+    items: [{ contentType: "video", completed: 8, target: 12 }],
+  },
 ];
 
 export const mockUpcomingEvents: UpcomingEvent[] = [

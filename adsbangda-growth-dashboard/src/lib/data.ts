@@ -34,12 +34,13 @@ import {
   mockMonthlyDelivery,
   mockQuickStats,
   mockChannelOverview,
+  mockSocialMediaBreakdown,
   mockUpcomingEvents,
   mockWeeklyCalendar,
   mockFiles,
   marketingInsight,
 } from "./mock-data";
-import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar, DeliveryIcon, ChannelOverviewRow, AttentionItem, UpcomingEvent } from "./types";
+import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar, DeliveryIcon, ChannelOverviewRow, AttentionItem, UpcomingEvent, SocialPlatformSummary } from "./types";
 
 const MONTH_LABEL_ID = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
 
@@ -226,60 +227,129 @@ export async function getQuickStats(clientId: string) {
  * platform per tanggal. Tabel `channel_overview` (skema awal) ditinggalkan
  * karena tidak ada admin UI yang menulis ke situ.
  */
-export async function getChannelOverview(clientId: string): Promise<ChannelOverviewRow[]> {
+/**
+ * Diturunkan dari snapshot `performance_metrics` — engagement rate per
+ * platform social (7 snapshot terakhir jadi sparkline), PLUS Meta Ads
+ * (Lead Masuk) dan Website (Pengunjung) sebagai baris tambahan — PERSIS
+ * susunan "Channel Overview" di desain (Instagram/TikTok/Facebook/Meta
+ * Ads/Website).
+ *
+ * Conditional rendering di sini didorong oleh DUA sinyal:
+ *   1. `client.socialMediaActive`/`metaAdsActive`/`websiteActive` — flag
+ *      service level yang SUDAH ADA di kolom `clients` (migration 0009),
+ *      bukan konfigurasi baru yang saya buat.
+ *   2. Presensi baris `performance_metrics` per platform — platform social
+ *      yang belum pernah ada snapshot performance-nya otomatis tidak
+ *      pernah muncul (bukan di-filter manual, memang tidak pernah masuk
+ *      query result), jadi tidak perlu toggle per-channel terpisah untuk
+ *      Instagram/TikTok/Facebook.
+ */
+export async function getChannelOverview(client: Client): Promise<ChannelOverviewRow[]> {
   if (!isSupabaseConfigured) return mockChannelOverview;
 
   const supabase = await createClient();
-  const { data } = await supabase!
-    .from("performance_metrics")
-    .select("*")
-    .eq("client_id", clientId)
-    .eq("channel", "social")
-    .order("date", { ascending: true });
-
+  const { data } = await supabase!.from("performance_metrics").select("*").eq("client_id", client.id).order("date", { ascending: true });
   const metrics = (data ?? []).map(mapPerformanceMetric);
-  if (metrics.length === 0) return [];
-
-  const ICON_MAP: Record<string, "instagram" | "facebook" | "tiktok"> = { instagram: "instagram", facebook: "facebook", tiktok: "tiktok" };
-  const platforms = Array.from(new Set(metrics.map((m) => m.platform))).filter((p): p is "instagram" | "facebook" | "tiktok" => !!p && p in ICON_MAP);
 
   const pctDelta = (latest: number, prev: number | undefined) => (prev != null && prev > 0 ? Math.round(((latest - prev) / prev) * 1000) / 10 : null);
   const deltaLabel = (delta: number | null) => (delta == null ? "—" : `${delta >= 0 ? "↑" : "↓"} ${Math.abs(delta)}%`);
 
-  const rows: ChannelOverviewRow[] = platforms.map((platform) => {
-    const history = metrics.filter((m) => m.platform === platform).slice(-7);
-    const latest = history[history.length - 1];
-    const prev = history.length > 1 ? history[history.length - 2] : undefined;
-    const latestRate = latest?.engagementRate ?? 0;
-    const delta = pctDelta(latestRate, prev?.engagementRate);
+  const rows: ChannelOverviewRow[] = [];
 
-    return {
-      id: platform,
-      icon: ICON_MAP[platform],
-      label: platform.charAt(0).toUpperCase() + platform.slice(1),
-      metricLabel: "Engagement Rate",
-      value: `${latestRate.toFixed(2)}%`,
-      deltaLabel: deltaLabel(delta),
-      sparkline: history.map((h) => h.engagementRate ?? 0),
-    };
-  });
+  if (client.socialMediaActive) {
+    const social = metrics.filter((m) => m.channel === "social");
+    const ICON_MAP: Record<string, "instagram" | "facebook" | "tiktok"> = { instagram: "instagram", facebook: "facebook", tiktok: "tiktok" };
+    const platforms = Array.from(new Set(social.map((m) => m.platform))).filter((p): p is "instagram" | "facebook" | "tiktok" => !!p && p in ICON_MAP);
 
-  const dates = Array.from(new Set(metrics.map((m) => m.date))).sort();
-  const reachByDate = dates.map((d) => metrics.filter((m) => m.date === d).reduce((sum, m) => sum + (m.reach ?? 0), 0)).slice(-7);
-  const latestReach = reachByDate[reachByDate.length - 1] ?? 0;
-  const prevReach = reachByDate.length > 1 ? reachByDate[reachByDate.length - 2] : undefined;
+    for (const platform of platforms) {
+      const history = social.filter((m) => m.platform === platform).slice(-7);
+      const latest = history[history.length - 1];
+      const prev = history.length > 1 ? history[history.length - 2] : undefined;
+      const latestRate = latest?.engagementRate ?? 0;
+      rows.push({
+        id: platform,
+        icon: ICON_MAP[platform],
+        label: platform.charAt(0).toUpperCase() + platform.slice(1),
+        metricLabel: "Engagement Rate",
+        value: `${latestRate.toFixed(2)}%`,
+        deltaLabel: deltaLabel(pctDelta(latestRate, prev?.engagementRate)),
+        sparkline: history.map((h) => h.engagementRate ?? 0),
+      });
+    }
+  }
 
-  rows.push({
-    id: "reach",
-    icon: "reach",
-    label: "Total Reach",
-    metricLabel: "Seluruh Platform",
-    value: new Intl.NumberFormat("id-ID").format(latestReach),
-    deltaLabel: deltaLabel(pctDelta(latestReach, prevReach)),
-    sparkline: reachByDate,
-  });
+  if (client.metaAdsActive) {
+    const metaAds = metrics.filter((m) => m.channel === "meta_ads").slice(-7);
+    if (metaAds.length > 0) {
+      const latest = metaAds[metaAds.length - 1];
+      const prev = metaAds.length > 1 ? metaAds[metaAds.length - 2] : undefined;
+      rows.push({
+        id: "meta_ads",
+        icon: "meta_ads",
+        label: "Meta Ads",
+        metricLabel: "Lead Masuk",
+        value: new Intl.NumberFormat("id-ID").format(latest?.leads ?? 0),
+        deltaLabel: deltaLabel(pctDelta(latest?.leads ?? 0, prev?.leads)),
+        sparkline: metaAds.map((m) => m.leads ?? 0),
+      });
+    }
+  }
+
+  if (client.websiteActive) {
+    const website = metrics.filter((m) => m.channel === "website").slice(-7);
+    if (website.length > 0) {
+      const latest = website[website.length - 1];
+      const prev = website.length > 1 ? website[website.length - 2] : undefined;
+      rows.push({
+        id: "website",
+        icon: "website",
+        label: "Website",
+        metricLabel: "Pengunjung",
+        value: new Intl.NumberFormat("id-ID").format(latest?.visitors ?? 0),
+        deltaLabel: deltaLabel(pctDelta(latest?.visitors ?? 0, prev?.visitors)),
+        sparkline: website.map((m) => m.visitors ?? 0),
+      });
+    }
+  }
 
   return rows;
+}
+
+/**
+ * Breakdown per-platform buat card "Social Media Performance" — target vs
+ * published bulan ini, dikelompokkan per platform. Platform dianggap
+ * "pernah diaktifkan" kalau PERNAH ada baris `content_targets` untuknya
+ * (period apa saja, bukan cuma bulan ini) — supaya platform yang bulan ini
+ * targetnya belum diisi admin tidak tiba-tiba hilang dari Overview, beda
+ * kasus dengan platform yang memang tidak pernah dipakai client ini sama
+ * sekali (lihat catatan "service aktif vs data kosong" — dua kondisi
+ * berbeda, jangan disamakan).
+ */
+export async function getSocialMediaBreakdown(clientId: string): Promise<SocialPlatformSummary[]> {
+  if (!isSupabaseConfigured) return mockSocialMediaBreakdown;
+
+  const period = currentPeriod();
+  const supabase = await createClient();
+  const [{ data: everTargetRows }, { data: currentTargetRows }, items] = await Promise.all([
+    supabase!.from("content_targets").select("platform").eq("client_id", clientId),
+    supabase!.from("content_targets").select("*").eq("client_id", clientId).eq("period", period),
+    getContentCalendar(clientId),
+  ]);
+
+  const everConfigured = Array.from(new Set((everTargetRows ?? []).map((r) => r.platform as string)));
+  const targets = (currentTargetRows ?? []).map(mapContentTarget);
+  const published = items.filter((i) => i.status === "published");
+
+  return everConfigured.map((platform) => ({
+    platform: platform as SocialPlatformSummary["platform"],
+    items: targets
+      .filter((t) => t.platform === platform)
+      .map((t) => ({
+        contentType: t.contentType,
+        completed: published.filter((i) => i.platform === platform && i.type === t.contentType).length,
+        target: t.target,
+      })),
+  }));
 }
 
 /**
