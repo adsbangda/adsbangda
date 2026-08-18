@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/dashboard/section-heading";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { buttonVariants } from "@/components/dashboard/button";
 import { DemoModeBanner } from "@/components/admin/demo-banner";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { DEMO_MODE } from "@/lib/data";
 import {
@@ -15,6 +16,7 @@ import {
   adminUnassignClient,
   adminListClients,
   adminCreateUser,
+  adminDeleteUser,
   canCreateUsersDirectly,
 } from "@/lib/admin-data";
 import { Users, KeyRound } from "lucide-react";
@@ -70,6 +72,12 @@ export default async function TeamPage() {
   async function unassignAction(formData: FormData) {
     "use server";
     await adminUnassignClient(String(formData.get("userId")), String(formData.get("clientId")));
+    revalidatePath("/admin/team");
+  }
+
+  async function deleteUserAction(formData: FormData) {
+    "use server";
+    await adminDeleteUser(String(formData.get("userId")));
     revalidatePath("/admin/team");
   }
 
@@ -161,6 +169,15 @@ export default async function TeamPage() {
                     <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
                       Ubah
                     </button>
+                  </form>
+                  <form action={deleteUserAction}>
+                    <input type="hidden" name="userId" value={u.id} />
+                    <ConfirmDeleteButton
+                      confirmMessage={`Hapus user ${u.email}? Akun ini tidak bisa dipakai login lagi dan semua akses client-nya ikut terhapus. Tindakan ini tidak bisa dibatalkan.`}
+                      className={buttonVariants({ variant: "outline", size: "sm" }) + " text-danger hover:border-danger"}
+                    >
+                      Hapus
+                    </ConfirmDeleteButton>
                   </form>
                 </div>
               </div>

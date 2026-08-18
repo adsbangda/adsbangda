@@ -7,7 +7,7 @@
 
 import { isSupabaseConfigured, createClient } from "./supabase/server";
 import { isServiceRoleConfigured, createAdminClient } from "./supabase/admin-client";
-import { requireAdmin } from "./auth";
+import { requireAdmin, getSessionUserId, getSessionRole } from "./auth";
 import {
   mapClient,
   mapProject,
@@ -870,6 +870,51 @@ export async function adminCreateUser(input: {
   }
 
   return { id: userId };
+}
+
+/**
+ * Hapus user sepenuhnya dari sistem — auth.users lewat Admin API (butuh
+ * service role, sama seperti adminCreateUser), dan baris profiles +
+ * client_users ikut terhapus otomatis lewat `on delete cascade` (lihat
+ * migration 0001 & 0002) — tidak perlu query cleanup manual.
+ *
+ * Guard tambahan di luar requireAdmin():
+ *   1. Tidak bisa hapus akun sendiri (mencegah admin mengunci dirinya
+ *      sendiri dari Admin Portal tanpa sadar).
+ *   2. Kalau target-nya super_admin/admin, pemanggil harus super_admin —
+ *      cermin dari guard privilege-escalation yang sama di admin_set_role()
+ *      (migration 0004), supaya admin biasa tidak bisa menghapus admin lain.
+ */
+export async function adminDeleteUser(userId: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    throw new Error("Butuh Supabase live untuk menghapus user — di mode demo tidak ada sistem auth sungguhan.");
+  }
+  if (!isServiceRoleConfigured()) {
+    throw new Error(
+      "Butuh SUPABASE_SERVICE_ROLE_KEY untuk menghapus user langsung dari Admin Portal (lihat .env.example)."
+    );
+  }
+
+  const currentUserId = await getSessionUserId();
+  if (currentUserId === userId) {
+    throw new Error("Tidak bisa menghapus akun yang sedang kamu pakai sendiri.");
+  }
+
+  const supabase = await createClient();
+  const { data: targetProfile } = await supabase!.from("profiles").select("role").eq("id", userId).single();
+  const targetRole = (targetProfile?.role as UserRole | undefined) ?? "client";
+
+  if ((targetRole === "super_admin" || targetRole === "admin")) {
+    const callerRole = await getSessionRole();
+    if (callerRole !== "super_admin") {
+      throw new Error("Hanya super_admin yang boleh menghapus akun admin-tier.");
+    }
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminListUsers(): Promise<AdminUserRow[]> {
