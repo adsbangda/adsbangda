@@ -13,17 +13,20 @@ import { createClient } from "@/lib/supabase/client";
  * jadi penjaga utama (baris client lain tidak akan pernah sampai ke browser
  * ini), cuma kurang efisien kalau banyak client lain berubah bersamaan.
  * Trade-off yang wajar untuk ukuran agency saat ini.
+ *
+ * SENGAJA TIDAK termasuk delivery_meta/delivery_items/attention_items/
+ * channel_overview/upcoming_events — tabel-tabel skema awal yang sudah
+ * tidak dibaca lagi oleh lib/data.ts (lihat komentar di getMonthlyDelivery/
+ * getAttentionItems/getChannelOverview/getUpcomingEvents), jadi tidak ada
+ * gunanya dipantau. quick_stats & activity_log masih dipantau walau juga
+ * belum ada admin UI yang menulis ke situ — biar konsisten sampai
+ * getQuickStats()/getRecentActivity() ikut di-rewire ke sumber data asli.
  */
 const CLIENT_SCOPED_TABLES: { table: string; filterColumn: "id" | "client_id" | null }[] = [
   { table: "clients", filterColumn: "id" },
   { table: "projects", filterColumn: "client_id" },
   { table: "project_tasks", filterColumn: null },
-  { table: "delivery_meta", filterColumn: "client_id" },
-  { table: "delivery_items", filterColumn: "client_id" },
   { table: "quick_stats", filterColumn: "client_id" },
-  { table: "channel_overview", filterColumn: "client_id" },
-  { table: "upcoming_events", filterColumn: "client_id" },
-  { table: "attention_items", filterColumn: "client_id" },
   { table: "activity_log", filterColumn: "client_id" },
   { table: "content_items", filterColumn: "client_id" },
   { table: "content_approval_history", filterColumn: null },

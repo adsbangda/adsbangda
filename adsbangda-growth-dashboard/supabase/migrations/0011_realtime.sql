@@ -30,12 +30,7 @@ begin
     'clients',
     'projects',
     'project_tasks',
-    'delivery_meta',
-    'delivery_items',
     'quick_stats',
-    'channel_overview',
-    'upcoming_events',
-    'attention_items',
     'activity_log',
     'content_items',
     'content_approval_history',
@@ -47,6 +42,16 @@ begin
     'website_activity'
   ]
   loop
+    -- REPLICA IDENTITY FULL — supaya event DELETE ikut membawa nilai kolom
+    -- non-primary-key (mis. client_id) di payload "old record"-nya. Tanpa
+    -- ini, default REPLICA IDENTITY cuma menyertakan primary key saat baris
+    -- dihapus, jadi filter `client_id=eq.<id>` di RealtimeRefresh TIDAK
+    -- akan pernah match untuk event DELETE — hapus attention item/report/
+    -- file dsb tidak akan memicu live-refresh, walau INSERT/UPDATE tetap
+    -- normal. Aman & murah (tabel-tabel ini kecil, bukan tabel besar
+    -- volume-tinggi), jadi tidak perlu dipikirkan trade-off storage-nya.
+    execute format('alter table %I replica identity full', t);
+
     if not exists (
       select 1 from pg_publication_tables
       where pubname = 'supabase_realtime' and tablename = t

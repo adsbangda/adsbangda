@@ -137,6 +137,31 @@ otomatis narik data terbaru sendiri, tanpa siapa pun perlu menekan reload.
 - Mode Demo: no-op total (tidak ada Supabase = tidak ada apa pun untuk
   didengar), jadi aman dipasang tanpa syarat di kedua layout.
 
+### Overview Client Portal — disambungkan ulang ke data asli
+
+Sebelumnya `getMonthlyDelivery`, `getAttentionItems`, `getChannelOverview`,
+`getUpcomingEvents` (`src/lib/data.ts`) membaca 5 tabel peninggalan skema
+awal (`delivery_meta`, `delivery_items`, `attention_items`,
+`channel_overview`, `upcoming_events`) yang **tidak ada satu pun admin UI
+yang menulis ke situ** — jadi widget "Progress Bulan Ini", "Needs Your
+Attention", "Channel Overview", dan "Upcoming" di Overview tidak akan
+pernah berubah walau Live Sync sudah aktif, karena memang tidak ada
+perubahan data untuk dipantau.
+
+Sudah di-rewire supaya baca dari sumber yang SAMA dengan yang Admin Portal
+pakai sendiri (`content_items`, `content_targets`, `performance_metrics`)
+— mirroring persis logika `adminComputeOverallProgress()` dan komputasi
+lain di `src/app/admin/clients/[clientId]/page.tsx`, supaya angka yang
+client lihat selalu sama dengan yang admin lihat, dan otomatis ikut Live
+Sync begitu admin mengedit Content List / Content Delivery target /
+Performance snapshot.
+
+**Belum ikut di-rewire** (masih baca tabel lama tanpa admin UI, tapi tidak
+ada di 4 widget yang dilaporkan): `getQuickStats()` (`quick_stats`) dan
+`getRecentActivity()` (`activity_log`) — "What AdsBangda Did" & angka
+Quick Stats di atasnya. Sama kelasnya dengan bug di atas, cuma belum
+diprioritaskan karena belum dilaporkan.
+
 ## Yang diperbaiki dari MVP sebelumnya
 
 Waktu bikin migration 0002, ditemukan beberapa mismatch antara skema 0001

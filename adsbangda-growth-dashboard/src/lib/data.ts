@@ -6,19 +6,17 @@
 import { revalidatePath } from "next/cache";
 import { isSupabaseConfigured, createClient } from "./supabase/server";
 import { ClientNotAssignedError, getSessionUserId } from "./auth";
+import { formatDateID } from "./utils";
 import {
   mapProject,
   mapProjectTask,
   mapPerformanceMetric,
   mapContentItem,
+  mapContentTarget,
   mapReportItem,
   mapFileEntry,
-  mapAttentionItem,
   mapActivityEntry,
-  mapDeliveryItem,
   mapQuickStat,
-  mapChannelOverviewRow,
-  mapUpcomingEvent,
 } from "./mappers";
 import {
   mockClient,
@@ -41,7 +39,9 @@ import {
   mockFiles,
   marketingInsight,
 } from "./mock-data";
-import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar } from "./types";
+import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar, DeliveryIcon, ChannelOverviewRow, AttentionItem, UpcomingEvent } from "./types";
+
+const MONTH_LABEL_ID = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
 
 export const DEMO_MODE = !isSupabaseConfigured;
 
@@ -108,18 +108,28 @@ export async function getActiveProject(clientId: string): Promise<{
   };
 }
 
-export async function getAttentionItems(clientId: string) {
+/**
+ * Diturunkan LANGSUNG dari content_items (approval_required + approval_status)
+ * — bukan tabel `attention_items` terpisah, yang ternyata tidak pernah
+ * ditulis dari mana pun di Admin Portal (peninggalan skema awal, orphan
+ * sejak Phase 3+ memindahkan approval workflow ke content_items). Ini
+ * PERSIS logika yang sama dipakai halaman /content-calendar sendiri untuk
+ * "Needs Your Approval", supaya definisi "butuh perhatian kamu" konsisten
+ * di seluruh Client Portal.
+ */
+export async function getAttentionItems(clientId: string): Promise<AttentionItem[]> {
   if (!isSupabaseConfigured) return mockAttentionItems;
 
-  const supabase = await createClient();
-  const { data } = await supabase!
-    .from("attention_items")
-    .select("*")
-    .eq("client_id", clientId)
-    .eq("resolved", false)
-    .order("created_at", { ascending: false });
+  const items = await getContentCalendar(clientId);
+  const needsApproval = items.filter((i) => i.approvalRequired && (i.approvalStatus === "pending" || !i.approvalStatus));
 
-  return (data ?? []).map(mapAttentionItem);
+  return needsApproval.map((item) => ({
+    id: item.id,
+    icon: "approval",
+    title: `Menunggu persetujuan kamu: ${item.title}`,
+    description: `${item.platform} · ${item.type} · ${formatDateID(item.plannedDate)}`,
+    href: "/content-calendar",
+  }));
 }
 
 export async function getRecentActivity(clientId: string) {
@@ -136,36 +146,62 @@ export async function getRecentActivity(clientId: string) {
   return (data ?? []).map(mapActivityEntry);
 }
 
+/**
+ * Diturunkan dari `content_targets` (target per platform+jenis konten yang
+ * admin isi di Social Media → Content Delivery) dibandingkan konten
+ * `content_items` berstatus "published" — PERSIS logika yang sama dengan
+ * `adminComputeOverallProgress()` di admin-data.ts, supaya angka yang
+ * client lihat di Overview selalu sama dengan yang admin lihat. Tabel
+ * `delivery_meta`/`delivery_items`/view `delivery_progress` (skema awal)
+ * ditinggalkan di sini karena tidak ada satu pun admin UI yang menulis ke
+ * situ lagi — nulis ke situ manual lewat Table Editor tidak akan pernah
+ * konsisten dengan apa yang admin lihat sendiri di layarnya.
+ */
 export async function getMonthlyDelivery(clientId: string): Promise<MonthlyDeliveryHero> {
   if (!isSupabaseConfigured) return mockMonthlyDelivery;
 
+  const period = currentPeriod();
   const supabase = await createClient();
-  const { data: metaRow } = await supabase!
-    .from("delivery_meta")
-    .select("*")
-    .eq("client_id", clientId)
-    .order("period", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const period = (metaRow?.period as string | undefined) ?? currentPeriod();
-
-  const [{ data: itemRows }, { data: progressRow }] = await Promise.all([
-    supabase!.from("delivery_items").select("*").eq("client_id", clientId).eq("period", period).order("sort_order"),
-    supabase!.from("delivery_progress").select("overall_pct").eq("client_id", clientId).eq("period", period).maybeSingle(),
+  const [{ data: targetRows }, items] = await Promise.all([
+    supabase!.from("content_targets").select("*").eq("client_id", clientId).eq("period", period),
+    getContentCalendar(clientId),
   ]);
 
+  const targets = (targetRows ?? []).map(mapContentTarget);
+  const published = items.filter((i) => i.status === "published");
+
+  const totalTarget = targets.reduce((sum, t) => sum + t.target, 0);
+  const totalDelivered = published.length;
+  const overallPct = totalTarget > 0 ? Math.min(100, Math.round((totalDelivered / totalTarget) * 100)) : 0;
+
+  const DELIVERY_ICON: Record<string, DeliveryIcon> = {
+    instagram: "instagram",
+    facebook: "facebook",
+    tiktok: "tiktok",
+  };
+
+  const status: MonthlyDeliveryHero["status"] =
+    totalTarget === 0 ? "on_track" : overallPct >= 100 ? "completed" : overallPct >= 60 ? "on_track" : overallPct >= 30 ? "at_risk" : "delayed";
+
   return {
-    periodLabel: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date(`${period}-01`)),
-    overallPct: (progressRow?.overall_pct as number | undefined) ?? 0,
-    status: (metaRow?.status as MonthlyDeliveryHero["status"]) ?? "on_track",
-    helperText: (metaRow?.helper_text as string) ?? "",
-    items: (itemRows ?? []).map(mapDeliveryItem),
+    periodLabel: new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(new Date(`${period}-01`)),
+    overallPct,
+    status,
+    helperText:
+      totalTarget > 0 ? `${totalDelivered} dari ${totalTarget} konten sudah published bulan ini.` : "Belum ada target content untuk periode ini — hubungi tim Adsbangda.",
+    items: targets.map((t) => ({
+      id: t.id,
+      icon: DELIVERY_ICON[t.platform] ?? "calendar",
+      label: `${t.platform.charAt(0).toUpperCase()}${t.platform.slice(1)} · ${t.contentType}`,
+      completed: published.filter((i) => i.platform === t.platform && i.type === t.contentType).length,
+      target: t.target,
+      unit: "konten",
+    })),
     meta: {
-      periodRange: (metaRow?.period_range as string) ?? "",
-      lastUpdated: (metaRow?.last_updated as string) ?? "",
-      agreedDate: (metaRow?.agreed_date as string) ?? "",
-      contractHref: (metaRow?.contract_href as string) ?? "/reports",
+      periodRange: new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${period}-01`)),
+      lastUpdated: "—",
+      agreedDate: "—",
+      contractHref: "/reports",
     },
   };
 }
@@ -183,32 +219,95 @@ export async function getQuickStats(clientId: string) {
   return (data ?? []).map(mapQuickStat);
 }
 
-export async function getChannelOverview(clientId: string) {
+/**
+ * Diturunkan dari snapshot `performance_metrics` (channel='social') yang
+ * admin isi di Social Media → Performance — engagement rate per platform
+ * (7 snapshot terakhir jadi sparkline) + Total Reach gabungan semua
+ * platform per tanggal. Tabel `channel_overview` (skema awal) ditinggalkan
+ * karena tidak ada admin UI yang menulis ke situ.
+ */
+export async function getChannelOverview(clientId: string): Promise<ChannelOverviewRow[]> {
   if (!isSupabaseConfigured) return mockChannelOverview;
 
   const supabase = await createClient();
   const { data } = await supabase!
-    .from("channel_overview")
+    .from("performance_metrics")
     .select("*")
     .eq("client_id", clientId)
-    .order("sort_order");
+    .eq("channel", "social")
+    .order("date", { ascending: true });
 
-  return (data ?? []).map(mapChannelOverviewRow);
+  const metrics = (data ?? []).map(mapPerformanceMetric);
+  if (metrics.length === 0) return [];
+
+  const ICON_MAP: Record<string, "instagram" | "facebook" | "tiktok"> = { instagram: "instagram", facebook: "facebook", tiktok: "tiktok" };
+  const platforms = Array.from(new Set(metrics.map((m) => m.platform))).filter((p): p is "instagram" | "facebook" | "tiktok" => !!p && p in ICON_MAP);
+
+  const pctDelta = (latest: number, prev: number | undefined) => (prev != null && prev > 0 ? Math.round(((latest - prev) / prev) * 1000) / 10 : null);
+  const deltaLabel = (delta: number | null) => (delta == null ? "—" : `${delta >= 0 ? "↑" : "↓"} ${Math.abs(delta)}%`);
+
+  const rows: ChannelOverviewRow[] = platforms.map((platform) => {
+    const history = metrics.filter((m) => m.platform === platform).slice(-7);
+    const latest = history[history.length - 1];
+    const prev = history.length > 1 ? history[history.length - 2] : undefined;
+    const latestRate = latest?.engagementRate ?? 0;
+    const delta = pctDelta(latestRate, prev?.engagementRate);
+
+    return {
+      id: platform,
+      icon: ICON_MAP[platform],
+      label: platform.charAt(0).toUpperCase() + platform.slice(1),
+      metricLabel: "Engagement Rate",
+      value: `${latestRate.toFixed(2)}%`,
+      deltaLabel: deltaLabel(delta),
+      sparkline: history.map((h) => h.engagementRate ?? 0),
+    };
+  });
+
+  const dates = Array.from(new Set(metrics.map((m) => m.date))).sort();
+  const reachByDate = dates.map((d) => metrics.filter((m) => m.date === d).reduce((sum, m) => sum + (m.reach ?? 0), 0)).slice(-7);
+  const latestReach = reachByDate[reachByDate.length - 1] ?? 0;
+  const prevReach = reachByDate.length > 1 ? reachByDate[reachByDate.length - 2] : undefined;
+
+  rows.push({
+    id: "reach",
+    icon: "reach",
+    label: "Total Reach",
+    metricLabel: "Seluruh Platform",
+    value: new Intl.NumberFormat("id-ID").format(latestReach),
+    deltaLabel: deltaLabel(pctDelta(latestReach, prevReach)),
+    sparkline: reachByDate,
+  });
+
+  return rows;
 }
 
-export async function getUpcomingEvents(clientId: string) {
+/**
+ * Diturunkan dari `content_items` berstatus "scheduled" (konten yang sudah
+ * dijadwalkan tapi belum publish) — bukan tabel `upcoming_events` terpisah
+ * yang tidak ada admin UI-nya. Mirroring persis "Upcoming" di Admin
+ * Portal (adminGetClient's scheduledContent).
+ */
+export async function getUpcomingEvents(clientId: string): Promise<UpcomingEvent[]> {
   if (!isSupabaseConfigured) return mockUpcomingEvents;
 
-  const supabase = await createClient();
-  const { data } = await supabase!
-    .from("upcoming_events")
-    .select("*")
-    .eq("client_id", clientId)
-    .gte("event_date", new Date().toISOString().slice(0, 10))
-    .order("event_date")
-    .limit(5);
+  const items = await getContentCalendar(clientId);
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = items
+    .filter((i) => i.status === "scheduled" && i.plannedDate >= today)
+    .sort((a, b) => a.plannedDate.localeCompare(b.plannedDate))
+    .slice(0, 5);
 
-  return (data ?? []).map(mapUpcomingEvent);
+  return upcoming.map((item) => {
+    const d = new Date(`${item.plannedDate}T00:00:00Z`);
+    return {
+      id: item.id,
+      day: String(d.getUTCDate()),
+      month: MONTH_LABEL_ID[d.getUTCMonth()],
+      title: item.title,
+      timeLabel: `${item.platform} · ${item.type}`,
+    };
+  });
 }
 
 const PLATFORM_BUCKET: Record<string, "instagram_feed" | "instagram_story" | "facebook_post" | "tiktok_post" | null> = {
