@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/dashboard/empty-state";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { ClientAvatar } from "@/components/admin/client-avatar";
 import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
+import { PillTabs } from "@/components/admin/pill-tabs";
 import { adminListClientsOverview, adminUpdateClient, adminDeleteClient } from "@/lib/admin-data";
 import { formatDateID } from "@/lib/utils";
 
@@ -16,20 +17,27 @@ const STATUS_FILTERS = [
   { value: "active", label: "Active" },
   { value: "onboarding", label: "Onboarding" },
   { value: "paused", label: "Paused" },
-  { value: "archived", label: "Archived" },
 ];
 
 export default async function AdminClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; view?: string }>;
 }) {
-  const { q = "", status = "" } = await searchParams;
+  const { q = "", status = "", view = "active" } = await searchParams;
+  const isArchivedView = view === "archived";
   const allClients = await adminListClientsOverview();
 
-  const clients = allClients.filter((c) => {
+  // Archived SENGAJA dipisah jadi tab sendiri, bukan salah satu pilihan di
+  // dropdown status — supaya client yang sudah "selesai kerja sama untuk
+  // sekarang" tidak nyampur di grid utama sama yang masih berjalan aktif.
+  const activeClients = allClients.filter((c) => c.status !== "archived");
+  const archivedClients = allClients.filter((c) => c.status === "archived");
+  const baseList = isArchivedView ? archivedClients : activeClients;
+
+  const clients = baseList.filter((c) => {
     const matchesQuery = q ? c.name.toLowerCase().includes(q.toLowerCase()) || c.industry.toLowerCase().includes(q.toLowerCase()) : true;
-    const matchesStatus = status ? c.status === status : true;
+    const matchesStatus = !isArchivedView && status ? c.status === status : true;
     return matchesQuery && matchesStatus;
   });
 
@@ -62,7 +70,17 @@ export default async function AdminClientsPage({
           </Link>
         </div>
 
+        <div className="mb-5 max-w-sm">
+          <PillTabs
+            items={[
+              { href: "/admin/clients?view=active", label: `Aktif · ${activeClients.length}`, active: !isArchivedView },
+              { href: "/admin/clients?view=archived", label: `Archived · ${archivedClients.length}`, active: isArchivedView },
+            ]}
+          />
+        </div>
+
         <form className="mb-5 flex flex-wrap items-center gap-2" action="/admin/clients">
+          <input type="hidden" name="view" value={view} />
           <div className="relative flex-1 min-w-[200px] max-w-xs">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" strokeWidth={1.75} />
             <input
@@ -73,26 +91,35 @@ export default async function AdminClientsPage({
               className="w-full rounded-[var(--radius-md)] border border-border py-2 pl-8 pr-3 text-xs text-ink outline-none focus:border-ink"
             />
           </div>
-          <select
-            name="status"
-            defaultValue={status}
-            className="rounded-[var(--radius-md)] border border-border px-3 py-2 text-xs text-ink outline-none focus:border-ink"
-          >
-            {STATUS_FILTERS.map((f) => (
-              <option key={f.value} value={f.value}>
-                {f.label}
-              </option>
-            ))}
-          </select>
+          {!isArchivedView && (
+            <select
+              name="status"
+              defaultValue={status}
+              className="rounded-[var(--radius-md)] border border-border px-3 py-2 text-xs text-ink outline-none focus:border-ink"
+            >
+              {STATUS_FILTERS.map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          )}
           <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
             Filter
           </button>
           {(q || status) && (
-            <Link href="/admin/clients" className="font-data text-xs text-muted hover:text-ink hover:underline">
+            <Link href={`/admin/clients?view=${view}`} className="font-data text-xs text-muted hover:text-ink hover:underline">
               Reset
             </Link>
           )}
         </form>
+
+        {isArchivedView && archivedClients.length > 0 && (
+          <p className="mb-4 text-xs text-muted">
+            Client di sini tidak muncul di daftar Aktif dan tidak dihitung di laporan berjalan — datanya tetap tersimpan utuh, tinggal klik{" "}
+            <ArchiveRestore className="inline h-3 w-3" strokeWidth={2} /> kapan pun kalau mereka balik lagi kerja sama.
+          </p>
+        )}
 
         {allClients.length === 0 ? (
           <Card className="flex flex-col items-center gap-3 py-12 text-center">
@@ -106,9 +133,9 @@ export default async function AdminClientsPage({
           </Card>
         ) : clients.length === 0 ? (
           <EmptyState
-            icon={Search}
-            title="Tidak ada client yang cocok"
-            description="Coba ubah kata kunci pencarian atau filter status."
+            icon={isArchivedView ? Archive : Search}
+            title={isArchivedView ? "Belum ada client yang diarsipkan" : "Tidak ada client yang cocok"}
+            description={isArchivedView ? "Client yang kamu archive dari tab Aktif akan muncul di sini." : "Coba ubah kata kunci pencarian atau filter status."}
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
