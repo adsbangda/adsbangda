@@ -208,7 +208,9 @@ export async function adminUpdateClient(
   if (input.socialMediaActive !== undefined) payload.social_media_active = input.socialMediaActive;
   if (input.metaAdsActive !== undefined) payload.meta_ads_active = input.metaAdsActive;
   if (input.websiteActive !== undefined) payload.website_active = input.websiteActive;
-  await supabase!.from("clients").update(payload).eq("id", clientId);
+  if (Object.keys(payload).length === 0) return;
+  const { error } = await supabase!.from("clients").update(payload).eq("id", clientId);
+  if (error) throw new Error(error.message);
 }
 
 /**
@@ -242,7 +244,8 @@ export async function adminDeleteClient(clientId: string) {
   }
 
   const supabase = await createClient();
-  const { data: client } = await supabase!.from("clients").select("status").eq("id", clientId).single();
+  const { data: client, error: fetchError } = await supabase!.from("clients").select("status").eq("id", clientId).single();
+  if (fetchError) throw new Error(fetchError.message);
   if (!client || client.status !== "archived") {
     throw new Error("Archive client ini dulu sebelum dihapus permanen.");
   }
