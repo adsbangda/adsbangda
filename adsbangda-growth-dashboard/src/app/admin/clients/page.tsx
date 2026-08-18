@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { Plus, ArrowRight, Building2, Search } from "lucide-react";
+import { revalidatePath } from "next/cache";
+import { Plus, ArrowRight, Building2, Search, Archive, ArchiveRestore, Trash2 } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { buttonVariants } from "@/components/dashboard/button";
 import { DemoModeBanner } from "@/components/admin/demo-banner";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { StatusBadge } from "@/components/dashboard/status-badge";
-import { adminListClientsOverview } from "@/lib/admin-data";
+import { ClientAvatar } from "@/components/admin/client-avatar";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
+import { adminListClientsOverview, adminUpdateClient, adminDeleteClient } from "@/lib/admin-data";
 import { formatDateID } from "@/lib/utils";
 
 const STATUS_FILTERS = [
@@ -29,6 +32,20 @@ export default async function AdminClientsPage({
     const matchesStatus = status ? c.status === status : true;
     return matchesQuery && matchesStatus;
   });
+
+  async function toggleArchiveAction(formData: FormData) {
+    "use server";
+    const clientId = String(formData.get("clientId"));
+    const nextStatus = String(formData.get("nextStatus")) as "archived" | "active";
+    await adminUpdateClient(clientId, { status: nextStatus });
+    revalidatePath("/admin/clients");
+  }
+
+  async function deleteClientAction(formData: FormData) {
+    "use server";
+    await adminDeleteClient(String(formData.get("clientId")));
+    revalidatePath("/admin/clients");
+  }
 
   return (
     <div className="min-h-screen">
@@ -96,41 +113,63 @@ export default async function AdminClientsPage({
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {clients.map((client) => (
-              <Link key={client.id} href={`/admin/clients/${client.id}`}>
-                <Card interactive className="h-full">
+              <Card key={client.id} className="flex h-full flex-col">
+                <div className="flex items-center justify-between">
+                  <ClientAvatar name={client.name} logoUrl={client.logoUrl} />
+                  <StatusBadge status={client.status} />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-ink">{client.name}</p>
+                <p className="text-xs text-muted">{client.industry}</p>
+
+                <div className="mt-4 space-y-1.5 border-t border-border pt-3 text-xs text-muted">
                   <div className="flex items-center justify-between">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
-                      {client.name.slice(0, 2).toUpperCase()}
-                    </span>
-                    <StatusBadge status={client.status} />
+                    <span>Services</span>
+                    <span className="text-right font-medium text-ink">{client.services.length > 0 ? client.services.join(" · ") : "—"}</span>
                   </div>
-                  <p className="mt-3 text-sm font-semibold text-ink">{client.name}</p>
-                  <p className="text-xs text-muted">{client.industry}</p>
-
-                  <div className="mt-4 space-y-1.5 border-t border-border pt-3 text-xs text-muted">
-                    <div className="flex items-center justify-between">
-                      <span>Services</span>
-                      <span className="text-right font-medium text-ink">{client.services.length > 0 ? client.services.join(" · ") : "—"}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Overall Progress</span>
-                      <span className="font-data text-base font-bold text-accent">{client.overallProgress != null ? `${client.overallProgress}%` : "—"}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Account Manager</span>
-                      <span className="font-medium text-ink">{client.accountManagerName ?? "—"}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Last Activity</span>
-                      <span className="font-data text-ink">{client.lastActivity ? formatDateID(client.lastActivity) : "—"}</span>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <span>Overall Progress</span>
+                    <span className="font-data text-base font-bold text-accent">{client.overallProgress != null ? `${client.overallProgress}%` : "—"}</span>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span>Account Manager</span>
+                    <span className="font-medium text-ink">{client.accountManagerName ?? "—"}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Last Activity</span>
+                    <span className="font-data text-ink">{client.lastActivity ? formatDateID(client.lastActivity) : "—"}</span>
+                  </div>
+                </div>
 
-                  <span className="mt-4 inline-flex items-center gap-1 font-data text-xs font-semibold text-accent">
+                <div className="mt-4 flex flex-1 items-end justify-between gap-2 border-t border-border pt-3">
+                  <Link href={`/admin/clients/${client.id}`} className="inline-flex items-center gap-1 font-data text-xs font-semibold text-accent hover:underline">
                     Kelola <ArrowRight className="h-3.5 w-3.5" />
-                  </span>
-                </Card>
-              </Link>
+                  </Link>
+                  <div className="flex items-center gap-1">
+                    <form action={toggleArchiveAction}>
+                      <input type="hidden" name="clientId" value={client.id} />
+                      <input type="hidden" name="nextStatus" value={client.status === "archived" ? "active" : "archived"} />
+                      <button
+                        type="submit"
+                        title={client.status === "archived" ? "Aktifkan lagi" : "Archive client ini"}
+                        className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-muted transition-colors hover:bg-black/[0.04] hover:text-ink"
+                      >
+                        {client.status === "archived" ? <ArchiveRestore className="h-3.5 w-3.5" strokeWidth={1.75} /> : <Archive className="h-3.5 w-3.5" strokeWidth={1.75} />}
+                      </button>
+                    </form>
+                    {client.status === "archived" && (
+                      <form action={deleteClientAction}>
+                        <input type="hidden" name="clientId" value={client.id} />
+                        <ConfirmDeleteButton
+                          confirmMessage={`Hapus "${client.name}" secara PERMANEN? Semua data — project, content, performance, report, file — ikut terhapus dan TIDAK BISA dikembalikan. Kalau cuma mau berhenti kerja sama sementara, pakai Archive saja.`}
+                          className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-muted transition-colors hover:bg-danger-soft hover:text-danger"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                        </ConfirmDeleteButton>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              </Card>
             ))}
           </div>
         )}

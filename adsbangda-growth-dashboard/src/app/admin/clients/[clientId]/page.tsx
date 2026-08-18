@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { Briefcase, Users, FileText, ArrowRight, Globe, AlertCircle, Clock } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { buttonVariants } from "@/components/dashboard/button";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import {
   adminGetClient,
   adminUpdateClient,
+  adminDeleteClient,
   adminListClientTeam,
   adminListContent,
   adminListContentTargets,
@@ -41,10 +44,17 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
       name: String(formData.get("name") ?? "").trim(),
       industry: String(formData.get("industry") ?? "").trim(),
       website: String(formData.get("website") ?? "").trim(),
+      logoUrl: String(formData.get("logoUrl") ?? "").trim(),
       description: String(formData.get("description") ?? "").trim(),
       status: String(formData.get("status") ?? currentStatus) as Client["status"],
     });
     revalidatePath(path);
+  }
+
+  async function deleteClientAction() {
+    "use server";
+    await adminDeleteClient(clientId);
+    redirect("/admin/clients");
   }
 
   const [team, content, contentTargets, socialMetrics, metaMetrics, websiteMetrics, reports, websiteActivity, overallProgress] = await Promise.all([
@@ -105,6 +115,7 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
             <option value="paused">Paused</option>
             <option value="archived">Archived</option>
           </select>
+          <input name="logoUrl" type="url" defaultValue={client.logoUrl ?? ""} placeholder="Logo URL (opsional)" className={`${inputClass} sm:col-span-2 lg:col-span-1`} />
           <textarea
             name="description"
             defaultValue={client.description ?? ""}
@@ -346,6 +357,25 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
           </Card>
         </Link>
       )}
+
+      <Card padding="lg" className="border-danger-soft bg-danger-soft/30">
+        <SectionHeading title="Danger Zone" description="Hapus client ini secara permanen — cuma bisa dilakukan super_admin, dan client harus Archived dulu." />
+        {currentStatus !== "archived" ? (
+          <p className="text-xs text-muted">
+            Ubah status client ke <span className="font-semibold text-ink">Archived</span> lewat form di atas dulu kalau memang mau berhenti kerja sama — data tetap
+            tersimpan dan bisa diaktifkan lagi kapan pun. Tombol hapus permanen muncul di sini setelah status Archived.
+          </p>
+        ) : (
+          <form action={deleteClientAction}>
+            <ConfirmDeleteButton
+              confirmMessage={`Hapus "${client.name}" secara PERMANEN? Semua data — project, content, performance, report, file — ikut terhapus dan TIDAK BISA dikembalikan.`}
+              className={buttonVariants({ variant: "outline", className: "border-danger text-danger hover:bg-danger-soft" })}
+            >
+              Hapus Client Ini Secara Permanen
+            </ConfirmDeleteButton>
+          </form>
+        )}
+      </Card>
     </div>
   );
 }

@@ -10,11 +10,12 @@ async function createClientAction(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const industry = String(formData.get("industry") ?? "").trim();
   const website = String(formData.get("website") ?? "").trim();
+  const logoUrl = String(formData.get("logoUrl") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const status = String(formData.get("status") ?? "onboarding") as Client["status"];
   if (!name) return;
 
-  const client = await adminCreateClient({ name, industry, status, website: website || undefined, description: description || undefined });
+  const client = await adminCreateClient({ name, industry, status, website: website || undefined, description: description || undefined, logoUrl: logoUrl || undefined });
   revalidatePath("/admin/clients");
   redirect(`/admin/clients/${(client as { id: string }).id}`);
 }
@@ -61,6 +62,19 @@ export default function NewClientPage() {
               placeholder="https://amaticoffee.com"
               className="w-full rounded-[var(--radius-md)] border border-border px-3 py-2 text-sm text-ink outline-none focus:border-ink"
             />
+          </div>
+          <div>
+            <label htmlFor="logoUrl" className="mb-1.5 block text-sm font-medium text-ink">
+              Logo URL <span className="font-normal text-muted">(opsional)</span>
+            </label>
+            <input
+              id="logoUrl"
+              name="logoUrl"
+              type="url"
+              placeholder="https://.../logo-client.png"
+              className="w-full rounded-[var(--radius-md)] border border-border px-3 py-2 text-sm text-ink outline-none focus:border-ink"
+            />
+            <p className="mt-1 text-xs text-muted">Link gambar yang sudah di-hosting (Drive/CDN dsb) — belum ada upload file langsung.</p>
           </div>
           <div>
             <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-ink">

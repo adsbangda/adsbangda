@@ -148,10 +148,10 @@ export async function adminGetClient(clientId: string): Promise<Client | null> {
   return clients.find((c) => c.id === clientId) ?? null;
 }
 
-export async function adminCreateClient(input: { name: string; industry: string; status: Client["status"]; website?: string; description?: string }) {
+export async function adminCreateClient(input: { name: string; industry: string; status: Client["status"]; website?: string; description?: string; logoUrl?: string }) {
   await requireAdmin();
   if (!isSupabaseConfigured) {
-    const client: Client = { id: uid(), name: input.name, industry: input.industry, status: input.status, website: input.website ?? null, description: input.description ?? null };
+    const client: Client = { id: uid(), name: input.name, industry: input.industry, status: input.status, website: input.website ?? null, description: input.description ?? null, logoUrl: input.logoUrl ?? null };
     mockClients.push(client);
     return client;
   }
@@ -159,7 +159,7 @@ export async function adminCreateClient(input: { name: string; industry: string;
   const supabase = await createClient();
   const { data, error } = await supabase!
     .from("clients")
-    .insert({ name: input.name, industry: input.industry, status: input.status, website: input.website || null, description: input.description || null })
+    .insert({ name: input.name, industry: input.industry, status: input.status, website: input.website || null, description: input.description || null, logo_url: input.logoUrl || null })
     .select()
     .single();
   if (error) throw new Error(error.message);
@@ -174,6 +174,7 @@ export async function adminUpdateClient(
     status: Client["status"];
     website: string;
     description: string;
+    logoUrl: string;
     socialMediaActive: boolean;
     metaAdsActive: boolean;
     websiteActive: boolean;
@@ -188,6 +189,7 @@ export async function adminUpdateClient(
       if (input.status !== undefined) client.status = input.status;
       if (input.website !== undefined) client.website = input.website;
       if (input.description !== undefined) client.description = input.description;
+      if (input.logoUrl !== undefined) client.logoUrl = input.logoUrl;
       if (input.socialMediaActive !== undefined) client.socialMediaActive = input.socialMediaActive;
       if (input.metaAdsActive !== undefined) client.metaAdsActive = input.metaAdsActive;
       if (input.websiteActive !== undefined) client.websiteActive = input.websiteActive;
@@ -202,10 +204,51 @@ export async function adminUpdateClient(
   if (input.status !== undefined) payload.status = input.status;
   if (input.website !== undefined) payload.website = input.website;
   if (input.description !== undefined) payload.description = input.description;
+  if (input.logoUrl !== undefined) payload.logo_url = input.logoUrl || null;
   if (input.socialMediaActive !== undefined) payload.social_media_active = input.socialMediaActive;
   if (input.metaAdsActive !== undefined) payload.meta_ads_active = input.metaAdsActive;
   if (input.websiteActive !== undefined) payload.website_active = input.websiteActive;
   await supabase!.from("clients").update(payload).eq("id", clientId);
+}
+
+/**
+ * Hapus client SEPENUHNYA — cascade menghapus SEMUA data terkait (project,
+ * content, performance, report, file, goal, dst — semua FK client_id di
+ * schema pakai `on delete cascade`, lihat migration 0001/0002/0005/0006/
+ * 0008). Ini tindakan permanen & tidak bisa dibatalkan.
+ *
+ * Guard yang sengaja dibuat ketat:
+ *   1. Cuma super_admin (bukan admin biasa) — sepadan dengan besarnya
+ *      dampak (menghapus seluruh riwayat kerja sama dengan satu client).
+ *   2. Client HARUS berstatus "archived" dulu sebelum boleh dihapus — ini
+ *      memaksa alur dua langkah yang jauh lebih aman: Archive dulu (masih
+ *      bisa dibatalkan, data tetap ada, tinggal ubah status lagi kalau
+ *      client itu balik lagi kerja sama), baru Delete kalau memang sudah
+ *      pasti tidak akan dipakai lagi. Mencegah klik-tidak-sengaja
+ *      menghapus client yang masih aktif.
+ */
+export async function adminDeleteClient(clientId: string) {
+  const role = await getSessionRole();
+  if (role !== "super_admin") throw new Error("Hanya super_admin yang boleh menghapus client secara permanen.");
+
+  if (!isSupabaseConfigured) {
+    const client = mockClients.find((c) => c.id === clientId);
+    if (client && client.status !== "archived") {
+      throw new Error("Archive client ini dulu sebelum dihapus permanen.");
+    }
+    const idx = mockClients.findIndex((c) => c.id === clientId);
+    if (idx !== -1) mockClients.splice(idx, 1);
+    return;
+  }
+
+  const supabase = await createClient();
+  const { data: client } = await supabase!.from("clients").select("status").eq("id", clientId).single();
+  if (!client || client.status !== "archived") {
+    throw new Error("Archive client ini dulu sebelum dihapus permanen.");
+  }
+
+  const { error } = await supabase!.from("clients").delete().eq("id", clientId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------

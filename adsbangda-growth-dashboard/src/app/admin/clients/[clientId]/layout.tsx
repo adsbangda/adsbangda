@@ -3,6 +3,7 @@ import { DemoModeBanner } from "@/components/admin/demo-banner";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { DetailTabs } from "@/components/admin/detail-tabs";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
+import { ClientAvatar } from "@/components/admin/client-avatar";
 import { adminGetClient } from "@/lib/admin-data";
 
 export default async function AdminClientLayout({
@@ -25,9 +26,7 @@ export default async function AdminClientLayout({
       <div className="bg-surface px-5 pt-6 print:hidden lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4 pb-5">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">
-              {client.name.slice(0, 2).toUpperCase()}
-            </span>
+            <ClientAvatar name={client.name} logoUrl={client.logoUrl} size={44} />
             <div>
               <h1 className="font-display text-xl font-bold tracking-tight text-ink">{client.name}</h1>
               <p className="text-xs text-muted">{client.industry}</p>
