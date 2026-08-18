@@ -108,6 +108,8 @@ export interface PerformanceMetric {
   roas?: number;
   /** Opsional — kalau diisi, Meta Ads bisa tampilkan Goal Achievement %. */
   targetLeads?: number;
+  /** Budget iklan yang disepakati untuk periode ini — dipakai buat "Budget Terpakai" (spend / budgetTarget) di Overview. */
+  budgetTarget?: number;
   /** Deal yang benar-benar closing dari leads Meta Ads. */
   closing?: number;
   conversionRate?: number;
@@ -240,7 +242,6 @@ export interface MonthlyDeliveryHero {
   overallPct: number;
   status: DeliveryStatus;
   helperText: string;
-  items: DeliveryMetricItem[];
   meta: MonthlyDeliveryMeta;
 }
 

@@ -40,9 +40,17 @@ export function Sidebar({ clientName, isAdmin = false, onNavigate }: { clientNam
   return (
     <div className="flex h-full w-64 flex-col border-r border-border bg-surface">
       <div className="flex items-center justify-between px-5 py-6">
-        <div>
-          <Logo tone="dark" height={18} />
-          <div className="mt-2 font-data text-[10px] uppercase tracking-wider text-muted">Client Portal</div>
+        <div className="flex items-center gap-2.5">
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] font-display text-sm font-extrabold text-white"
+            style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)" }}
+          >
+            A
+          </span>
+          <div>
+            <Logo tone="dark" height={16} />
+            <div className="mt-1 font-data text-[10px] uppercase tracking-wider text-muted">Client Portal</div>
+          </div>
         </div>
         {onNavigate && (
           <button onClick={onNavigate} aria-label="Tutup menu" className="text-muted lg:hidden">

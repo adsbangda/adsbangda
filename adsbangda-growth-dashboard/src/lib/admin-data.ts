@@ -16,7 +16,6 @@ import {
   mapFileEntry,
   mapAttentionItem,
   mapActivityEntry,
-  mapDeliveryItem,
   mapPerformanceMetric,
   mapGoal,
   mapContentTarget,
@@ -32,7 +31,6 @@ import {
   mockActivity,
   mockFiles,
   mockReports,
-  mockMonthlyDelivery,
   mockQuickStats,
   mockChannelOverview,
   mockUpcomingEvents,
@@ -55,7 +53,6 @@ import type {
   FileEntry,
   AttentionItem,
   ActivityEntry,
-  DeliveryIcon,
   QuickStatIcon,
   ChannelIcon,
   UserRole,
@@ -255,132 +252,6 @@ export async function adminDeleteClient(clientId: string) {
 }
 
 // ---------------------------------------------------------------------------
-// MONTHLY DELIVERY
-// ---------------------------------------------------------------------------
-
-function recomputeOverallPct() {
-  const items = mockMonthlyDelivery.items;
-  if (items.length === 0) return 0;
-  const avg = items.reduce((sum, i) => sum + (i.target > 0 ? Math.min(100, (i.completed / i.target) * 100) : 0), 0) / items.length;
-  return Math.round(avg);
-}
-
-export async function adminGetDelivery(clientId: string, period: string) {
-  await requireAdmin();
-  if (!isSupabaseConfigured) {
-    if (!isDemoClient(clientId)) return { meta: null, items: [] };
-    const m = mockMonthlyDelivery;
-    return {
-      meta: {
-        status: m.status,
-        helper_text: m.helperText,
-        period_range: m.meta.periodRange,
-        last_updated: m.meta.lastUpdated,
-        agreed_date: m.meta.agreedDate,
-        contract_href: m.meta.contractHref,
-      },
-      items: m.items,
-    };
-  }
-
-  const supabase = await createClient();
-  const [{ data: meta }, { data: items }] = await Promise.all([
-    supabase!.from("delivery_meta").select("*").eq("client_id", clientId).eq("period", period).maybeSingle(),
-    supabase!.from("delivery_items").select("*").eq("client_id", clientId).eq("period", period).order("sort_order"),
-  ]);
-  return { meta, items: (items ?? []).map(mapDeliveryItem) };
-}
-
-export async function adminUpsertDeliveryMeta(
-  clientId: string,
-  period: string,
-  input: { status: string; helperText: string; periodRange: string; lastUpdated: string; agreedDate: string; contractHref: string }
-) {
-  await requireAdmin();
-  if (!isSupabaseConfigured) {
-    if (!isDemoClient(clientId)) return;
-    mockMonthlyDelivery.status = input.status as typeof mockMonthlyDelivery.status;
-    mockMonthlyDelivery.helperText = input.helperText;
-    mockMonthlyDelivery.meta = {
-      periodRange: input.periodRange,
-      lastUpdated: input.lastUpdated,
-      agreedDate: input.agreedDate,
-      contractHref: input.contractHref,
-    };
-    return;
-  }
-
-  const supabase = await createClient();
-  await supabase!.from("delivery_meta").upsert(
-    {
-      client_id: clientId,
-      period,
-      status: input.status,
-      helper_text: input.helperText,
-      period_range: input.periodRange,
-      last_updated: input.lastUpdated,
-      agreed_date: input.agreedDate,
-      contract_href: input.contractHref,
-    },
-    { onConflict: "client_id,period" }
-  );
-}
-
-export async function adminAddDeliveryItem(
-  clientId: string,
-  period: string,
-  input: { icon: DeliveryIcon; label: string; completed: number; target: number; unit: string }
-) {
-  await requireAdmin();
-  if (!isSupabaseConfigured) {
-    if (!isDemoClient(clientId)) return;
-    mockMonthlyDelivery.items.push({ id: uid(), ...input });
-    mockMonthlyDelivery.overallPct = recomputeOverallPct();
-    return;
-  }
-
-  const supabase = await createClient();
-  await supabase!.from("delivery_items").insert({
-    client_id: clientId,
-    period,
-    icon: input.icon,
-    label: input.label,
-    completed: input.completed,
-    target: input.target,
-    unit: input.unit,
-  });
-}
-
-export async function adminUpdateDeliveryItem(
-  itemId: string,
-  input: { completed: number; target: number; label: string; unit: string }
-) {
-  await requireAdmin();
-  if (!isSupabaseConfigured) {
-    const item = mockMonthlyDelivery.items.find((i) => i.id === itemId);
-    if (item) Object.assign(item, input);
-    mockMonthlyDelivery.overallPct = recomputeOverallPct();
-    return;
-  }
-
-  const supabase = await createClient();
-  await supabase!.from("delivery_items").update(input).eq("id", itemId);
-}
-
-export async function adminDeleteDeliveryItem(itemId: string) {
-  await requireAdmin();
-  if (!isSupabaseConfigured) {
-    const idx = mockMonthlyDelivery.items.findIndex((i) => i.id === itemId);
-    if (idx >= 0) mockMonthlyDelivery.items.splice(idx, 1);
-    mockMonthlyDelivery.overallPct = recomputeOverallPct();
-    return;
-  }
-
-  const supabase = await createClient();
-  await supabase!.from("delivery_items").delete().eq("id", itemId);
-}
-
-// ---------------------------------------------------------------------------
 // CONTENT CALENDAR
 // ---------------------------------------------------------------------------
 
@@ -407,7 +278,7 @@ export async function adminCreateContent(
   }
 
   const supabase = await createClient();
-  await supabase!.from("content_items").insert({
+  const { error } = await supabase!.from("content_items").insert({
     client_id: clientId,
     title: input.title,
     planned_date: input.plannedDate,
@@ -415,6 +286,7 @@ export async function adminCreateContent(
     platform: input.platform,
     type: input.type,
   });
+  if (error) throw new Error(error.message);
 }
 
 export async function adminUpdateContentStatus(itemId: string, status: ContentStatus) {
@@ -426,7 +298,8 @@ export async function adminUpdateContentStatus(itemId: string, status: ContentSt
   }
 
   const supabase = await createClient();
-  await supabase!.from("content_items").update({ status }).eq("id", itemId);
+  const { error } = await supabase!.from("content_items").update({ status }).eq("id", itemId);
+  if (error) throw new Error(error.message);
 }
 
 /**
@@ -479,7 +352,8 @@ export async function adminUpdateContentFull(
   if (input.publishLink !== undefined) payload.publish_link = input.publishLink || null;
   if (input.approvalRequired !== undefined) payload.approval_required = input.approvalRequired;
   if (input.approvalStatus !== undefined) payload.approval_status = input.approvalStatus;
-  await supabase!.from("content_items").update(payload).eq("id", itemId);
+  const { error } = await supabase!.from("content_items").update(payload).eq("id", itemId);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeleteContent(itemId: string) {
@@ -491,7 +365,8 @@ export async function adminDeleteContent(itemId: string) {
   }
 
   const supabase = await createClient();
-  await supabase!.from("content_items").delete().eq("id", itemId);
+  const { error } = await supabase!.from("content_items").delete().eq("id", itemId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -549,7 +424,7 @@ export async function adminCreateAttention(
   }
 
   const supabase = await createClient();
-  await supabase!.from("attention_items").insert({
+  const { error } = await supabase!.from("attention_items").insert({
     client_id: clientId,
     icon: input.icon,
     title: input.title,
@@ -557,6 +432,7 @@ export async function adminCreateAttention(
     href: input.href,
     count_badge: input.countBadge ?? null,
   });
+  if (error) throw new Error(error.message);
 }
 
 export async function adminResolveAttention(itemId: string) {
@@ -568,7 +444,8 @@ export async function adminResolveAttention(itemId: string) {
   }
 
   const supabase = await createClient();
-  await supabase!.from("attention_items").update({ resolved: true }).eq("id", itemId);
+  const { error } = await supabase!.from("attention_items").update({ resolved: true }).eq("id", itemId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -598,13 +475,14 @@ export async function adminCreateActivity(
   }
 
   const supabase = await createClient();
-  await supabase!.from("activity_log").insert({
+  const { error } = await supabase!.from("activity_log").insert({
     client_id: clientId,
     day_label: input.day,
     title: input.title,
     description: input.description,
     done: input.done,
   });
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeleteActivity(entryId: string) {
@@ -616,7 +494,8 @@ export async function adminDeleteActivity(entryId: string) {
   }
 
   const supabase = await createClient();
-  await supabase!.from("activity_log").delete().eq("id", entryId);
+  const { error } = await supabase!.from("activity_log").delete().eq("id", entryId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -643,13 +522,14 @@ export async function adminCreateFile(clientId: string, input: { name: string; c
   }
 
   const supabase = await createClient();
-  await supabase!.from("files").insert({
+  const { error } = await supabase!.from("files").insert({
     client_id: clientId,
     name: input.name,
     category: input.category,
     file_url: input.fileUrl,
     size_label: input.sizeLabel,
   });
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeleteFile(fileId: string) {
@@ -661,7 +541,8 @@ export async function adminDeleteFile(fileId: string) {
   }
 
   const supabase = await createClient();
-  await supabase!.from("files").delete().eq("id", fileId);
+  const { error } = await supabase!.from("files").delete().eq("id", fileId);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminListReports(clientId: string): Promise<ReportItem[]> {
@@ -684,12 +565,13 @@ export async function adminCreateReport(clientId: string, input: { periodMonth: 
   }
 
   const supabase = await createClient();
-  await supabase!.from("reports").insert({
+  const { error } = await supabase!.from("reports").insert({
     client_id: clientId,
     period_month: input.periodMonth,
     file_url: input.fileUrl,
     summary: input.summary,
   });
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeleteReport(reportId: string) {
@@ -701,7 +583,8 @@ export async function adminDeleteReport(reportId: string) {
   }
 
   const supabase = await createClient();
-  await supabase!.from("reports").delete().eq("id", reportId);
+  const { error } = await supabase!.from("reports").delete().eq("id", reportId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -737,7 +620,7 @@ export async function adminCreateQuickStat(
   }
 
   const supabase = await createClient();
-  await supabase!.from("quick_stats").insert({
+  const { error } = await supabase!.from("quick_stats").insert({
     client_id: clientId,
     icon: input.icon,
     label: input.label,
@@ -745,6 +628,7 @@ export async function adminCreateQuickStat(
     delta_label: input.deltaLabel,
     delta_positive: input.deltaPositive,
   });
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeleteQuickStat(id: string) {
@@ -755,7 +639,8 @@ export async function adminDeleteQuickStat(id: string) {
     return;
   }
   const supabase = await createClient();
-  await supabase!.from("quick_stats").delete().eq("id", id);
+  const { error } = await supabase!.from("quick_stats").delete().eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminCreateChannelRow(
@@ -770,7 +655,7 @@ export async function adminCreateChannelRow(
   }
 
   const supabase = await createClient();
-  await supabase!.from("channel_overview").insert({
+  const { error } = await supabase!.from("channel_overview").insert({
     client_id: clientId,
     icon: input.icon,
     label: input.label,
@@ -779,6 +664,7 @@ export async function adminCreateChannelRow(
     delta_label: input.deltaLabel,
     sparkline: input.sparkline,
   });
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeleteChannelRow(id: string) {
@@ -789,7 +675,8 @@ export async function adminDeleteChannelRow(id: string) {
     return;
   }
   const supabase = await createClient();
-  await supabase!.from("channel_overview").delete().eq("id", id);
+  const { error } = await supabase!.from("channel_overview").delete().eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminCreateUpcomingEvent(clientId: string, input: { eventDate: string; title: string; timeLabel: string }) {
@@ -808,12 +695,13 @@ export async function adminCreateUpcomingEvent(clientId: string, input: { eventD
   }
 
   const supabase = await createClient();
-  await supabase!.from("upcoming_events").insert({
+  const { error } = await supabase!.from("upcoming_events").insert({
     client_id: clientId,
     event_date: input.eventDate,
     title: input.title,
     time_label: input.timeLabel,
   });
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeleteUpcomingEvent(id: string) {
@@ -824,7 +712,8 @@ export async function adminDeleteUpcomingEvent(id: string) {
     return;
   }
   const supabase = await createClient();
-  await supabase!.from("upcoming_events").delete().eq("id", id);
+  const { error } = await supabase!.from("upcoming_events").delete().eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -837,7 +726,8 @@ export async function adminUpdateTaskProgress(taskId: string, progressPct: numbe
     return; // Mode demo: mockProjectTasks statis, tidak diedit lewat Admin Portal fase ini.
   }
   const supabase = await createClient();
-  await supabase!.from("project_tasks").update({ progress_pct: progressPct, status }).eq("id", taskId);
+  const { error } = await supabase!.from("project_tasks").update({ progress_pct: progressPct, status }).eq("id", taskId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -1108,7 +998,8 @@ export async function adminUpdateProject(
   if (input.endDate !== undefined) payload.end_date = input.endDate;
   if (input.stage !== undefined) payload.stage = input.stage;
   if (input.progressPct !== undefined) payload.progress_pct = input.progressPct;
-  await supabase!.from("projects").update(payload).eq("id", projectId);
+  const { error } = await supabase!.from("projects").update(payload).eq("id", projectId);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminArchiveProject(projectId: string) {
@@ -1176,7 +1067,8 @@ export async function adminUnassignFromClient(clientId: string, userId: string) 
   await requireAdmin();
   if (!isSupabaseConfigured) return;
   const supabase = await createClient();
-  await supabase!.from("client_assignments").delete().eq("client_id", clientId).eq("user_id", userId);
+  const { error } = await supabase!.from("client_assignments").delete().eq("client_id", clientId).eq("user_id", userId);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminListProjectTeam(projectId: string): Promise<TeamMember[]> {
@@ -1214,7 +1106,8 @@ export async function adminUnassignFromProject(projectId: string, userId: string
   await requireAdmin();
   if (!isSupabaseConfigured) return;
   const supabase = await createClient();
-  await supabase!.from("project_assignments").delete().eq("project_id", projectId).eq("user_id", userId);
+  const { error } = await supabase!.from("project_assignments").delete().eq("project_id", projectId).eq("user_id", userId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -1300,6 +1193,7 @@ export async function adminCreatePerformanceMetric(
       cpc: cpc ?? null,
       roas: input.roas ?? null,
       target_leads: input.targetLeads ?? null,
+      budget_target: input.budgetTarget ?? null,
       closing: input.closing ?? null,
       conversion_rate: input.leads && input.closing ? Math.round((input.closing / input.leads) * 1000) / 10 : null,
     })
@@ -1349,9 +1243,12 @@ export async function adminUpdatePerformanceMetric(
   if (cpc !== undefined) payload.cpc = cpc;
   if (input.roas !== undefined) payload.roas = input.roas;
   if (input.targetLeads !== undefined) payload.target_leads = input.targetLeads;
+  if (input.budgetTarget !== undefined) payload.budget_target = input.budgetTarget;
   if (input.closing !== undefined) payload.closing = input.closing;
   if (conversionRate !== undefined) payload.conversion_rate = conversionRate;
-  await supabase!.from("performance_metrics").update(payload).eq("id", id);
+  if (Object.keys(payload).length === 0) return;
+  const { error } = await supabase!.from("performance_metrics").update(payload).eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeletePerformanceMetric(id: string, channel: Channel) {
@@ -1363,7 +1260,8 @@ export async function adminDeletePerformanceMetric(id: string, channel: Channel)
     return;
   }
   const supabase = await createClient();
-  await supabase!.from("performance_metrics").delete().eq("id", id);
+  const { error } = await supabase!.from("performance_metrics").delete().eq("id", id);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -1428,7 +1326,8 @@ export async function adminUpdateGoal(
     return;
   }
   const supabase = await createClient();
-  await supabase!.from("client_goals").update(input).eq("id", goalId);
+  const { error } = await supabase!.from("client_goals").update(input).eq("id", goalId);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeleteGoal(goalId: string) {
@@ -1439,7 +1338,8 @@ export async function adminDeleteGoal(goalId: string) {
     return;
   }
   const supabase = await createClient();
-  await supabase!.from("client_goals").delete().eq("id", goalId);
+  const { error } = await supabase!.from("client_goals").delete().eq("id", goalId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -1533,7 +1433,8 @@ export async function adminUpdateContentTargetById(targetId: string, input: { pl
     return;
   }
   const supabase = await createClient();
-  await supabase!.from("content_targets").update({ platform: input.platform, content_type: input.contentType, target: input.target }).eq("id", targetId);
+  const { error } = await supabase!.from("content_targets").update({ platform: input.platform, content_type: input.contentType, target: input.target }).eq("id", targetId);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeleteContentTarget(targetId: string) {
@@ -1544,7 +1445,8 @@ export async function adminDeleteContentTarget(targetId: string) {
     return;
   }
   const supabase = await createClient();
-  await supabase!.from("content_targets").delete().eq("id", targetId);
+  const { error } = await supabase!.from("content_targets").delete().eq("id", targetId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
@@ -1593,7 +1495,8 @@ export async function adminUpdateWebsiteActivity(activityId: string, input: Part
   if (input.title !== undefined) payload.title = input.title;
   if (input.description !== undefined) payload.description = input.description;
   if (input.status !== undefined) payload.status = input.status;
-  await supabase!.from("website_activity").update(payload).eq("id", activityId);
+  const { error } = await supabase!.from("website_activity").update(payload).eq("id", activityId);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminDeleteWebsiteActivity(activityId: string) {
@@ -1604,7 +1507,8 @@ export async function adminDeleteWebsiteActivity(activityId: string) {
     return;
   }
   const supabase = await createClient();
-  await supabase!.from("website_activity").delete().eq("id", activityId);
+  const { error } = await supabase!.from("website_activity").delete().eq("id", activityId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------

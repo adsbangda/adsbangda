@@ -51,6 +51,7 @@ export default async function AdminClientMetaAdsPage({
       ctr: Number(formData.get("ctr") ?? 0) || undefined,
       roas: Number(formData.get("roas") ?? 0) || undefined,
       targetLeads: Number(formData.get("targetLeads") ?? 0) || undefined,
+      budgetTarget: Number(formData.get("budgetTarget") ?? 0) || undefined,
       closing: Number(formData.get("closing") ?? 0) || undefined,
     });
     revalidatePath(path);
@@ -68,6 +69,7 @@ export default async function AdminClientMetaAdsPage({
       ctr: Number(formData.get("ctr") ?? 0) || undefined,
       roas: Number(formData.get("roas") ?? 0) || undefined,
       targetLeads: Number(formData.get("targetLeads") ?? 0) || undefined,
+      budgetTarget: Number(formData.get("budgetTarget") ?? 0) || undefined,
       closing: Number(formData.get("closing") ?? 0) || undefined,
     });
     revalidatePath(path);
@@ -139,6 +141,7 @@ export default async function AdminClientMetaAdsPage({
           <input name="ctr" type="number" step="0.01" placeholder="CTR (%)" className={inputClass} />
           <input name="closing" type="number" placeholder="Closing (opsional)" className={inputClass} />
           <input name="targetLeads" type="number" placeholder="Target Leads (opsional)" className={inputClass} />
+          <input name="budgetTarget" type="number" placeholder="Budget Target Rp (opsional)" className={inputClass} />
           <input name="roas" type="number" step="0.1" placeholder="ROAS (x, opsional)" className={inputClass} />
           <button type="submit" className={buttonVariants({ variant: "primary", size: "sm", className: "sm:col-span-3 lg:col-span-6 justify-center" })}>
             <Plus className="h-3.5 w-3.5" /> Save Data
@@ -160,6 +163,7 @@ export default async function AdminClientMetaAdsPage({
                     <input name="date" type="date" defaultValue={m.date} required className={inputClass} />
                     <input name="leads" type="number" defaultValue={m.leads ?? ""} placeholder="Leads" className={inputClass} />
                     <input name="targetLeads" type="number" defaultValue={m.targetLeads ?? ""} placeholder="Target Leads" className={inputClass} />
+                    <input name="budgetTarget" type="number" defaultValue={m.budgetTarget ?? ""} placeholder="Budget Target Rp" className={inputClass} />
                     <input name="spend" type="number" defaultValue={m.spend ?? ""} placeholder="Spend" className={inputClass} />
                     <input name="reach" type="number" defaultValue={m.reach ?? ""} placeholder="Reach" className={inputClass} />
                     <input name="impressions" type="number" defaultValue={m.impressions ?? ""} placeholder="Impressions" className={inputClass} />

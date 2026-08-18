@@ -41,7 +41,7 @@ import {
   mockFiles,
   marketingInsight,
 } from "./mock-data";
-import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar, DeliveryIcon, ChannelOverviewRow, AttentionItem, UpcomingEvent, SocialPlatformSummary } from "./types";
+import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar, ChannelOverviewRow, AttentionItem, UpcomingEvent, SocialPlatformSummary } from "./types";
 
 const MONTH_LABEL_ID = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
 
@@ -179,12 +179,6 @@ export async function getMonthlyDelivery(clientId: string): Promise<MonthlyDeliv
   const totalDelivered = published.length;
   const overallPct = totalTarget > 0 ? Math.min(100, Math.round((totalDelivered / totalTarget) * 100)) : 0;
 
-  const DELIVERY_ICON: Record<string, DeliveryIcon> = {
-    instagram: "instagram",
-    facebook: "facebook",
-    tiktok: "tiktok",
-  };
-
   const status: MonthlyDeliveryHero["status"] =
     totalTarget === 0 ? "on_track" : overallPct >= 100 ? "completed" : overallPct >= 60 ? "on_track" : overallPct >= 30 ? "at_risk" : "delayed";
 
@@ -194,14 +188,6 @@ export async function getMonthlyDelivery(clientId: string): Promise<MonthlyDeliv
     status,
     helperText:
       totalTarget > 0 ? `${totalDelivered} dari ${totalTarget} konten sudah published bulan ini.` : "Belum ada target content untuk periode ini — hubungi tim Adsbangda.",
-    items: targets.map((t) => ({
-      id: t.id,
-      icon: DELIVERY_ICON[t.platform] ?? "calendar",
-      label: `${t.platform.charAt(0).toUpperCase()}${t.platform.slice(1)} · ${t.contentType}`,
-      completed: published.filter((i) => i.platform === t.platform && i.type === t.contentType).length,
-      target: t.target,
-      unit: "konten",
-    })),
     meta: {
       periodRange: new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${period}-01`)),
       lastUpdated: "—",

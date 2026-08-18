@@ -135,17 +135,7 @@ export const mockMonthlyDelivery: MonthlyDeliveryHero = {
   periodLabel: "August 2026",
   overallPct: 72,
   status: "on_track",
-  helperText: "Progres dihitung berdasarkan target pekerjaan yang disepakati di awal bulan.",
-  items: [
-    { id: "dl1", icon: "calendar", label: "Content (Semua Platform)", completed: 24, target: 30, unit: "postingan" },
-    { id: "dl2", icon: "instagram", label: "Instagram Feed", completed: 12, target: 15, unit: "postingan" },
-    { id: "dl3", icon: "instagram", label: "Instagram Story", completed: 36, target: 50, unit: "story" },
-    { id: "dl4", icon: "facebook", label: "Facebook", completed: 8, target: 12, unit: "postingan" },
-    { id: "dl5", icon: "tiktok", label: "TikTok", completed: 10, target: 15, unit: "postingan" },
-    { id: "dl6", icon: "edit", label: "Content Creative", completed: 28, target: 35, unit: "desain" },
-    { id: "dl7", icon: "megaphone", label: "Meta Ads Campaign", completed: 4, target: 6, unit: "campaign" },
-    { id: "dl8", icon: "chart", label: "Laporan & Analisis", completed: 1, target: 1, unit: "laporan bulanan" },
-  ],
+  helperText: "24 dari 30 konten sudah published bulan ini.",
   meta: {
     periodRange: "1 – 31 August 2026",
     lastUpdated: "11 August 2026, 10:00 WIB",
