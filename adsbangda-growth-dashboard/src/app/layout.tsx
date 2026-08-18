@@ -1,24 +1,24 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Instrument_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import "./globals.css";
 
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
+// Geist + Geist Mono — dua-duanya variable font (rentang weight penuh
+// 100–900), jadi kontras bold/reguler/semibold di seluruh UI (headings,
+// tombol, label data) benar-benar renders sebagai weight yang berbeda,
+// bukan dibatasi ke 2-3 cut fixed seperti font sebelumnya. Satu keluarga
+// font (Geist) dipakai untuk display & body sekaligus — hierarki dibentuk
+// lewat weight, bukan mencampur banyak typeface berbeda — plus Geist Mono
+// yang serasi untuk angka/label data, kesan lebih premium & khas produk
+// analytics, bukan pairing template SaaS generik.
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
 });
 
-const instrumentSans = Instrument_Sans({
-  variable: "--font-instrument",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -44,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body
-        className={`${plusJakarta.variable} ${instrumentSans.variable} ${plexMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
       </body>

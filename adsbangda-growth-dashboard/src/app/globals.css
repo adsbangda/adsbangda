@@ -74,9 +74,9 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
 
-  --font-display: var(--font-plus-jakarta), sans-serif;
-  --font-body: var(--font-instrument), sans-serif;
-  --font-data: var(--font-plex-mono), monospace;
+  --font-display: var(--font-geist-sans), sans-serif;
+  --font-body: var(--font-geist-sans), sans-serif;
+  --font-data: var(--font-geist-mono), monospace;
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -98,11 +98,14 @@ body {
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
-  letter-spacing: -0.012em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .font-data {
   font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 ::selection {

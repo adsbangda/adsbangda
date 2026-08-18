@@ -165,9 +165,8 @@ dipisah. Lihat token di `src/app/globals.css`.
 - **Accent** `#1D4ED8` — satu-satunya warna aksen brand (ikon platform di
   Monthly Delivery pakai warna khasnya masing-masing — itu semantik, bukan
   dekoratif)
-- **Plus Jakarta Sans** — heading
-- **Instrument Sans** — body text
-- **IBM Plex Mono** — angka, label, data
+- **Geist** — heading & body text (satu keluarga, hierarki lewat weight)
+- **Geist Mono** — angka, label, data
 
 ## Roadmap berikutnya
 

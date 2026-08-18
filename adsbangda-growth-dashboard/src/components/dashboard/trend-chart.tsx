@@ -31,12 +31,12 @@ export function TrendChart({ data, dataKey, xKey = "label", format }: TrendChart
       <LineChart data={data} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
         <XAxis
           dataKey={xKey}
-          tick={{ fontSize: 11, fill: "#6f6b5e", fontFamily: "var(--font-plex-mono)" }}
+          tick={{ fontSize: 11, fill: "#6f6b5e", fontFamily: "var(--font-data)" }}
           axisLine={{ stroke: "#e5e7eb" }}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: "#6f6b5e", fontFamily: "var(--font-plex-mono)" }}
+          tick={{ fontSize: 11, fill: "#6f6b5e", fontFamily: "var(--font-data)" }}
           axisLine={false}
           tickLine={false}
           width={48}
@@ -47,7 +47,7 @@ export function TrendChart({ data, dataKey, xKey = "label", format }: TrendChart
             borderRadius: 8,
             border: "1px solid #e5e7eb",
             fontSize: 12,
-            fontFamily: "var(--font-instrument)",
+            fontFamily: "var(--font-body)",
             boxShadow: "0 4px 16px -4px rgba(24,24,27,0.12)",
           }}
           formatter={(value) => formatValue(Number(value), format)}
