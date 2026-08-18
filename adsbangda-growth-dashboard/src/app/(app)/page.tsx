@@ -64,7 +64,7 @@ export default async function OverviewPage() {
                 Platform per-item (Instagram/TikTok/Facebook dst) sudah ter-filter
                 sendiri di dalam getSocialMediaBreakdown — tidak perlu toggle
                 tambahan di sini. */}
-            {client.socialMediaActive && socialBreakdown.length > 0 && (
+            {client.socialMediaActive && (
               <Card>
                 <SectionHeading
                   title="Social Media Performance"
@@ -74,7 +74,11 @@ export default async function OverviewPage() {
                     </a>
                   }
                 />
-                <SocialMediaPerformance platforms={socialBreakdown} />
+                {socialBreakdown.length === 0 ? (
+                  <EmptyState title="Belum ada target content" description="Atur target per platform di Social Media → Content Delivery." />
+                ) : (
+                  <SocialMediaPerformance platforms={socialBreakdown} />
+                )}
               </Card>
             )}
 
@@ -147,10 +151,14 @@ export default async function OverviewPage() {
               </a>
             </Card>
 
-            {channelRows.length > 0 && (
+            {(client.socialMediaActive || client.metaAdsActive || client.websiteActive) && (
               <Card>
                 <SectionHeading title="Channel Overview (This Month)" action={<a href="/reports" className="font-data text-xs font-semibold text-accent hover:underline">Lihat laporan</a>} />
-                <ChannelOverview rows={channelRows} />
+                {channelRows.length === 0 ? (
+                  <EmptyState title="Belum ada data performance" description="Data akan muncul begitu tim Adsbangda mengisi performance mingguan." />
+                ) : (
+                  <ChannelOverview rows={channelRows} />
+                )}
               </Card>
             )}
 
