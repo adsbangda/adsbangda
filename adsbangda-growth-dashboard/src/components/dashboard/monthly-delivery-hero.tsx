@@ -35,7 +35,7 @@ interface MonthlyDeliveryHeroProps {
  */
 export function MonthlyDeliveryHero({ periodLabel, overallPct, status, helperText, meta }: MonthlyDeliveryHeroProps) {
   return (
-    <Card padding="lg" className="h-full">
+    <Card padding="lg">
       <p className="font-data text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">Progress Keseluruhan</p>
 
       <div className="mt-5 flex items-center gap-5">

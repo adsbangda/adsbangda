@@ -33,7 +33,7 @@ const PLATFORM_META: Record<
  */
 export function SocialMediaPerformance({ platforms }: { platforms: SocialPlatformSummary[] }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {platforms.map((p) => {
         const meta = PLATFORM_META[p.platform] ?? { label: p.platform, Icon: Music2, iconClass: "text-ink", bgClass: "bg-black/5" };
         const { Icon, iconClass, bgClass, label } = meta;

@@ -11,7 +11,7 @@ const ICON_MAP: Record<QuickStatIcon, { Icon: React.ComponentType<{ className?: 
 
 export function QuickStats({ stats }: { stats: QuickStat[] }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {stats.map((stat) => {
         const { Icon, iconClass, bgClass } = ICON_MAP[stat.icon];
         return (

@@ -26,7 +26,7 @@ export function WebsiteSummary({ metrics }: { metrics: PerformanceMetric[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 items-start gap-3 sm:grid-cols-4">
         <MiniStat label="Pengunjung" value={formatNumber(latest.visitors ?? 0)} deltaPct={pctDelta(latest.visitors, previous?.visitors)} color="blue" />
         <MiniStat label="Leads (Form)" value={formatNumber(latest.conversions ?? 0)} deltaPct={pctDelta(latest.conversions, previous?.conversions)} color="purple" />
         <MiniStat

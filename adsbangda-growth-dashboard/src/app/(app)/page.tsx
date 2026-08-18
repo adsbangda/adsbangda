@@ -52,7 +52,7 @@ export default async function OverviewPage() {
       <OverviewHeader clientName={client.name} periodLabel={delivery.periodLabel} notificationCount={attentionItems.length} />
 
       <div className="space-y-6 p-5 lg:p-8">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
           {/* Main column */}
           <div className="space-y-6 lg:col-span-2">
             <MonthlyDeliveryHero {...delivery} />
@@ -86,7 +86,7 @@ export default async function OverviewPage() {
                 aktif, masing-masing full width kalau cuma satu yang aktif,
                 dan section-nya hilang total kalau dua-duanya tidak aktif. */}
             {(client.metaAdsActive || client.websiteActive) && (
-              <div className={`grid grid-cols-1 gap-6 ${client.metaAdsActive && client.websiteActive ? "xl:grid-cols-2" : ""}`}>
+              <div className={`grid grid-cols-1 items-start gap-6 ${client.metaAdsActive && client.websiteActive ? "xl:grid-cols-2" : ""}`}>
                 {client.metaAdsActive && (
                   <Card>
                     <SectionHeading
@@ -116,7 +116,7 @@ export default async function OverviewPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
               <Card>
                 <SectionHeading title="What AdsBangda Did" action={<a href="/reports" className="font-data text-xs font-semibold text-accent hover:underline">Lihat semua</a>} />
                 {activity.length === 0 ? (

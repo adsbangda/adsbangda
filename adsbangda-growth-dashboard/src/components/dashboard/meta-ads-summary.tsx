@@ -29,7 +29,7 @@ export function MetaAdsSummary({ metrics }: { metrics: PerformanceMetric[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 items-start gap-3 sm:grid-cols-4">
         <MiniStat label="Lead Masuk" value={formatNumber(latest.leads ?? 0)} deltaPct={pctDelta(latest.leads, previous?.leads)} color="blue" />
         <MiniStat label="Menjadi Client" value={formatNumber(latest.closing ?? 0)} deltaPct={pctDelta(latest.closing, previous?.closing)} color="purple" />
         {latest.conversionRate != null ? (
