@@ -15,7 +15,8 @@ import {
   adminUpdateWebsiteActivity,
   adminDeleteWebsiteActivity,
 } from "@/lib/admin-data";
-import { formatDateID, cn } from "@/lib/utils";
+import { formatDateID } from "@/lib/utils";
+import { PillTabs } from "@/components/admin/pill-tabs";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 
@@ -25,20 +26,13 @@ function SegmentedNav({ base, active }: { base: string; active: "performance" | 
     { key: "activity", label: "Activity" },
   ];
   return (
-    <div className="inline-flex items-center gap-1 rounded-[var(--radius-md)] border border-border bg-black/[0.02] p-1">
-      {items.map((item) => (
-        <Link
-          key={item.key}
-          href={`${base}?tab=${item.key}`}
-          className={cn(
-            "rounded-[var(--radius-sm)] px-4 py-2 font-data text-[11px] font-semibold transition-all duration-200 ease-out",
-            active === item.key ? "bg-white text-ink shadow-[var(--shadow-xs)]" : "text-muted hover:bg-white/60 hover:text-ink"
-          )}
-        >
-          {item.label}
-        </Link>
-      ))}
-    </div>
+    <PillTabs
+      items={items.map((item) => ({
+        href: `${base}?tab=${item.key}`,
+        label: item.label,
+        active: active === item.key,
+      }))}
+    />
   );
 }
 
