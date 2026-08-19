@@ -67,7 +67,15 @@ export function OverviewHeader({ clientName, periodLabel, currentPeriod, dateFro
     // yang di-render sebagai children pasti tampil DI ATAS card apa pun yang
     // ada di bawahnya di alur halaman (mis. Channel Overview yang sekarang
     // jadi card pertama tepat di bawah header ini), bukan ketutup/ketimpa.
-    <div className="relative z-20 flex flex-wrap items-center justify-between gap-4 border-b border-border bg-surface/80 px-5 py-4 backdrop-blur lg:px-8">
+    //
+    // PAKAI "z-20!" (bukan "z-20" polos) — SENGAJA, karena ada CSS global
+    // `.page-backdrop > *` (globals.css) yang otomatis kasih z-index:1 ke
+    // SEMUA anak langsung page-backdrop (termasuk header ini), dan aturan
+    // itu di-definisikan SETELAH utility Tailwind di stylesheet — jadi
+    // z-20 biasa kalah/ketimpa balik jadi 1 walau ditulis di JSX. "z-20!"
+    // (syntax important modifier Tailwind v4 — tanda "!" di BELAKANG nama
+    // utility, beda dari v3 yang di depan) memaksa menang dari override itu.
+    <div className="relative z-20! flex flex-wrap items-center justify-between gap-4 border-b border-border bg-surface/80 px-5 py-4 backdrop-blur lg:px-8">
       <div className="flex items-center gap-3">
         {/* Tanpa ini, sidebar desktop (hidden di bawah breakpoint lg) tidak
             bisa dibuka sama sekali di tablet/HP — drawer-nya sudah ada di
