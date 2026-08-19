@@ -92,7 +92,7 @@ export default async function OverviewPage() {
               )}
             </div>
 
-            <QuickStats stats={quickStats} />
+            {quickStats.length > 0 && <QuickStats stats={quickStats} />}
 
             {/* Meta Ads & Website Performance — berdampingan kalau dua-duanya
                 aktif, masing-masing full width kalau cuma satu yang aktif,

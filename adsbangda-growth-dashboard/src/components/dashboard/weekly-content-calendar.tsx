@@ -1,14 +1,7 @@
 import { cn } from "@/lib/utils";
-import { Calendar, Music2 } from "lucide-react";
-import { InstagramGlyph, FacebookGlyph } from "./platform-icons";
-import type { ContentPlatform, WeeklyCalendar } from "@/lib/types";
-
-const PLATFORM_ICON: Record<ContentPlatform, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
-  instagram_feed: InstagramGlyph,
-  instagram_story: InstagramGlyph,
-  facebook_post: FacebookGlyph,
-  tiktok_post: Music2,
-};
+import { Calendar } from "lucide-react";
+import { PLATFORM_META } from "./platform-meta";
+import type { WeeklyCalendar } from "@/lib/types";
 
 export function WeeklyContentCalendar({ calendar }: { calendar: WeeklyCalendar }) {
   const { weekDays, activeIndex, rows, totalLabel } = calendar;
@@ -37,12 +30,17 @@ export function WeeklyContentCalendar({ calendar }: { calendar: WeeklyCalendar }
           </thead>
           <tbody>
             {rows.map((row) => {
-              const Icon = PLATFORM_ICON[row.platform];
+              const logo = PLATFORM_META[row.platform];
               return (
                 <tr key={row.id} className="border-t border-border">
                   <td className="py-3 pr-3">
                     <div className="flex items-center gap-2">
-                      <Icon className="h-3.5 w-3.5 shrink-0 text-muted" strokeWidth={1.75} />
+                      <span className="relative flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-[4px] border border-border bg-surface">
+                        {logo && (
+                          // eslint-disable-next-line @next/next/no-img-element -- next/image menolak SVG lokal tanpa config khusus; icon kecil ini tidak butuh optimisasi next/image.
+                          <img src={logo.src} alt={logo.label} className={cn("h-full w-full object-cover", logo.scaleUp && "scale-[1.35]")} />
+                        )}
+                      </span>
                       <span className="text-xs font-medium text-ink">{row.label}</span>
                     </div>
                   </td>

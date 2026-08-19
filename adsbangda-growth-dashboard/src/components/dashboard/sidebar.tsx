@@ -34,7 +34,7 @@ const NAV_ITEMS = [
 ];
 
 const WA_PHONE = "6282289348724";
-const SUPPORT_EMAIL = "info@adsbangda.com";
+const SUPPORT_EMAIL = "support@adsbangda.com";
 
 export function Sidebar({ clientName, isAdmin = false, onNavigate }: { clientName: string; isAdmin?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();

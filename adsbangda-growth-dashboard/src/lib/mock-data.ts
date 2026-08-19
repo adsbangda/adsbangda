@@ -193,10 +193,11 @@ export const mockWeeklyCalendar: WeeklyCalendar = {
   activeIndex: 1,
   totalLabel: "16 konten",
   rows: [
-    { id: "wc1", platform: "instagram_feed", label: "Instagram Feed", counts: [1, 1, 1, 1, 1, null, null] },
-    { id: "wc2", platform: "instagram_story", label: "Instagram Story", counts: [5, 5, 5, 5, 5, 5, 5] },
-    { id: "wc3", platform: "facebook_post", label: "Facebook Post", counts: [1, 1, 1, 1, null, null, null] },
-    { id: "wc4", platform: "tiktok_post", label: "TikTok Post", counts: [1, 1, 1, 1, null, null, null] },
+    { id: "instagram:feed", platform: "instagram", contentType: "feed", label: "Instagram Feed", counts: [1, 1, 1, 1, 1, null, null] },
+    { id: "instagram:story", platform: "instagram", contentType: "story", label: "Instagram Story", counts: [5, 5, 5, 5, 5, 5, 5] },
+    { id: "instagram:reels", platform: "instagram", contentType: "reels", label: "Instagram Reels", counts: [null, 1, 1, null, null, null, null] },
+    { id: "facebook:post", platform: "facebook", contentType: "post", label: "Facebook Post", counts: [1, 1, 1, 1, null, null, null] },
+    { id: "tiktok:video", platform: "tiktok", contentType: "video", label: "TikTok Video", counts: [1, 1, 1, 1, null, null, null] },
   ],
 };
 

@@ -21,6 +21,19 @@ export const CONTENT_TYPES_BY_PLATFORM: Record<SocialPlatform, string[]> = {
   threads: ["post"],
 };
 
+/** Label tampilan buat tiap contentType — dipakai lintas layer (data.ts & komponen UI), satu sumber kebenaran. */
+export const CONTENT_TYPE_LABEL: Record<string, string> = {
+  feed: "Feed",
+  story: "Story",
+  reels: "Reels",
+  reel: "Reels",
+  video: "Video",
+  post: "Post",
+  photo: "Foto",
+  carousel: "Carousel",
+  article: "Article",
+};
+
 export interface Organization {
   id: string;
   name: string;
@@ -287,11 +300,11 @@ export interface UpcomingEvent {
   timeLabel: string;
 }
 
-export type ContentPlatform = "instagram_feed" | "instagram_story" | "facebook_post" | "tiktok_post";
 
 export interface WeeklyCalendarRow {
   id: string;
-  platform: ContentPlatform;
+  platform: SocialPlatform;
+  contentType: string;
   label: string;
   /** One count per day, aligned with WeeklyCalendar.weekDays; null = no content. */
   counts: (number | null)[];

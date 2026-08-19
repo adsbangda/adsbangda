@@ -1,31 +1,6 @@
 import { cn } from "@/lib/utils";
+import { PLATFORM_META, CONTENT_TYPE_LABEL } from "./platform-meta";
 import type { SocialPlatformSummary } from "@/lib/types";
-
-const CONTENT_TYPE_LABEL: Record<string, string> = {
-  feed: "Feed",
-  story: "Story",
-  reels: "Reels",
-  reel: "Reels",
-  video: "Video",
-  post: "Post",
-  photo: "Foto",
-  carousel: "Carousel",
-  article: "Article",
-};
-
-/**
- * Logo resmi tiap platform (file di /public/logos) — Facebook sumbernya
- * bulat (di-scale up dikit lewat CSS supaya nutup penuh sampai pojok
- * kotak rounded-square, tidak nyisain celah putih di sudut).
- */
-const PLATFORM_LOGO: Record<string, { src: string; label: string; scaleUp?: boolean }> = {
-  instagram: { src: "/logos/instagram.svg", label: "Instagram" },
-  tiktok: { src: "/logos/tiktok.webp", label: "TikTok" },
-  facebook: { src: "/logos/facebook.webp", label: "Facebook", scaleUp: true },
-  x: { src: "/logos/x.webp", label: "X" },
-  linkedin: { src: "/logos/linkedin.png", label: "LinkedIn" },
-  threads: { src: "/logos/threads.avif", label: "Threads" },
-};
 
 /**
  * Satu mini-card per platform yang PERNAH punya content_targets untuk
@@ -53,7 +28,7 @@ export function SocialMediaPerformance({ platforms }: { platforms: SocialPlatfor
       )}
     >
       {platforms.map((p) => {
-        const logo = PLATFORM_LOGO[p.platform] ?? null;
+        const logo = PLATFORM_META[p.platform] ?? null;
         return (
           <div key={p.platform} className="flex min-w-0 flex-col justify-center gap-4 rounded-[var(--radius-md)] border border-border bg-surface p-4">
             <div className="flex items-center gap-2">

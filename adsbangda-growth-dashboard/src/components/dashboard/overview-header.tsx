@@ -1,4 +1,5 @@
 import { ChevronDown, Bell } from "lucide-react";
+import { MobileMenuButton } from "./app-shell";
 
 interface OverviewHeaderProps {
   clientName: string;
@@ -14,9 +15,15 @@ interface OverviewHeaderProps {
 export function OverviewHeader({ clientName, periodLabel, notificationCount = 0 }: OverviewHeaderProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border bg-surface/80 px-5 py-4 backdrop-blur lg:px-8">
-      <div>
-        <h1 className="font-display text-xl font-bold tracking-tight text-ink lg:text-2xl">Halo, {clientName} 👋</h1>
-        <p className="mt-0.5 text-sm text-muted">Berikut ringkasan progres pekerjaan AdsBangda untuk bulan ini.</p>
+      <div className="flex items-center gap-3">
+        {/* Tanpa ini, sidebar desktop (hidden di bawah breakpoint lg) tidak
+            bisa dibuka sama sekali di tablet/HP — drawer-nya sudah ada di
+            AppShell, cuma tombol pemicunya kelewat dipasang di header ini. */}
+        <MobileMenuButton />
+        <div>
+          <h1 className="font-display text-xl font-bold tracking-tight text-ink lg:text-2xl">Halo, {clientName} 👋</h1>
+          <p className="mt-0.5 text-sm text-muted">Berikut ringkasan progres pekerjaan AdsBangda untuk bulan ini.</p>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

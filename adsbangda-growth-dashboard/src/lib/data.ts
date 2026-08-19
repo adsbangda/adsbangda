@@ -42,6 +42,7 @@ import {
   marketingInsight,
 } from "./mock-data";
 import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar, ChannelOverviewRow, AttentionItem, UpcomingEvent, SocialPlatformSummary } from "./types";
+import { CONTENT_TYPE_LABEL } from "./types";
 
 const MONTH_LABEL_ID = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
 
@@ -379,17 +380,16 @@ export async function getUpcomingEvents(clientId: string): Promise<UpcomingEvent
   });
 }
 
-const PLATFORM_BUCKET: Record<string, "instagram_feed" | "instagram_story" | "facebook_post" | "tiktok_post" | null> = {
-  "instagram:post": "instagram_feed",
-  "instagram:carousel": "instagram_feed",
-  "instagram:reel": "instagram_feed",
-  "instagram:story": "instagram_story",
-  "facebook:post": "facebook_post",
-  "tiktok:reel": "tiktok_post",
-  "tiktok:post": "tiktok_post",
-};
-
-/** Diturunkan langsung dari content_items (bukan tabel terpisah) supaya admin cukup kelola satu sumber data konten. */
+/**
+ * Diturunkan dari `content_targets` (platform+jenis konten yang PERNAH
+ * dikonfigurasi admin, sama seperti getSocialMediaBreakdown) + `content_items`
+ * minggu ini — BUKAN 4 baris hardcoded seperti sebelumnya (Instagram Feed/
+ * Story, Facebook Post, TikTok Post selalu ada apapun kondisinya). Platform
+ * yang tidak pernah dikonfigurasi client ini otomatis tidak pernah punya
+ * baris di kalender. content_targets.contentType & content_items.type
+ * pakai vocabulary yang SAMA (lihat CONTENT_TYPES_BY_PLATFORM di types.ts),
+ * jadi tidak perlu tabel translasi platform→bucket lagi.
+ */
 export async function getWeeklyCalendar(clientId: string): Promise<WeeklyCalendar> {
   if (!isSupabaseConfigured) return mockWeeklyCalendar;
 
@@ -401,14 +401,17 @@ export async function getWeeklyCalendar(clientId: string): Promise<WeeklyCalenda
   sunday.setUTCDate(monday.getUTCDate() + 6);
 
   const supabase = await createClient();
-  const { data } = await supabase!
-    .from("content_items")
-    .select("*")
-    .eq("client_id", clientId)
-    .gte("planned_date", monday.toISOString().slice(0, 10))
-    .lte("planned_date", sunday.toISOString().slice(0, 10));
+  const [{ data: targetRows }, { data: itemRows }] = await Promise.all([
+    supabase!.from("content_targets").select("platform, content_type").eq("client_id", clientId),
+    supabase!
+      .from("content_items")
+      .select("*")
+      .eq("client_id", clientId)
+      .gte("planned_date", monday.toISOString().slice(0, 10))
+      .lte("planned_date", sunday.toISOString().slice(0, 10)),
+  ]);
 
-  const items = (data ?? []).map(mapContentItem);
+  const items = (itemRows ?? []).map(mapContentItem);
 
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(monday);
@@ -417,35 +420,29 @@ export async function getWeeklyCalendar(clientId: string): Promise<WeeklyCalenda
   });
   const activeIndex = day - 1;
 
-  const buckets: Record<string, (number | null)[]> = {
-    instagram_feed: Array(7).fill(null),
-    instagram_story: Array(7).fill(null),
-    facebook_post: Array(7).fill(null),
-    tiktok_post: Array(7).fill(null),
-  };
+  // Kombinasi platform+contentType unik yang PERNAH dikonfigurasi client ini
+  // (period apa saja, sama prinsipnya dengan getSocialMediaBreakdown — bulan
+  // ini targetnya belum diisi bukan berarti platform itu "tidak aktif").
+  const combos = Array.from(
+    new Map((targetRows ?? []).map((r) => [`${r.platform}:${r.content_type}`, { platform: r.platform as string, contentType: r.content_type as string }])).values()
+  );
 
-  for (const item of items) {
-    const key = `${item.platform}:${item.type}`;
-    const bucket = PLATFORM_BUCKET[key];
-    if (!bucket) continue;
-    const idx = Math.round((new Date(item.plannedDate).getTime() - monday.getTime()) / 86400000);
-    if (idx < 0 || idx > 6) continue;
-    buckets[bucket][idx] = (buckets[bucket][idx] ?? 0) + 1;
-  }
-
-  const LABELS: Record<string, string> = {
-    instagram_feed: "Instagram Feed",
-    instagram_story: "Instagram Story",
-    facebook_post: "Facebook Post",
-    tiktok_post: "TikTok Post",
-  };
-
-  const rows = Object.entries(buckets).map(([platform, counts]) => ({
-    id: platform,
-    platform: platform as WeeklyCalendar["rows"][number]["platform"],
-    label: LABELS[platform],
-    counts,
-  }));
+  const rows = combos.map(({ platform, contentType }) => {
+    const counts: (number | null)[] = Array(7).fill(null);
+    for (const item of items) {
+      if (item.platform !== platform || item.type !== contentType) continue;
+      const idx = Math.round((new Date(item.plannedDate).getTime() - monday.getTime()) / 86400000);
+      if (idx < 0 || idx > 6) continue;
+      counts[idx] = (counts[idx] ?? 0) + 1;
+    }
+    return {
+      id: `${platform}:${contentType}`,
+      platform: platform as WeeklyCalendar["rows"][number]["platform"],
+      contentType,
+      label: `${platform.charAt(0).toUpperCase()}${platform.slice(1)} ${CONTENT_TYPE_LABEL[contentType] ?? contentType}`,
+      counts,
+    };
+  });
 
   const total = rows.reduce((sum, r) => sum + r.counts.reduce((s: number, c) => s + (c ?? 0), 0), 0);
 
