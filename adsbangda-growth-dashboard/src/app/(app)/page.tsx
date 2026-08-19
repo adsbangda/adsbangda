@@ -55,32 +55,44 @@ export default async function OverviewPage() {
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
           {/* Main column */}
           <div className="space-y-6 lg:col-span-2">
-            <MonthlyDeliveryHero {...delivery} />
+            {/* Progress + Social Media Performance — SATU baris sejajar (Progress sempit fixed,
+                Social Media ngisi sisa lebar), tinggi disamakan (stretch) karena cuma 2 card ini
+                yang dipasangkan berdampingan — beda kasus dengan grid utama di bawah yang sengaja
+                items-start (biar tidak kena bug "kolom raksasa" kalau salah satu kolom jauh lebih
+                tinggi dari yang lain). */}
+            <div
+              className={`grid items-stretch gap-6 ${
+                client.socialMediaActive ? "grid-cols-1 sm:grid-cols-[minmax(230px,260px)_1fr]" : "grid-cols-1"
+              }`}
+            >
+              <div className={client.socialMediaActive ? "" : "max-w-[260px]"}>
+                <MonthlyDeliveryHero {...delivery} />
+              </div>
+
+              {/* Social Media Performance — HANYA render kalau service-nya aktif DAN memang ada
+                  platform yang pernah dikonfigurasi (content_targets). Platform per-item
+                  (Instagram/TikTok/Facebook dst) sudah ter-filter sendiri di dalam
+                  getSocialMediaBreakdown — tidak perlu toggle tambahan di sini. */}
+              {client.socialMediaActive && (
+                <Card>
+                  <SectionHeading
+                    title="Social Media Performance"
+                    action={
+                      <a href="/social-media" className="font-data text-xs font-semibold text-accent hover:underline">
+                        Lihat detail
+                      </a>
+                    }
+                  />
+                  {socialBreakdown.length === 0 ? (
+                    <EmptyState title="Belum ada target content" description="Atur target per platform di Social Media → Content Delivery." />
+                  ) : (
+                    <SocialMediaPerformance platforms={socialBreakdown} />
+                  )}
+                </Card>
+              )}
+            </div>
 
             <QuickStats stats={quickStats} />
-
-            {/* Social Media Performance — HANYA render kalau service-nya aktif
-                DAN memang ada platform yang pernah dikonfigurasi (content_targets).
-                Platform per-item (Instagram/TikTok/Facebook dst) sudah ter-filter
-                sendiri di dalam getSocialMediaBreakdown — tidak perlu toggle
-                tambahan di sini. */}
-            {client.socialMediaActive && (
-              <Card>
-                <SectionHeading
-                  title="Social Media Performance"
-                  action={
-                    <a href="/social-media" className="font-data text-xs font-semibold text-accent hover:underline">
-                      Lihat detail
-                    </a>
-                  }
-                />
-                {socialBreakdown.length === 0 ? (
-                  <EmptyState title="Belum ada target content" description="Atur target per platform di Social Media → Content Delivery." />
-                ) : (
-                  <SocialMediaPerformance platforms={socialBreakdown} />
-                )}
-              </Card>
-            )}
 
             {/* Meta Ads & Website Performance — berdampingan kalau dua-duanya
                 aktif, masing-masing full width kalau cuma satu yang aktif,

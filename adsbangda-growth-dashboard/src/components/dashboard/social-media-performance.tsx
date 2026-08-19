@@ -1,5 +1,4 @@
-import { Music2 } from "lucide-react";
-import { InstagramGlyph, FacebookGlyph } from "./platform-icons";
+import { cn } from "@/lib/utils";
 import type { SocialPlatformSummary } from "@/lib/types";
 
 const CONTENT_TYPE_LABEL: Record<string, string> = {
@@ -9,20 +8,23 @@ const CONTENT_TYPE_LABEL: Record<string, string> = {
   reel: "Reels",
   video: "Video",
   post: "Post",
+  photo: "Foto",
   carousel: "Carousel",
   article: "Article",
 };
 
-const PLATFORM_META: Record<
-  string,
-  { label: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; iconClass: string; bgClass: string }
-> = {
-  instagram: { label: "Instagram", Icon: InstagramGlyph, iconClass: "text-pink-600", bgClass: "bg-pink-50" },
-  tiktok: { label: "TikTok", Icon: Music2, iconClass: "text-ink", bgClass: "bg-black/5" },
-  facebook: { label: "Facebook", Icon: FacebookGlyph, iconClass: "text-blue-600", bgClass: "bg-blue-50" },
-  x: { label: "X", Icon: Music2, iconClass: "text-ink", bgClass: "bg-black/5" },
-  linkedin: { label: "LinkedIn", Icon: Music2, iconClass: "text-blue-700", bgClass: "bg-blue-50" },
-  threads: { label: "Threads", Icon: Music2, iconClass: "text-ink", bgClass: "bg-black/5" },
+/**
+ * Logo resmi tiap platform (file di /public/logos) — Facebook sumbernya
+ * bulat (di-scale up dikit lewat CSS supaya nutup penuh sampai pojok
+ * kotak rounded-square, tidak nyisain celah putih di sudut).
+ */
+const PLATFORM_LOGO: Record<string, { src: string; label: string; scaleUp?: boolean }> = {
+  instagram: { src: "/logos/instagram.svg", label: "Instagram" },
+  tiktok: { src: "/logos/tiktok.webp", label: "TikTok" },
+  facebook: { src: "/logos/facebook.webp", label: "Facebook", scaleUp: true },
+  x: { src: "/logos/x.webp", label: "X" },
+  linkedin: { src: "/logos/linkedin.png", label: "LinkedIn" },
+  threads: { src: "/logos/threads.avif", label: "Threads" },
 };
 
 /**
@@ -30,23 +32,41 @@ const PLATFORM_META: Record<
  * client ini (lihat getSocialMediaBreakdown di lib/data.ts) — platform
  * yang belum pernah dikonfigurasi tidak pernah ada di `platforms`, jadi
  * otomatis tidak dirender di sini tanpa perlu flag "active" terpisah.
+ *
+ * Dua mode grid tergantung jumlah platform aktif:
+ *   - 1 platform  → kotak kecil fixed-width (230px), menempel kiri.
+ *   - 2+ platform → bagi rata SELURUH lebar card (auto-fit/1fr), bukan
+ *     nempel kiri nyisa kosong di kanan.
+ * align-items:stretch + justify-content:center di dalam tiap kotak —
+ * kalau salah satu platform kontennya lebih panjang (mis. Instagram 3
+ * baris vs TikTok 1 baris), tinggi kotak disamakan tapi isi yang lebih
+ * pendek nggak numpuk di atas nyisain kosong di bawah, melainkan center.
  */
 export function SocialMediaPerformance({ platforms }: { platforms: SocialPlatformSummary[] }) {
+  const isSingle = platforms.length === 1;
+
   return (
-    <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div
+      className={cn(
+        "grid items-stretch gap-3.5",
+        isSingle ? "grid-cols-[230px] justify-start" : "grid-cols-[repeat(auto-fit,minmax(200px,1fr))]"
+      )}
+    >
       {platforms.map((p) => {
-        const meta = PLATFORM_META[p.platform] ?? { label: p.platform, Icon: Music2, iconClass: "text-ink", bgClass: "bg-black/5" };
-        const { Icon, iconClass, bgClass, label } = meta;
+        const logo = PLATFORM_LOGO[p.platform] ?? null;
         return (
-          <div key={p.platform} className="rounded-[var(--radius-md)] border border-border bg-surface p-4">
+          <div key={p.platform} className="flex min-w-0 flex-col justify-center gap-4 rounded-[var(--radius-md)] border border-border bg-surface p-4">
             <div className="flex items-center gap-2">
-              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] ${bgClass}`}>
-                <Icon className={`h-4 w-4 ${iconClass}`} strokeWidth={1.75} />
+              <span className="relative flex h-[26px] w-[26px] shrink-0 items-center justify-center overflow-hidden rounded-[8px] border border-border bg-surface">
+                {logo && (
+                  // eslint-disable-next-line @next/next/no-img-element -- next/image menolak SVG lokal tanpa config khusus; icon kecil ini tidak butuh optimisasi next/image.
+                  <img src={logo.src} alt={logo.label} className={cn("h-full w-full object-cover", logo.scaleUp && "scale-[1.35]")} />
+                )}
               </span>
-              <span className="text-sm font-semibold text-ink">{label}</span>
+              <span className="text-sm font-semibold text-ink">{logo?.label ?? p.platform}</span>
             </div>
 
-            <div className="mt-3.5 space-y-3">
+            <div className="space-y-3">
               {p.items.length === 0 ? (
                 <p className="text-xs text-muted">Belum ada target bulan ini.</p>
               ) : (

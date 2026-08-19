@@ -11,13 +11,13 @@ export type ContentType = "reel" | "carousel" | "story" | "post" | "article";
 /** Platform social media yang didukung modul Social Media (konsolidasi). */
 export type SocialPlatform = "instagram" | "facebook" | "tiktok" | "x" | "linkedin" | "threads";
 
-/** Jenis content per platform — platform berbeda punya pilihan berbeda. */
+/** Jenis content per platform — platform berbeda punya pilihan berbeda, mengikuti fitur upload asli tiap platform. */
 export const CONTENT_TYPES_BY_PLATFORM: Record<SocialPlatform, string[]> = {
   instagram: ["feed", "reels", "story"],
-  facebook: ["feed", "reels", "story"],
-  tiktok: ["video"],
-  x: ["post"],
-  linkedin: ["post"],
+  facebook: ["post", "video"],
+  tiktok: ["video", "photo"],
+  x: ["post", "video"],
+  linkedin: ["post", "article"],
   threads: ["post"],
 };
 
@@ -267,7 +267,7 @@ export interface ActivityEntry {
   thumbnailCount?: number;
 }
 
-export type ChannelIcon = "instagram" | "facebook" | "tiktok" | "reach" | "meta_ads" | "website";
+export type ChannelIcon = "instagram" | "facebook" | "tiktok" | "x" | "linkedin" | "threads" | "reach" | "meta_ads" | "website";
 
 export interface ChannelOverviewRow {
   id: string;

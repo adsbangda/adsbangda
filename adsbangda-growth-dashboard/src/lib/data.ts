@@ -248,8 +248,17 @@ export async function getChannelOverview(client: Client): Promise<ChannelOvervie
 
   if (client.socialMediaActive) {
     const social = metrics.filter((m) => m.channel === "social");
-    const ICON_MAP: Record<string, "instagram" | "facebook" | "tiktok"> = { instagram: "instagram", facebook: "facebook", tiktok: "tiktok" };
-    const platforms = Array.from(new Set(social.map((m) => m.platform))).filter((p): p is "instagram" | "facebook" | "tiktok" => !!p && p in ICON_MAP);
+    const ICON_MAP: Record<string, "instagram" | "facebook" | "tiktok" | "x" | "linkedin" | "threads"> = {
+      instagram: "instagram",
+      facebook: "facebook",
+      tiktok: "tiktok",
+      x: "x",
+      linkedin: "linkedin",
+      threads: "threads",
+    };
+    const platforms = Array.from(new Set(social.map((m) => m.platform))).filter(
+      (p): p is "instagram" | "facebook" | "tiktok" | "x" | "linkedin" | "threads" => !!p && p in ICON_MAP
+    );
 
     for (const platform of platforms) {
       const history = social.filter((m) => m.platform === platform).slice(-7);

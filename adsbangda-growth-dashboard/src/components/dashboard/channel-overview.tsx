@@ -1,27 +1,41 @@
-import { Users, Music2, Infinity as InfinityIcon, Globe, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { InstagramGlyph, FacebookGlyph } from "./platform-icons";
+import { Users, Globe, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { ChannelIcon, ChannelOverviewRow } from "@/lib/types";
 
-const ICON_MAP: Record<ChannelIcon, { Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; iconClass: string; bgClass: string }> = {
-  instagram: { Icon: InstagramGlyph, iconClass: "text-pink-600", bgClass: "bg-pink-50" },
-  facebook: { Icon: FacebookGlyph, iconClass: "text-blue-600", bgClass: "bg-blue-50" },
-  tiktok: { Icon: Music2, iconClass: "text-ink", bgClass: "bg-black/5" },
-  reach: { Icon: Users, iconClass: "text-accent", bgClass: "bg-accent-soft" },
-  meta_ads: { Icon: InfinityIcon, iconClass: "text-accent", bgClass: "bg-accent-soft" },
-  website: { Icon: Globe, iconClass: "text-emerald-600", bgClass: "bg-emerald-50" },
+/** Logo resmi (file di /public/logos) — Facebook di-scale up dikit karena sumbernya bulat, Meta cuma simbol infinity polos jadi pakai contain+padding. */
+const LOGO_MAP: Partial<Record<ChannelIcon, { src: string; scaleUp?: boolean; contain?: boolean }>> = {
+  instagram: { src: "/logos/instagram.svg" },
+  facebook: { src: "/logos/facebook.webp", scaleUp: true },
+  tiktok: { src: "/logos/tiktok.webp" },
+  x: { src: "/logos/x.webp" },
+  linkedin: { src: "/logos/linkedin.png" },
+  threads: { src: "/logos/threads.avif" },
+  meta_ads: { src: "/logos/meta.webp", contain: true },
 };
 
-/** Baris ringkas icon + label + value + panah tren — sesuai referensi (bukan sparkline). */
+/** Baris ringkas icon + label + value + panah tren. */
 export function ChannelOverview({ rows }: { rows: ChannelOverviewRow[] }) {
   return (
     <div className="divide-y divide-border">
       {rows.map((row) => {
-        const { Icon, iconClass, bgClass } = ICON_MAP[row.icon];
+        const logo = LOGO_MAP[row.icon];
         const isUp = !row.deltaLabel.startsWith("↓");
         return (
           <div key={row.id} className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0">
-            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] ${bgClass}`}>
-              <Icon className={`h-4 w-4 ${iconClass}`} strokeWidth={1.75} />
+            <span
+              className={cn(
+                "relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-sm)] border border-border bg-surface",
+                logo?.contain && "p-1.5"
+              )}
+            >
+              {logo ? (
+                // eslint-disable-next-line @next/next/no-img-element -- next/image menolak SVG lokal tanpa config khusus; icon kecil ini tidak butuh optimisasi next/image.
+                <img src={logo.src} alt={row.label} className={cn("h-full w-full", logo.contain ? "object-contain" : "object-cover", logo.scaleUp && "scale-[1.35]")} />
+              ) : row.icon === "website" ? (
+                <Globe className="h-4 w-4 text-emerald-600" strokeWidth={1.75} />
+              ) : (
+                <Users className="h-4 w-4 text-accent" strokeWidth={1.75} />
+              )}
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-ink">{row.label}</p>
