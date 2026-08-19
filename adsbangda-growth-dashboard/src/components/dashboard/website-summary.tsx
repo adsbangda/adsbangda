@@ -1,6 +1,6 @@
 import { EmptyState } from "./empty-state";
 import { MiniStat, pctDelta } from "./mini-stat";
-import { formatNumber } from "@/lib/utils";
+import { formatNumber, formatPercent } from "@/lib/utils";
 import { Globe } from "lucide-react";
 import type { PerformanceMetric } from "@/lib/types";
 
@@ -25,10 +25,10 @@ export function WebsiteSummary({ metrics }: { metrics: PerformanceMetric[] }) {
       <MiniStat label="Leads (Form)" value={formatNumber(latest.conversions ?? 0)} deltaPct={pctDelta(latest.conversions, previous?.conversions)} color="purple" />
       <MiniStat
         label="Conversion Rate"
-        value={latest.visitors ? `${(((latest.conversions ?? 0) / latest.visitors) * 100).toFixed(2)}%` : "—"}
+        value={latest.visitors ? formatPercent((((latest.conversions ?? 0) / latest.visitors) * 100), 2) : "—"}
         color="purple"
       />
-      <MiniStat label="Bounce Rate" value={latest.bounceRate != null ? `${latest.bounceRate}%` : "—"} deltaPct={pctDelta(latest.bounceRate, previous?.bounceRate)} deltaGoodDirection="down" color="orange" />
+      <MiniStat label="Bounce Rate" value={latest.bounceRate != null ? formatPercent(latest.bounceRate) : "—"} deltaPct={pctDelta(latest.bounceRate, previous?.bounceRate)} deltaGoodDirection="down" color="orange" />
       {latest.avgSessionDuration && <MiniStat label="Durasi Sesi" value={latest.avgSessionDuration} color="blue" />}
     </div>
   );

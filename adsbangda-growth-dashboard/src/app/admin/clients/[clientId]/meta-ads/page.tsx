@@ -14,7 +14,7 @@ import {
   adminGetClient,
   adminUpdateClient,
 } from "@/lib/admin-data";
-import { formatDateID } from "@/lib/utils";
+import { formatDateID, formatPercent, formatMultiplier } from "@/lib/utils";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 
@@ -115,12 +115,12 @@ export default async function AdminClientMetaAdsPage({
               <MetricCard icon={Wallet} label="Ad Spend" value={latest.spend != null ? `Rp${latest.spend.toLocaleString("id-ID")}` : null} />
               <MetricCard icon={Eye} label="Reach" value={latest.reach != null ? latest.reach.toLocaleString("id-ID") : null} />
               <MetricCard icon={MousePointerClick} label="Clicks" value={latest.clicks != null ? latest.clicks.toLocaleString("id-ID") : null} />
-              <MetricCard icon={MousePointerClick} label="CTR" value={latest.ctr != null ? `${latest.ctr}%` : null} />
+              <MetricCard icon={MousePointerClick} label="CTR" value={latest.ctr != null ? formatPercent(latest.ctr, 2) : null} />
               <MetricCard icon={Wallet} label="CPC" value={latest.cpc != null ? `Rp${latest.cpc.toLocaleString("id-ID")}` : null} />
               <MetricCard icon={Wallet} label="CPL" value={latest.costPerLead != null ? `Rp${latest.costPerLead.toLocaleString("id-ID")}` : null} />
-              <MetricCard icon={Target} label="ROAS" value={latest.roas != null ? `${latest.roas}x` : null} />
+              <MetricCard icon={Target} label="ROAS" value={latest.roas != null ? formatMultiplier(latest.roas) : null} />
               <MetricCard icon={Target} label="Closing" value={latest.closing != null ? latest.closing.toLocaleString("id-ID") : null} />
-              <MetricCard icon={Target} label="Conversion Rate" value={latest.conversionRate != null ? `${latest.conversionRate}%` : null} />
+              <MetricCard icon={Target} label="Conversion Rate" value={latest.conversionRate != null ? formatPercent(latest.conversionRate) : null} />
             </div>
 
             {/* Goal Achievement — BUKAN Project Progress, dan HANYA tampil kalau target diisi (tidak dipaksakan). */}
@@ -245,8 +245,8 @@ export default async function AdminClientMetaAdsPage({
                     <p className="font-data text-xs text-muted">
                       {m.leads != null && `${m.leads} leads · `}
                       {m.spend != null && `Rp${m.spend.toLocaleString("id-ID")} spend · `}
-                      {m.ctr != null && `${m.ctr}% CTR · `}
-                      {m.roas != null && `${m.roas}x ROAS`}
+                      {m.ctr != null && `${formatPercent(m.ctr, 2)} CTR · `}
+                      {m.roas != null && `${formatMultiplier(m.roas)} ROAS`}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

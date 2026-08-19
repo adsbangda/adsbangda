@@ -6,7 +6,7 @@
 import { revalidatePath } from "next/cache";
 import { isSupabaseConfigured, createClient } from "./supabase/server";
 import { ClientNotAssignedError, getSessionUserId } from "./auth";
-import { formatDateID } from "./utils";
+import { formatDateID, formatPercent } from "./utils";
 import {
   mapClient,
   mapProject,
@@ -271,7 +271,7 @@ export async function getChannelOverview(client: Client): Promise<ChannelOvervie
         icon: ICON_MAP[platform],
         label: platform.charAt(0).toUpperCase() + platform.slice(1),
         metricLabel: "Engagement Rate",
-        value: `${latestRate.toFixed(2)}%`,
+        value: formatPercent(latestRate, 2),
         deltaLabel: deltaLabel(pctDelta(latestRate, prev?.engagementRate)),
         sparkline: history.map((h) => h.engagementRate ?? 0),
       });

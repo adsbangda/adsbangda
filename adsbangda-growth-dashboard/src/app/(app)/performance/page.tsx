@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { DateRangeTabs } from "@/components/dashboard/date-range-tabs";
 import { getCurrentClient, getPerformanceSummary } from "@/lib/data";
-import { formatIDR, formatNumber } from "@/lib/utils";
+import { formatIDR, formatNumber, formatPercent } from "@/lib/utils";
 import { Wallet, Target, Eye, Heart, TrendingUp, Users2 } from "lucide-react";
 
 function shortDate(iso: string) {
@@ -38,7 +38,7 @@ export default async function PerformancePage() {
           <KpiCard label="Cost per Lead" value={formatIDR(latestMeta?.costPerLead ?? 0)} icon={Wallet} iconColor="text-accent" iconBg="bg-accent-soft" />
           <KpiCard label="Ad Spend" value={formatIDR(latestMeta?.spend ?? 0)} icon={Wallet} iconColor="text-accent" iconBg="bg-accent-soft" />
           <KpiCard label="Reach" value={formatNumber(latestMeta?.reach ?? 0)} icon={Eye} iconColor="text-accent" iconBg="bg-accent-soft" />
-          <KpiCard label="Engagement" value={`${latestSocial?.engagementRate?.toFixed(1) ?? "0"}%`} icon={Heart} iconColor="text-accent" iconBg="bg-accent-soft" />
+          <KpiCard label="Engagement" value={latestSocial?.engagementRate != null ? formatPercent(latestSocial.engagementRate) : "0%"} icon={Heart} iconColor="text-accent" iconBg="bg-accent-soft" />
           <KpiCard label="Conversions" value={formatNumber(latestWebsite?.conversions ?? 0)} icon={Users2} iconColor="text-accent" iconBg="bg-accent-soft" />
         </section>
 
@@ -72,7 +72,7 @@ export default async function PerformancePage() {
                     <td className="py-3.5 pr-4 font-data text-xs text-muted">{row.spend ? formatIDR(row.spend) : "—"}</td>
                     <td className="py-3.5 pr-4 font-data text-xs text-ink">{row.leads}</td>
                     <td className="py-3.5 pr-4 font-data text-xs text-muted">{row.costPerLead ? formatIDR(row.costPerLead) : "—"}</td>
-                    <td className="py-3.5 pr-4 font-data text-xs text-ink">{row.engagementRate}%</td>
+                    <td className="py-3.5 pr-4 font-data text-xs text-ink">{formatPercent(row.engagementRate)}</td>
                     <td className="py-3.5">
                       <StatusBadge status={row.status} />
                     </td>
@@ -93,7 +93,7 @@ export default async function PerformancePage() {
                   <p className="font-data text-xs text-muted">{formatNumber(item.reach)} reach</p>
                 </div>
                 <span className="inline-flex shrink-0 items-center gap-1 font-data text-xs font-semibold text-success">
-                  <TrendingUp className="h-3 w-3" /> {item.engagementRate}%
+                  <TrendingUp className="h-3 w-3" /> {formatPercent(item.engagementRate)}
                 </span>
               </div>
             ))}

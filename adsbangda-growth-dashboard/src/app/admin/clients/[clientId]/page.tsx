@@ -18,7 +18,7 @@ import {
   adminListReports,
   adminListWebsiteActivity,
 } from "@/lib/admin-data";
-import { formatDateID } from "@/lib/utils";
+import { formatDateID, formatDecimal } from "@/lib/utils";
 import type { Client, SocialPlatform } from "@/lib/types";
 
 const inputClass = "w-full rounded-[var(--radius-md)] border border-border px-3 py-2 text-sm text-ink outline-none focus:border-ink";
@@ -208,7 +208,7 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
                       <p className="text-[11px] text-muted">Leads</p>
                     </div>
                     <div>
-                      <p className="font-data text-lg font-bold text-ink">{latestMeta.spend != null ? `Rp${(latestMeta.spend / 1000000).toFixed(1)}M` : "—"}</p>
+                      <p className="font-data text-lg font-bold text-ink">{latestMeta.spend != null ? `Rp${formatDecimal(latestMeta.spend / 1000000)}M` : "—"}</p>
                       <p className="text-[11px] text-muted">Spend</p>
                     </div>
                     <div>
@@ -216,11 +216,11 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
                       <p className="text-[11px] text-muted">Clicks</p>
                     </div>
                     <div>
-                      <p className="font-data text-lg font-bold text-ink">{latestMeta.cpc != null ? `Rp${(latestMeta.cpc / 1000).toFixed(1)}K` : "—"}</p>
+                      <p className="font-data text-lg font-bold text-ink">{latestMeta.cpc != null ? `Rp${formatDecimal(latestMeta.cpc / 1000)}K` : "—"}</p>
                       <p className="text-[11px] text-muted">CPC</p>
                     </div>
                     <div>
-                      <p className="font-data text-lg font-bold text-ink">{latestMeta.costPerLead != null ? `Rp${(latestMeta.costPerLead / 1000).toFixed(1)}K` : "—"}</p>
+                      <p className="font-data text-lg font-bold text-ink">{latestMeta.costPerLead != null ? `Rp${formatDecimal(latestMeta.costPerLead / 1000)}K` : "—"}</p>
                       <p className="text-[11px] text-muted">CPL</p>
                     </div>
                     <div>
@@ -244,11 +244,11 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
                 ) : (
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <p className="font-data text-xl font-bold text-ink">{latestWebsite.visitors != null ? `${(latestWebsite.visitors / 1000).toFixed(1)}K` : "—"}</p>
+                      <p className="font-data text-xl font-bold text-ink">{latestWebsite.visitors != null ? `${formatDecimal(latestWebsite.visitors / 1000)}K` : "—"}</p>
                       <p className="text-[11px] text-muted">Visitors</p>
                     </div>
                     <div>
-                      <p className="font-data text-xl font-bold text-ink">{latestWebsite.sessions != null ? `${(latestWebsite.sessions / 1000).toFixed(1)}K` : "—"}</p>
+                      <p className="font-data text-xl font-bold text-ink">{latestWebsite.sessions != null ? `${formatDecimal(latestWebsite.sessions / 1000)}K` : "—"}</p>
                       <p className="text-[11px] text-muted">Sessions</p>
                     </div>
                     <div>
@@ -281,7 +281,7 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
               {socialByPlatform.map(({ platform, latest }) => (
                 <div key={platform}>
                   <p className="font-data text-[10px] uppercase tracking-wider text-muted">{platform}</p>
-                  <p className="mt-1 text-sm font-bold text-ink">{latest?.followers != null ? `${(latest.followers / 1000).toFixed(1)}K` : "—"}</p>
+                  <p className="mt-1 text-sm font-bold text-ink">{latest?.followers != null ? `${formatDecimal(latest.followers / 1000)}K` : "—"}</p>
                   <p className="text-[11px] text-muted">followers</p>
                 </div>
               ))}

@@ -6,7 +6,7 @@ import { TrendChart } from "@/components/dashboard/trend-chart";
 import { DateRangeTabs } from "@/components/dashboard/date-range-tabs";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { getCurrentClient, getPerformanceSummary } from "@/lib/data";
-import { formatNumber } from "@/lib/utils";
+import { formatNumber, formatPercent } from "@/lib/utils";
 import { Users, MousePointerClick, TrendingDown, Clock, Globe } from "lucide-react";
 
 function shortDate(iso: string) {
@@ -63,7 +63,7 @@ export default async function WebsitePage() {
           />
           <KpiCard
             label="Bounce Rate"
-            value={latest.bounceRate != null ? `${latest.bounceRate}%` : "—"}
+            value={latest.bounceRate != null ? formatPercent(latest.bounceRate) : "—"}
             icon={TrendingDown}
             iconColor="text-accent"
             iconBg="bg-accent-soft"

@@ -5,7 +5,7 @@ import { KpiCard } from "@/components/dashboard/kpi-card";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { ChannelOverview } from "@/components/dashboard/channel-overview";
 import { getCurrentClient, getPerformanceSummary, getChannelOverview } from "@/lib/data";
-import { formatNumber } from "@/lib/utils";
+import { formatNumber, formatPercent } from "@/lib/utils";
 import { Users, Heart, TrendingUp } from "lucide-react";
 
 function shortDate(iso: string) {
@@ -29,7 +29,7 @@ export default async function SocialMediaPage() {
       <div className="space-y-6 p-5 lg:p-8">
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <KpiCard label="Followers" value={formatNumber(latest?.followers ?? 0)} icon={Users} iconColor="text-accent" iconBg="bg-accent-soft" />
-          <KpiCard label="Engagement Rate" value={`${latest?.engagementRate?.toFixed(1) ?? "0"}%`} icon={Heart} iconColor="text-pink-600" iconBg="bg-pink-50" />
+          <KpiCard label="Engagement Rate" value={latest?.engagementRate != null ? formatPercent(latest.engagementRate) : "0%"} icon={Heart} iconColor="text-pink-600" iconBg="bg-pink-50" />
           <KpiCard label="Reach" value={formatNumber(latest?.reach ?? 0)} icon={TrendingUp} iconColor="text-emerald-600" iconBg="bg-emerald-50" />
         </section>
 
@@ -53,7 +53,7 @@ export default async function SocialMediaPage() {
                   <p className="font-data text-xs text-muted">{formatNumber(item.reach)} reach</p>
                 </div>
                 <span className="inline-flex shrink-0 items-center gap-1 font-data text-xs font-semibold text-success">
-                  <TrendingUp className="h-3 w-3" /> {item.engagementRate}%
+                  <TrendingUp className="h-3 w-3" /> {formatPercent(item.engagementRate)}
                 </span>
               </div>
             ))}

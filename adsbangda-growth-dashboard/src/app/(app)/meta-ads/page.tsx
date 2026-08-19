@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { DateRangeTabs } from "@/components/dashboard/date-range-tabs";
 import { getCurrentClient, getPerformanceSummary } from "@/lib/data";
-import { formatIDR, formatNumber } from "@/lib/utils";
+import { formatIDR, formatNumber, formatMultiplier } from "@/lib/utils";
 import { Target, Wallet, Eye, MousePointerClick, TrendingUp } from "lucide-react";
 
 function shortDate(iso: string) {
@@ -57,7 +57,7 @@ export default async function MetaAdsPage() {
           {latest?.roas != null && (
             <KpiCard
               label="ROAS"
-              value={`${latest.roas.toFixed(1)}x`}
+              value={formatMultiplier(latest.roas)}
               icon={TrendingUp}
               iconColor="text-accent"
               iconBg="bg-accent-soft"

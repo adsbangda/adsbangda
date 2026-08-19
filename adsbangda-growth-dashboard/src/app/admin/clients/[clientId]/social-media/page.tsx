@@ -28,7 +28,7 @@ import {
 import { CONTENT_TYPES_BY_PLATFORM, type SocialPlatform, type GoalStatus, type ContentStatus } from "@/lib/types";
 import { QuickStatusSelect } from "@/components/admin/quick-status-select";
 import { PillTabs } from "@/components/admin/pill-tabs";
-import { formatDateID, cn } from "@/lib/utils";
+import { formatDateID, formatPercent, cn } from "@/lib/utils";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 const SOCIAL_PLATFORMS: SocialPlatform[] = ["instagram", "facebook", "tiktok", "x", "linkedin", "threads"];
@@ -613,7 +613,7 @@ async function PerformancePanel({
                   <p className="font-data text-xs text-muted">
                     {m.followers != null && `${m.followers.toLocaleString("id-ID")} followers · `}
                     {m.reach != null && `${m.reach.toLocaleString("id-ID")} reach · `}
-                    {m.engagementRate != null && `${m.engagementRate}% ER`}
+                    {m.engagementRate != null && `${formatPercent(m.engagementRate, 2)} ER`}
                   </p>
                 </div>
                 <form action={deleteMetricAction}>

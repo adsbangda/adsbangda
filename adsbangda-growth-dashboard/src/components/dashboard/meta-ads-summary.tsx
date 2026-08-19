@@ -1,6 +1,6 @@
 import { EmptyState } from "./empty-state";
 import { MiniStat, pctDelta } from "./mini-stat";
-import { formatIDR, formatNumber } from "@/lib/utils";
+import { formatIDR, formatNumber, formatPercent, formatMultiplier } from "@/lib/utils";
 import { Megaphone } from "lucide-react";
 import type { PerformanceMetric } from "@/lib/types";
 
@@ -36,10 +36,10 @@ export function MetaAdsSummary({ metrics, budgetTarget }: { metrics: Performance
       <MiniStat label="Lead Masuk" value={formatNumber(latest.leads ?? 0)} deltaPct={pctDelta(latest.leads, previous?.leads)} color="blue" />
       <MiniStat label="Menjadi Client" value={formatNumber(latest.closing ?? 0)} deltaPct={pctDelta(latest.closing, previous?.closing)} color="green" />
       {latest.conversionRate != null && (
-        <MiniStat label="Conversion Rate" value={`${latest.conversionRate}%`} deltaPct={pctDelta(latest.conversionRate, previous?.conversionRate)} color="purple" />
+        <MiniStat label="Conversion Rate" value={formatPercent(latest.conversionRate)} deltaPct={pctDelta(latest.conversionRate, previous?.conversionRate)} color="purple" />
       )}
       <MiniStat label="Cost per Lead" value={formatIDR(latest.costPerLead ?? 0)} deltaPct={pctDelta(latest.costPerLead, previous?.costPerLead)} deltaGoodDirection="down" color="orange" />
-      {latest.roas != null && <MiniStat label="ROAS" value={`${latest.roas.toFixed(1)}x`} deltaPct={pctDelta(latest.roas, previous?.roas)} color="green" />}
+      {latest.roas != null && <MiniStat label="ROAS" value={formatMultiplier(latest.roas)} deltaPct={pctDelta(latest.roas, previous?.roas)} color="green" />}
 
       {budgetPct != null && (
         <div className="col-span-2 min-w-0 rounded-[var(--radius-md)] border border-border p-2.5">
