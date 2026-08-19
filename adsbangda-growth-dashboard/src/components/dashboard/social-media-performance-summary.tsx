@@ -44,9 +44,15 @@ export function SocialMediaPerformanceSummary({ metrics }: { metrics: Performanc
         if (!latest) return null;
 
         const followerDelta = pctDelta(latest.followers, previous?.followers);
+        const stats: { label: string; value: number | undefined; delta?: number | null }[] = [
+          { label: "Followers", value: latest.followers, delta: followerDelta },
+          { label: "Reach", value: latest.reach },
+          { label: "Impressions", value: latest.impressions },
+          { label: "Profile Visit", value: latest.visitors },
+        ];
 
         return (
-          <div key={platform} className="flex min-w-0 flex-col gap-3 rounded-[var(--radius-md)] border border-border bg-surface p-4">
+          <div key={platform} className="flex min-w-0 flex-col gap-3.5 rounded-[var(--radius-md)] border border-border bg-surface p-4">
             <div className="flex items-center gap-2">
               <span className="relative flex h-[26px] w-[26px] shrink-0 items-center justify-center overflow-hidden rounded-[8px] border border-border bg-surface">
                 {logo && (
@@ -57,32 +63,24 @@ export function SocialMediaPerformanceSummary({ metrics }: { metrics: Performanc
               <span className="text-sm font-semibold text-ink">{logo?.label ?? platform}</span>
             </div>
 
-            <div>
-              <p className="font-data text-xl font-extrabold leading-none text-ink">{formatNumber(latest.followers ?? 0)}</p>
-              <div className="mt-1 flex items-center gap-1.5">
-                <p className="text-[11px] text-muted">followers</p>
-                {followerDelta != null && (
-                  <span className={cn("font-data text-[10px] font-bold", followerDelta >= 0 ? "text-success" : "text-danger")}>
-                    {followerDelta >= 0 ? "+" : ""}
-                    {followerDelta}%
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2.5 border-t border-border pt-2.5">
-              <div>
-                <p className="font-data text-xs font-bold text-ink">{formatNumber(latest.reach ?? 0)}</p>
-                <p className="text-[10px] text-muted">Reach</p>
-              </div>
-              <div>
-                <p className="font-data text-xs font-bold text-ink">{formatNumber(latest.impressions ?? 0)}</p>
-                <p className="text-[10px] text-muted">Impressions</p>
-              </div>
-              <div className="col-span-2">
-                <p className="font-data text-xs font-bold text-ink">{formatNumber(latest.visitors ?? 0)}</p>
-                <p className="text-[10px] text-muted">Profile Visit</p>
-              </div>
+            {/* 4 metrik SAMA RATA — sama besar font, sama bobot — bukan
+                Followers dibesarkan sendiri lalu 3 lainnya kecil nyempil.
+                Data ini semua sama pentingnya buat client. */}
+            <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+              {stats.map((s) => (
+                <div key={s.label} className="min-w-0">
+                  <div className="flex items-baseline gap-1.5">
+                    <p className="font-data text-base font-bold leading-none text-ink">{formatNumber(s.value ?? 0)}</p>
+                    {s.delta != null && (
+                      <span className={cn("font-data text-[10px] font-bold", s.delta >= 0 ? "text-success" : "text-danger")}>
+                        {s.delta >= 0 ? "+" : ""}
+                        {s.delta}%
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted">{s.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         );
