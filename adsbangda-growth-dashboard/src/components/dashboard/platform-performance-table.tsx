@@ -43,9 +43,10 @@ function MetricCell({ value, delta }: { value?: number | null; delta?: number | 
  * "Platform Performance" — satu tabel per platform (bukan grid card
  * terpisah-pisah) menampilkan Followers, Reach, Impressions, dan Profile
  * Visit, masing-masing dengan indikator naik/turun vs periode sebelumnya.
- * Kolom dipisahkan garis vertikal tipis (border-l) supaya lebih enak
- * dipindai matanya di layar lebar — sebelumnya cuma mengandalkan spasi
- * antar kolom, jadi kelihatan menyatu/kurang terstruktur.
+ * Garis pemisah cuma horizontal antar baris (divide-y) — sempat dicoba
+ * tambah garis vertikal antar kolom juga, tapi hasilnya kurang enak
+ * dilihat (kesannya seperti "jeruji" turun ke bawah), jadi dibalikin ke
+ * versi minimal spasi antar kolom seperti biasa.
  *
  * FLEKSIBEL — baris yang muncul cuma platform yang benar-benar ada
  * datanya (lihat getPlatformPerformanceTable), bukan daftar hardcode.
@@ -55,18 +56,16 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
     return <EmptyState icon={Users} title="Belum ada data performance" description="Data akan muncul begitu tim Adsbangda mengisi performance mingguan per platform." />;
   }
 
-  const colClass = "py-3.5 pl-4 first:pl-0 border-l border-border first:border-l-0";
-
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[560px] table-fixed text-left">
+      <table className="w-full min-w-[560px] text-left">
         <thead>
           <tr className="border-b border-border text-sm text-muted">
-            <th className={cn(colClass, "w-[26%] pb-3 font-medium")}>Platform</th>
-            <th className={cn(colClass, "w-[18.5%] pb-3 font-medium")}>Followers</th>
-            <th className={cn(colClass, "w-[18.5%] pb-3 font-medium")}>Reach</th>
-            <th className={cn(colClass, "w-[18.5%] pb-3 font-medium")}>Impressions</th>
-            <th className={cn(colClass, "w-[18.5%] pb-3 font-medium")}>Profile Visit</th>
+            <th className="pb-3 pr-4 font-medium">Platform</th>
+            <th className="pb-3 pr-4 font-medium">Followers</th>
+            <th className="pb-3 pr-4 font-medium">Reach</th>
+            <th className="pb-3 pr-4 font-medium">Impressions</th>
+            <th className="pb-3 font-medium">Profile Visit</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -74,7 +73,7 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
             const logo = PLATFORM_META[row.platform] ?? null;
             return (
               <tr key={row.platform}>
-                <td className={colClass}>
+                <td className="py-3.5 pr-4">
                   <div className="flex items-center gap-2.5">
                     <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-border bg-surface">
                       {logo && (
@@ -85,16 +84,16 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
                     <span className="truncate text-base font-semibold text-ink">{logo?.label ?? row.platform}</span>
                   </div>
                 </td>
-                <td className={colClass}>
+                <td className="py-3.5 pr-4">
                   <MetricCell value={row.followers} delta={row.followersDelta} />
                 </td>
-                <td className={colClass}>
+                <td className="py-3.5 pr-4">
                   <MetricCell value={row.reach} delta={row.reachDelta} />
                 </td>
-                <td className={colClass}>
+                <td className="py-3.5 pr-4">
                   <MetricCell value={row.impressions} delta={row.impressionsDelta} />
                 </td>
-                <td className={colClass}>
+                <td className="py-3.5">
                   <MetricCell value={row.profileVisit} delta={row.profileVisitDelta} />
                 </td>
               </tr>

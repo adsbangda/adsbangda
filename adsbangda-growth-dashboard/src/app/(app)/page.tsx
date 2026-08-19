@@ -170,25 +170,30 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
               </div>
             )}
 
-            <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
-              <Card>
-                <SectionHeading title="What AdsBangda Did" action={<a href="/reports" className="font-data text-xs font-semibold text-accent hover:underline">Lihat semua</a>} />
-                {activity.length === 0 ? (
-                  <EmptyState title="Belum ada aktivitas" description="Aktivitas tim Adsbangda akan muncul di sini." />
-                ) : (
-                  <ActivityList items={activity} />
-                )}
-              </Card>
-
-              <Card>
-                <SectionHeading title="Kalender Konten (Minggu Ini)" action={<a href="/content-calendar" className="font-data text-xs font-semibold text-accent hover:underline">Lihat kalender</a>} />
-                <WeeklyContentCalendar calendar={weeklyCalendar} />
-              </Card>
-            </div>
+            {/* Kalender Konten Mingguan — SEKARANG full-width sendiri (sejajar
+                dengan pola Meta Ads/Website Performance di atas: Card
+                penuh, bukan dipasangkan setengah-setengah), karena "What
+                AdsBangda Did" pindah ke kolom kanan (lihat di bawah). */}
+            <Card>
+              <SectionHeading title="Kalender Konten (Minggu Ini)" action={<a href="/content-calendar" className="font-data text-xs font-semibold text-accent hover:underline">Lihat kalender</a>} />
+              <WeeklyContentCalendar calendar={weeklyCalendar} />
+            </Card>
           </div>
 
-          {/* Right column */}
+          {/* Right column — urutan: Channel Overview → Needs Your Attention →
+              What AdsBangda Did → Upcoming This Month. */}
           <div className="space-y-6">
+            {(client.socialMediaActive || client.metaAdsActive || client.websiteActive) && (
+              <Card>
+                <SectionHeading title="Channel Overview (This Month)" action={<a href="/reports" className="font-data text-xs font-semibold text-accent hover:underline">Lihat laporan</a>} />
+                {channelRows.length === 0 ? (
+                  <EmptyState title="Belum ada data performance" description="Data akan muncul begitu tim Adsbangda mengisi performance mingguan." />
+                ) : (
+                  <ChannelOverview rows={channelRows} />
+                )}
+              </Card>
+            )}
+
             <Card>
               <SectionHeading title="Needs Your Attention" action={<a href="/content-calendar" className="font-data text-xs font-semibold text-accent hover:underline">Lihat semua</a>} />
               {attentionItems.length === 0 ? (
@@ -205,16 +210,14 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
               </a>
             </Card>
 
-            {(client.socialMediaActive || client.metaAdsActive || client.websiteActive) && (
-              <Card>
-                <SectionHeading title="Channel Overview (This Month)" action={<a href="/reports" className="font-data text-xs font-semibold text-accent hover:underline">Lihat laporan</a>} />
-                {channelRows.length === 0 ? (
-                  <EmptyState title="Belum ada data performance" description="Data akan muncul begitu tim Adsbangda mengisi performance mingguan." />
-                ) : (
-                  <ChannelOverview rows={channelRows} />
-                )}
-              </Card>
-            )}
+            <Card>
+              <SectionHeading title="What AdsBangda Did" action={<a href="/reports" className="font-data text-xs font-semibold text-accent hover:underline">Lihat semua</a>} />
+              {activity.length === 0 ? (
+                <EmptyState title="Belum ada aktivitas" description="Aktivitas tim Adsbangda akan muncul di sini." />
+              ) : (
+                <ActivityList items={activity} />
+              )}
+            </Card>
 
             <Card>
               <SectionHeading title="Upcoming This Month" action={<a href="/reports" className="font-data text-xs font-semibold text-accent hover:underline">Lihat kalender</a>} />
