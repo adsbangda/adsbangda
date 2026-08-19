@@ -38,11 +38,11 @@ export function MiniStat({
   const { bg, label: labelClass, delta: deltaClass } = COLOR_MAP[color];
 
   return (
-    <div className={cn("min-w-0 rounded-[var(--radius-md)] border border-border p-2.5", bg, wide && "col-span-2")}>
-      <p className={cn("truncate font-data text-[10px] font-semibold", labelClass)}>{label}</p>
-      <p className="mt-1 font-data text-[15px] font-extrabold leading-none text-ink">{value}</p>
+    <div className={cn("min-w-0 rounded-[var(--radius-md)] border border-border p-3", bg, wide && "col-span-2")}>
+      <p className={cn("truncate font-data text-[11px] font-semibold", labelClass)}>{label}</p>
+      <p className="mt-1 font-data text-base font-extrabold leading-none text-ink">{value}</p>
       {deltaPct != null && (
-        <p className={cn("mt-1 font-data text-[10px] font-bold", isGood ? deltaClass : "text-danger")}>
+        <p className={cn("mt-1.5 font-data text-[11px] font-bold", isGood ? deltaClass : "text-danger")}>
           {deltaPct >= 0 ? "+" : ""}
           {deltaPct}%
         </p>

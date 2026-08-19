@@ -20,7 +20,7 @@ export function WebsiteSummary({ metrics }: { metrics: PerformanceMetric[] }) {
   }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] items-stretch gap-2.5">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] items-stretch gap-3">
       <MiniStat label="Pengunjung" value={formatNumber(latest.visitors ?? 0)} deltaPct={pctDelta(latest.visitors, previous?.visitors)} color="blue" />
       <MiniStat label="Leads (Form)" value={formatNumber(latest.conversions ?? 0)} deltaPct={pctDelta(latest.conversions, previous?.conversions)} color="purple" />
       <MiniStat

@@ -204,7 +204,7 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                     {goalBreakdown.map((g) => (
                       <div key={g.id} className="rounded-[var(--radius-md)] border border-border p-3">
-                        <p className="font-data text-[10px] uppercase tracking-wider text-muted">
+                        <p className="font-data text-[11px] uppercase tracking-wider text-muted">
                           {g.platform} · {g.contentType}
                         </p>
                         <p className="mt-1 text-lg font-bold text-ink">
@@ -223,9 +223,9 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
                     {socialByPlatform.map(({ platform, latest }) => (
                       <div key={platform}>
-                        <p className="font-data text-[10px] uppercase tracking-wider text-muted">{platform}</p>
-                        <p className="mt-1 text-sm font-bold text-ink">{latest?.followers != null ? `${formatDecimal(latest.followers / 1000)}K` : "—"}</p>
-                        <p className="text-[11px] text-muted">followers</p>
+                        <p className="font-data text-[11px] uppercase tracking-wider text-muted">{platform}</p>
+                        <p className="mt-1 text-lg font-bold text-ink">{latest?.followers != null ? `${formatDecimal(latest.followers / 1000)}K` : "—"}</p>
+                        <p className="text-xs text-muted">followers</p>
                       </div>
                     ))}
                   </div>

@@ -39,7 +39,7 @@ export function MetaAdsSummary({ metrics, budgetTarget }: { metrics: Performance
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] items-stretch gap-2.5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] items-stretch gap-3">
         <MiniStat label="Lead Masuk" value={formatNumber(latest.leads ?? 0)} deltaPct={pctDelta(latest.leads, previous?.leads)} color="blue" />
         <MiniStat label="Menjadi Client" value={formatNumber(latest.closing ?? 0)} deltaPct={pctDelta(latest.closing, previous?.closing)} color="green" />
         {latest.conversionRate != null && (
@@ -50,16 +50,16 @@ export function MetaAdsSummary({ metrics, budgetTarget }: { metrics: Performance
       </div>
 
       {budgetPct != null && (
-        <div className="rounded-[var(--radius-md)] border border-border bg-accent-soft p-3">
+        <div className="rounded-[var(--radius-md)] border border-border bg-accent-soft p-3.5">
           <div className="flex items-baseline justify-between gap-2">
-            <p className="font-data text-[15px] font-extrabold leading-none text-ink">{formatIDR(latest.spend ?? 0)}</p>
-            <p className="shrink-0 font-data text-[11px] font-semibold text-muted">dari {formatIDR(budgetTarget!)}</p>
+            <p className="font-data text-lg font-extrabold leading-none text-ink">{formatIDR(latest.spend ?? 0)}</p>
+            <p className="shrink-0 font-data text-xs font-semibold text-muted">dari {formatIDR(budgetTarget!)}</p>
           </div>
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2.5 flex items-center gap-2">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/70">
               <div className="h-full rounded-full bg-accent" style={{ width: `${budgetPct}%` }} />
             </div>
-            <span className="shrink-0 font-data text-[11px] font-bold text-accent">{budgetPct}% Budget Terpakai</span>
+            <span className="shrink-0 font-data text-xs font-bold text-accent">{budgetPct}% Budget Terpakai</span>
           </div>
         </div>
       )}

@@ -49,10 +49,10 @@ export function SocialMediaPerformance({ platforms }: { platforms: SocialPlatfor
                   const pct = item.target > 0 ? Math.min(100, Math.round((item.completed / item.target) * 100)) : 0;
                   return (
                     <div key={item.contentType}>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted">{CONTENT_TYPE_LABEL[item.contentType] ?? item.contentType}</span>
-                        <span className="font-data font-semibold text-ink">
-                          {item.completed} <span className="text-muted">/ {item.target}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted">{CONTENT_TYPE_LABEL[item.contentType] ?? item.contentType}</span>
+                        <span className="font-data text-sm font-bold text-ink">
+                          {item.completed} <span className="text-xs font-medium text-muted">/ {item.target}</span>
                         </span>
                       </div>
                       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-black/[0.06]">
