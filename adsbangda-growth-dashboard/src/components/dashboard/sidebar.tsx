@@ -41,7 +41,7 @@ export function Sidebar({ clientName, isAdmin = false, onNavigate }: { clientNam
     <div className="flex h-full w-64 flex-col border-r border-border bg-surface">
       <div className="flex items-center justify-between px-5 py-6">
         <div>
-          <Logo tone="dark" height={20} />
+          <Logo tone="dark" height={26} />
           <div className="mt-2 font-data text-[10px] uppercase tracking-wider text-muted">Client Portal</div>
         </div>
         {onNavigate && (
