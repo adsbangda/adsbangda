@@ -202,11 +202,11 @@ export const mockWeeklyCalendar: WeeklyCalendar = {
 
 // Snapshot mingguan — dipakai untuk chart trend & perbandingan periode.
 export const mockPerformance: PerformanceMetric[] = [
-  { id: "m1", clientId: mockClient.id, date: "2026-07-06", channel: "meta_ads", spend: 3200000, reach: 42000, impressions: 61000, clicks: 980, leads: 41, costPerLead: 78048, ctr: 1.61, cpc: 3265, roas: 2.4 },
-  { id: "m2", clientId: mockClient.id, date: "2026-07-13", channel: "meta_ads", spend: 3400000, reach: 45500, impressions: 66000, clicks: 1040, leads: 47, costPerLead: 72340, ctr: 1.58, cpc: 3269, roas: 2.6 },
-  { id: "m3", clientId: mockClient.id, date: "2026-07-20", channel: "meta_ads", spend: 3350000, reach: 44200, impressions: 63500, clicks: 1005, leads: 44, costPerLead: 76136, ctr: 1.58, cpc: 3333, roas: 2.5 },
-  { id: "m4", clientId: mockClient.id, date: "2026-07-27", channel: "meta_ads", spend: 3600000, reach: 49800, impressions: 71200, clicks: 1150, leads: 53, costPerLead: 67924, ctr: 1.62, cpc: 3130, roas: 2.8 },
-  { id: "m5", clientId: mockClient.id, date: "2026-08-03", channel: "meta_ads", spend: 3750000, reach: 52100, impressions: 74800, clicks: 1210, leads: 58, costPerLead: 64655, ctr: 1.62, cpc: 3099, roas: 3.2 },
+  { id: "m1", clientId: mockClient.id, date: "2026-07-06", channel: "meta_ads", spend: 3200000, reach: 42000, impressions: 61000, clicks: 980, leads: 41, costPerLead: 78048, ctr: 1.61, cpc: 3265, roas: 2.4, closing: 6, conversionRate: 14.6, budgetTarget: 10000000 },
+  { id: "m2", clientId: mockClient.id, date: "2026-07-13", channel: "meta_ads", spend: 3400000, reach: 45500, impressions: 66000, clicks: 1040, leads: 47, costPerLead: 72340, ctr: 1.58, cpc: 3269, roas: 2.6, closing: 7, conversionRate: 14.9, budgetTarget: 10000000 },
+  { id: "m3", clientId: mockClient.id, date: "2026-07-20", channel: "meta_ads", spend: 3350000, reach: 44200, impressions: 63500, clicks: 1005, leads: 44, costPerLead: 76136, ctr: 1.58, cpc: 3333, roas: 2.5, closing: 6, conversionRate: 13.6, budgetTarget: 10000000 },
+  { id: "m4", clientId: mockClient.id, date: "2026-07-27", channel: "meta_ads", spend: 3600000, reach: 49800, impressions: 71200, clicks: 1150, leads: 53, costPerLead: 67924, ctr: 1.62, cpc: 3130, roas: 2.8, closing: 7, conversionRate: 13.2, budgetTarget: 10000000 },
+  { id: "m5", clientId: mockClient.id, date: "2026-08-03", channel: "meta_ads", spend: 4850000, reach: 52100, impressions: 74800, clicks: 1210, leads: 32, costPerLead: 151563, ctr: 1.62, cpc: 3099, roas: 3.2, closing: 8, conversionRate: 25, budgetTarget: 10000000 },
 ];
 
 export const mockSocial: PerformanceMetric[] = [

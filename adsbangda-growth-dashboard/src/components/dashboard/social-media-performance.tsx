@@ -48,7 +48,7 @@ export function SocialMediaPerformance({ platforms }: { platforms: SocialPlatfor
   return (
     <div
       className={cn(
-        "grid items-stretch gap-3.5",
+        "grid flex-1 items-stretch gap-3.5",
         isSingle ? "grid-cols-[230px] justify-start" : "grid-cols-[repeat(auto-fit,minmax(200px,1fr))]"
       )}
     >

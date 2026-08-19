@@ -67,6 +67,11 @@ export function AdminSidebar({ pendingRevisions = 0 }: { pendingRevisions?: numb
           <button
             type="submit"
             className="flex w-full items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-xs font-medium text-muted transition-colors hover:bg-black/[0.03] hover:text-ink"
+            onClick={(e) => {
+              if (!window.confirm("Yakin mau keluar dari Admin Portal?")) {
+                e.preventDefault();
+              }
+            }}
           >
             <LogOut className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
             Keluar

@@ -7,7 +7,7 @@ import { TrendChart } from "@/components/dashboard/trend-chart";
 import { DateRangeTabs } from "@/components/dashboard/date-range-tabs";
 import { getCurrentClient, getPerformanceSummary } from "@/lib/data";
 import { formatIDR, formatNumber } from "@/lib/utils";
-import { Target, Wallet, Eye, MousePointerClick } from "lucide-react";
+import { Target, Wallet, Eye, MousePointerClick, TrendingUp } from "lucide-react";
 
 function shortDate(iso: string) {
   return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short" }).format(new Date(iso));
@@ -23,6 +23,8 @@ export default async function MetaAdsPage() {
     curr !== undefined && prev ? Math.round(((curr - prev) / prev) * 100) : null;
   const leadDelta = pct(latest?.leads, previous?.leads);
   const cplDelta = pct(latest?.costPerLead, previous?.costPerLead);
+  const roasDelta = pct(latest?.roas, previous?.roas);
+  const budgetPct = latest?.budgetTarget && latest.budgetTarget > 0 ? Math.min(100, Math.round(((latest.spend ?? 0) / latest.budgetTarget) * 100)) : null;
 
   const leadsChart = metaAds.map((m) => ({ label: shortDate(m.date), value: m.leads ?? 0 }));
   const metaAdsChannels = channelSummary.filter((c) => c.channel.toLowerCase().includes("meta"));
@@ -49,9 +51,35 @@ export default async function MetaAdsPage() {
             iconBg="bg-accent-soft"
             delta={cplDelta !== null ? { value: `${Math.abs(cplDelta)}%`, direction: cplDelta <= 0 ? "up" : "down" } : undefined}
           />
+          {latest?.roas != null && (
+            <KpiCard
+              label="ROAS"
+              value={`${latest.roas.toFixed(1)}x`}
+              icon={TrendingUp}
+              iconColor="text-accent"
+              iconBg="bg-accent-soft"
+              delta={roasDelta !== null ? { value: `${Math.abs(roasDelta)}%`, direction: roasDelta >= 0 ? "up" : "down" } : undefined}
+            />
+          )}
           <KpiCard label="Ad Spend" value={formatIDR(latest?.spend ?? 0)} icon={Wallet} iconColor="text-accent" iconBg="bg-accent-soft" />
           <KpiCard label="Reach" value={formatNumber(latest?.reach ?? 0)} icon={Eye} iconColor="text-accent" iconBg="bg-accent-soft" />
         </section>
+
+        {budgetPct != null && (
+          <Card>
+            <SectionHeading title="Budget Terpakai" />
+            <div className="flex items-baseline justify-between">
+              <p className="font-display text-2xl font-extrabold text-ink">{formatIDR(latest?.spend ?? 0)}</p>
+              <p className="text-sm text-muted">dari {formatIDR(latest!.budgetTarget!)}</p>
+            </div>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-black/[0.06]">
+                <div className="h-full rounded-full bg-accent" style={{ width: `${budgetPct}%` }} />
+              </div>
+              <span className="font-data text-sm font-bold text-ink">{budgetPct}%</span>
+            </div>
+          </Card>
+        )}
 
         <Card>
           <SectionHeading title="Leads Over Time" description="Data mingguan" action={<DateRangeTabs />} />

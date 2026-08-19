@@ -74,7 +74,7 @@ export default async function OverviewPage() {
                   (Instagram/TikTok/Facebook dst) sudah ter-filter sendiri di dalam
                   getSocialMediaBreakdown — tidak perlu toggle tambahan di sini. */}
               {client.socialMediaActive && (
-                <Card>
+                <Card className="flex h-full flex-col">
                   <SectionHeading
                     title="Social Media Performance"
                     action={
@@ -117,7 +117,7 @@ export default async function OverviewPage() {
                     <SectionHeading
                       title="Website Performance"
                       action={
-                        <a href="/performance" className="font-data text-xs font-semibold text-accent hover:underline">
+                        <a href="/website" className="font-data text-xs font-semibold text-accent hover:underline">
                           Lihat laporan
                         </a>
                       }
