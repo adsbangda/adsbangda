@@ -19,6 +19,7 @@ import {
   adminDeleteContentTarget,
   adminListPerformanceMetrics,
   adminCreatePerformanceMetric,
+  adminUpdatePerformanceMetric,
   adminDeletePerformanceMetric,
   adminListGoals,
   adminCreateGoal,
@@ -165,6 +166,19 @@ export default async function AdminClientSocialMediaPage({
   async function deleteMetricAction(formData: FormData) {
     "use server";
     await adminDeletePerformanceMetric(String(formData.get("id")), "social");
+    revalidatePath(path);
+  }
+
+  async function updateMetricAction(formData: FormData) {
+    "use server";
+    await adminUpdatePerformanceMetric(String(formData.get("id")), "social", {
+      date: String(formData.get("date")),
+      followers: Number(formData.get("followers") ?? 0) || undefined,
+      reach: Number(formData.get("reach") ?? 0) || undefined,
+      impressions: Number(formData.get("impressions") ?? 0) || undefined,
+      engagementRate: Number(formData.get("engagementRate") ?? 0) || undefined,
+      visitors: Number(formData.get("visitors") ?? 0) || undefined,
+    });
     revalidatePath(path);
   }
 
@@ -452,7 +466,15 @@ export default async function AdminClientSocialMediaPage({
       )}
 
       {activeTab === "performance" && (
-        <PerformancePanel clientId={clientId} base={base} activePlatform={activePlatform} addMetric={addMetric} deleteMetricAction={deleteMetricAction} />
+        <PerformancePanel
+          clientId={clientId}
+          base={base}
+          activePlatform={activePlatform}
+          addMetric={addMetric}
+          updateMetricAction={updateMetricAction}
+          deleteMetricAction={deleteMetricAction}
+          edit={edit}
+        />
       )}
 
       {activeTab === "goals" && (
@@ -545,16 +567,21 @@ async function PerformancePanel({
   base,
   activePlatform,
   addMetric,
+  updateMetricAction,
   deleteMetricAction,
+  edit,
 }: {
   clientId: string;
   base: string;
   activePlatform: SocialPlatform;
   addMetric: (formData: FormData) => Promise<void>;
+  updateMetricAction: (formData: FormData) => Promise<void>;
   deleteMetricAction: (formData: FormData) => Promise<void>;
+  edit?: string;
 }) {
   const metrics = await adminListPerformanceMetrics(clientId, "social", activePlatform);
   const latest = metrics[0];
+  const performanceBase = `${base}?tab=performance&platform=${activePlatform}`;
 
   return (
     <div className="animate-rise space-y-6">
@@ -579,9 +606,10 @@ async function PerformancePanel({
         {!latest ? (
           <EmptyState icon={TrendingUp} title={`Belum ada data ${activePlatform}`} description="Tambahkan snapshot pertama lewat form di bawah." />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             <MiniMetric icon={Users} label="Followers" value={latest.followers} />
             <MiniMetric icon={Eye} label="Reach" value={latest.reach} />
+            <MiniMetric icon={Eye} label="Impressions" value={latest.impressions} />
             <MiniMetric icon={Heart} label="Engagement Rate" value={latest.engagementRate} suffix="%" />
             <MiniMetric icon={TrendingUp} label="Profile Visits" value={latest.visitors} />
           </div>
@@ -602,29 +630,57 @@ async function PerformancePanel({
       </Card>
 
       <Card padding="lg">
-        <SectionHeading title="Performance History" description={`Snapshot ${activePlatform}, urut terbaru. Belum ada Edit di baris history — hapus & tambah ulang kalau salah input.`} />
+        <SectionHeading title="Performance History" description={`Snapshot ${activePlatform}, urut terbaru. Klik Edit untuk perbaiki data (termasuk Impressions).`} />
         {metrics.length === 0 ? (
           <p className="text-xs text-muted">Belum ada data.</p>
         ) : (
           <div className="divide-y divide-border border-t border-border">
-            {metrics.map((m) => (
-              <div key={m.id} className="flex items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-ink">{formatDateID(m.date)}</p>
-                  <p className="font-data text-xs text-muted">
-                    {m.followers != null && `${m.followers.toLocaleString("id-ID")} followers · `}
-                    {m.reach != null && `${m.reach.toLocaleString("id-ID")} reach · `}
-                    {m.engagementRate != null && `${formatPercent(m.engagementRate, 2)} ER`}
-                  </p>
+            {metrics.map((m) =>
+              edit === m.id ? (
+                <div key={m.id} className="bg-accent-soft/40 py-3">
+                  <form action={updateMetricAction} className="grid grid-cols-2 gap-2 sm:grid-cols-6">
+                    <input type="hidden" name="id" value={m.id} />
+                    <input name="date" type="date" defaultValue={m.date} required className={inputClass} />
+                    <FormattedNumberInput name="followers" defaultValue={m.followers} placeholder="Followers" className={inputClass} />
+                    <FormattedNumberInput name="reach" defaultValue={m.reach} placeholder="Reach" className={inputClass} />
+                    <FormattedNumberInput name="impressions" defaultValue={m.impressions} placeholder="Impressions" className={inputClass} />
+                    <FormattedNumberInput name="engagementRate" allowDecimal defaultValue={m.engagementRate} placeholder="Engagement %" className={inputClass} />
+                    <FormattedNumberInput name="visitors" defaultValue={m.visitors} placeholder="Profile Visits" className={inputClass} />
+                    <div className="flex gap-2 sm:col-span-6">
+                      <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                        Save
+                      </button>
+                      <Link href={performanceBase} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                        Cancel
+                      </Link>
+                    </div>
+                  </form>
                 </div>
-                <form action={deleteMetricAction}>
-                  <input type="hidden" name="id" value={m.id} />
-                  <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
-                    <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                  </button>
-                </form>
-              </div>
-            ))}
+              ) : (
+                <div key={m.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-ink">{formatDateID(m.date)}</p>
+                    <p className="font-data text-xs text-muted">
+                      {m.followers != null && `${m.followers.toLocaleString("id-ID")} followers · `}
+                      {m.reach != null && `${m.reach.toLocaleString("id-ID")} reach · `}
+                      {m.impressions != null && `${m.impressions.toLocaleString("id-ID")} impressions · `}
+                      {m.engagementRate != null && `${formatPercent(m.engagementRate, 2)} ER`}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Link href={`${performanceBase}&edit=${m.id}`} className="text-muted hover:text-ink" aria-label="Edit">
+                      <Pencil className="h-4 w-4" strokeWidth={1.75} />
+                    </Link>
+                    <form action={deleteMetricAction}>
+                      <input type="hidden" name="id" value={m.id} />
+                      <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
+                        <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )
+            )}
           </div>
         )}
       </Card>

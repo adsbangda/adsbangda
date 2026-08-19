@@ -212,12 +212,12 @@ export const mockPerformance: PerformanceMetric[] = [
 ];
 
 export const mockSocial: PerformanceMetric[] = [
-  { id: "s1", clientId: mockClient.id, date: "2026-07-06", channel: "social", platform: "instagram", followers: 18200, engagementRate: 3.1, reach: 38000 },
-  { id: "s2", clientId: mockClient.id, date: "2026-07-13", channel: "social", platform: "instagram", followers: 18450, engagementRate: 3.4, reach: 40500 },
-  { id: "s3", clientId: mockClient.id, date: "2026-07-20", channel: "social", platform: "instagram", followers: 18700, engagementRate: 3.2, reach: 39800 },
-  { id: "s4", clientId: mockClient.id, date: "2026-07-27", channel: "social", platform: "instagram", followers: 19050, engagementRate: 3.8, reach: 44200 },
-  { id: "s5", clientId: mockClient.id, date: "2026-08-03", channel: "social", platform: "instagram", followers: 19400, engagementRate: 4.1, reach: 47600 },
-  { id: "s6", clientId: mockClient.id, date: "2026-08-03", channel: "social", platform: "tiktok", followers: 8200, engagementRate: 5.2, reach: 30000 },
+  { id: "s1", clientId: mockClient.id, date: "2026-07-06", channel: "social", platform: "instagram", followers: 18200, engagementRate: 3.1, reach: 38000, impressions: 52000, visitors: 1450 },
+  { id: "s2", clientId: mockClient.id, date: "2026-07-13", channel: "social", platform: "instagram", followers: 18450, engagementRate: 3.4, reach: 40500, impressions: 55200, visitors: 1520 },
+  { id: "s3", clientId: mockClient.id, date: "2026-07-20", channel: "social", platform: "instagram", followers: 18700, engagementRate: 3.2, reach: 39800, impressions: 53900, visitors: 1490 },
+  { id: "s4", clientId: mockClient.id, date: "2026-07-27", channel: "social", platform: "instagram", followers: 19050, engagementRate: 3.8, reach: 44200, impressions: 60100, visitors: 1680 },
+  { id: "s5", clientId: mockClient.id, date: "2026-08-03", channel: "social", platform: "instagram", followers: 19400, engagementRate: 4.1, reach: 47600, impressions: 64800, visitors: 1810 },
+  { id: "s6", clientId: mockClient.id, date: "2026-08-03", channel: "social", platform: "tiktok", followers: 8200, engagementRate: 5.2, reach: 30000, impressions: 41500, visitors: 920 },
 ];
 
 export const mockWebsite: PerformanceMetric[] = [

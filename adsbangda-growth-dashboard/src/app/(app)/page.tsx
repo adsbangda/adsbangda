@@ -9,7 +9,7 @@ import { ChannelOverview } from "@/components/dashboard/channel-overview";
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { WeeklyContentCalendar } from "@/components/dashboard/weekly-content-calendar";
 import { SocialMediaPerformance } from "@/components/dashboard/social-media-performance";
-import { SocialFollowersSummary } from "@/components/dashboard/social-followers-summary";
+import { SocialMediaPerformanceSummary } from "@/components/dashboard/social-media-performance-summary";
 import { MetaAdsSummary } from "@/components/dashboard/meta-ads-summary";
 import { WebsiteSummary } from "@/components/dashboard/website-summary";
 import { MomentumBanner } from "@/components/dashboard/momentum-banner";
@@ -77,7 +77,7 @@ export default async function OverviewPage() {
               {client.socialMediaActive && (
                 <Card className="flex h-full flex-col">
                   <SectionHeading
-                    title="Social Media Performance"
+                    title="Content Delivery"
                     action={
                       <a href="/social-media" className="font-data text-xs font-semibold text-accent hover:underline">
                         Lihat detail
@@ -95,24 +95,26 @@ export default async function OverviewPage() {
 
             {quickStats.length > 0 && <QuickStats stats={quickStats} />}
 
-            {/* Social Media Followers — card TERPISAH dari "Social Media
-                Performance" di atas (yang isinya content delivery target
-                vs actual, bukan followers). Sebelumnya belum ada sama
-                sekali di Overview walau datanya sudah lama diisi admin.
-                Fleksibel sama seperti Meta Ads/Website — SEMUA platform
-                yang pernah ada datanya otomatis muncul, section hilang
-                total kalau socialMediaActive false atau belum ada data. */}
+            {/* Social Media Performance — Followers/Reach/Impressions/Profile
+                Visit per platform. TERPISAH dari "Content Delivery" di atas
+                (target vs actual konten, sumber data beda). Engagement Rate
+                SENGAJA tidak diulang di sini — sudah ada di "Engagement per
+                Platform" (ChannelOverview) di halaman /social-media. Sebelumnya
+                belum ada sama sekali di Overview walau datanya sudah lama
+                diisi admin. Fleksibel sama seperti Meta Ads/Website — SEMUA
+                platform yang pernah ada datanya otomatis muncul, section
+                hilang total kalau socialMediaActive false atau belum ada data. */}
             {client.socialMediaActive && (
               <Card padding="lg">
                 <SectionHeading
-                  title="Social Media Followers"
+                  title="Social Media Performance"
                   action={
                     <a href="/social-media" className="font-data text-xs font-semibold text-accent hover:underline">
                       Lihat detail
                     </a>
                   }
                 />
-                <SocialFollowersSummary metrics={performanceSummary?.social ?? []} />
+                <SocialMediaPerformanceSummary metrics={performanceSummary?.social ?? []} />
               </Card>
             )}
 
