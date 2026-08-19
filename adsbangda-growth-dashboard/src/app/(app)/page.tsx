@@ -27,6 +27,8 @@ import {
   getPlatformPerformanceTable,
   getPerformanceSummary,
   currentPeriod,
+  monthBounds,
+  type DateRange,
 } from "@/lib/data";
 
 /** Format "YYYY-MM" jadi ISO date murni buat validasi regex — dipakai supaya
@@ -36,10 +38,26 @@ function isValidPeriod(value: string | undefined): value is string {
   return !!value && /^\d{4}-\d{2}$/.test(value);
 }
 
-export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
-  const { period: periodParam } = await searchParams;
+function isValidDate(value: string | undefined): value is string {
+  return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value).getTime());
+}
+
+export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ period?: string; from?: string; to?: string }> }) {
+  const { period: periodParam, from: fromParam, to: toParam } = await searchParams;
   const client = await getCurrentClient();
   const period = isValidPeriod(periodParam) ? periodParam : currentPeriod();
+
+  // Rentang tanggal custom dari date-range picker di OverviewHeader — cuma
+  // dianggap valid kalau DUA-DUANYA ada, format tanggal benar, urut (from
+  // <= to), DAN masih di dalam bulan `period` yang sedang aktif (jaga-jaga
+  // kalau ada yang utak-atik URL manual dengan tanggal di luar bulan itu).
+  // Kalau tidak valid/tidak ada, `range` dibiarkan undefined — fungsi data
+  // di bawah otomatis fallback ke satu bulan penuh (lihat monthBounds()).
+  const bounds = monthBounds(period);
+  const range: DateRange | undefined =
+    isValidDate(fromParam) && isValidDate(toParam) && fromParam <= toParam && fromParam >= bounds.from && toParam <= bounds.to
+      ? { from: fromParam, to: toParam }
+      : undefined;
 
   // Setiap fetch di bawah HANYA dipanggil kalau service terkait aktif untuk
   // client ini (client.socialMediaActive/metaAdsActive/websiteActive —
@@ -48,17 +66,16 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
   // sumber kebenaran "service aktif" — tidak ada konfigurasi baru, tidak
   // ada hardcode per-client.
   //
-  // `period` (dari dropdown tanggal di OverviewHeader) mempengaruhi Monthly
-  // Delivery & Content Delivery per platform (dua-duanya konsep "target
-  // bulan X") — Quick Stats, Meta Ads/Website performance, Platform
-  // Performance (Followers/Reach/Engagement/Profile Visit), Activity, dan
-  // Content Calendar tetap nunjukin snapshot/data TERBARU apa pun periode
-  // yang dipilih, karena itu snapshot mingguan, bukan konsep target bulanan.
+  // `period`/`range` (dari date-range picker di OverviewHeader) mempengaruhi
+  // Monthly Delivery & "What AdsBangda Did" (dua-duanya konsep "terjadi pada
+  // tanggal tertentu") — Quick Stats, Meta Ads/Website/Platform Performance,
+  // dan Content Calendar tetap nunjukin snapshot/data TERBARU apa pun yang
+  // dipilih, karena itu snapshot mingguan, bukan aktivitas per-tanggal.
   const [delivery, quickStats, attentionItems, activity, channelRows, upcomingEvents, weeklyCalendar, socialBreakdown, platformPerformance, performanceSummary] = await Promise.all([
-    getMonthlyDelivery(client.id, period),
+    getMonthlyDelivery(client.id, period, range),
     getQuickStats(client.id),
     getAttentionItems(client.id),
-    getRecentActivity(client.id),
+    getRecentActivity(client.id, period, range),
     getChannelOverview(client),
     getUpcomingEvents(client.id),
     getWeeklyCalendar(client.id),
@@ -69,7 +86,14 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="page-backdrop min-h-screen">
-      <OverviewHeader clientName={client.name} periodLabel={delivery.periodLabel} currentPeriod={period} attentionItems={attentionItems} />
+      <OverviewHeader
+        clientName={client.name}
+        periodLabel={delivery.periodLabel}
+        currentPeriod={period}
+        dateFrom={range?.from}
+        dateTo={range?.to}
+        hasAttention={attentionItems.length > 0}
+      />
 
       <div className="space-y-6 p-5 lg:p-8">
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
@@ -114,28 +138,6 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
 
             {quickStats.length > 0 && <QuickStats stats={quickStats} />}
 
-            {/* Platform Performance — tabel Followers/Reach/Engagement/
-                Content per platform, masing-masing dengan indikator naik-
-                turun vs periode sebelumnya. TERPISAH dari "Content
-                Delivery" di atas (target vs actual konten, sumber data
-                beda). Sebelumnya belum ada sama sekali di Overview walau
-                datanya sudah lama diisi admin. Fleksibel — SEMUA platform
-                yang pernah ada datanya otomatis muncul, section hilang
-                total kalau socialMediaActive false atau belum ada data. */}
-            {client.socialMediaActive && (
-              <Card padding="lg">
-                <SectionHeading
-                  title="Platform Performance"
-                  action={
-                    <a href="/social-media" className="font-data text-xs font-semibold text-accent hover:underline">
-                      Lihat detail
-                    </a>
-                  }
-                />
-                <PlatformPerformanceTable rows={platformPerformance} />
-              </Card>
-            )}
-
             {/* Meta Ads & Website Performance — berdampingan kalau dua-duanya
                 aktif, masing-masing full width kalau cuma satu yang aktif,
                 dan section-nya hilang total kalau dua-duanya tidak aktif. */}
@@ -168,6 +170,27 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
                   </Card>
                 )}
               </div>
+            )}
+
+            {/* Platform Performance — tabel Followers/Reach/Impressions/
+                Profile Visit per platform, masing-masing dengan indikator
+                naik-turun vs periode sebelumnya. TERPISAH dari "Content
+                Delivery" di atas (target vs actual konten, sumber data
+                beda). Fleksibel — SEMUA platform yang pernah ada datanya
+                otomatis muncul, section hilang total kalau socialMediaActive
+                false atau belum ada data. */}
+            {client.socialMediaActive && (
+              <Card padding="lg">
+                <SectionHeading
+                  title="Platform Performance"
+                  action={
+                    <a href="/social-media" className="font-data text-xs font-semibold text-accent hover:underline">
+                      Lihat detail
+                    </a>
+                  }
+                />
+                <PlatformPerformanceTable rows={platformPerformance} />
+              </Card>
             )}
 
             {/* Kalender Konten Mingguan — SEKARANG full-width sendiri (sejajar

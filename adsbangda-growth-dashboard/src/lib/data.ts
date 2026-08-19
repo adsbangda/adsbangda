@@ -55,6 +55,20 @@ export function currentPeriod() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
+/** Tanggal awal & akhir satu bulan penuh dari period "YYYY-MM" — dipakai sebagai default DateRange kalau user belum pilih rentang custom. */
+export function monthBounds(period: string): DateRange {
+  const [y, m] = period.split("-").map(Number);
+  const from = `${period}-01`;
+  const lastDay = new Date(y, m, 0).getDate();
+  const to = `${period}-${String(lastDay).padStart(2, "0")}`;
+  return { from, to };
+}
+
 export async function getCurrentClient(): Promise<Client> {
   if (!isSupabaseConfigured) return mockClient;
 
@@ -140,16 +154,27 @@ export async function getAttentionItems(clientId: string): Promise<AttentionItem
   }));
 }
 
-export async function getRecentActivity(clientId: string) {
-  if (!isSupabaseConfigured) return mockActivity.map((a) => ({ ...a, day: activityDayLabel(a.occurredAt) }));
+export async function getRecentActivity(clientId: string, period: string = currentPeriod(), range?: DateRange) {
+  const { from, to } = range ?? monthBounds(period);
+
+  if (!isSupabaseConfigured) {
+    return mockActivity
+      .filter((a) => {
+        const d = a.occurredAt.slice(0, 10);
+        return d >= from && d <= to;
+      })
+      .map((a) => ({ ...a, day: activityDayLabel(a.occurredAt) }));
+  }
 
   const supabase = await createClient();
   const { data } = await supabase!
     .from("activity_log")
     .select("*")
     .eq("client_id", clientId)
+    .gte("occurred_at", `${from}T00:00:00.000Z`)
+    .lte("occurred_at", `${to}T23:59:59.999Z`)
     .order("occurred_at", { ascending: false })
-    .limit(20);
+    .limit(50);
 
   return (data ?? []).map(mapActivityEntry);
 }
@@ -165,7 +190,7 @@ export async function getRecentActivity(clientId: string) {
  * situ lagi — nulis ke situ manual lewat Table Editor tidak akan pernah
  * konsisten dengan apa yang admin lihat sendiri di layarnya.
  */
-export async function getMonthlyDelivery(clientId: string, period: string = currentPeriod()): Promise<MonthlyDeliveryHero> {
+export async function getMonthlyDelivery(clientId: string, period: string = currentPeriod(), range?: DateRange): Promise<MonthlyDeliveryHero> {
   if (!isSupabaseConfigured) return mockMonthlyDelivery;
 
   const supabase = await createClient();
@@ -175,7 +200,15 @@ export async function getMonthlyDelivery(clientId: string, period: string = curr
   ]);
 
   const targets = (targetRows ?? []).map(mapContentTarget);
-  const published = items.filter((i) => i.status === "published");
+  // Sebelumnya "published" dihitung TANPA filter tanggal sama sekali
+  // (semua konten published sepanjang waktu, apa pun period yang dipilih
+  // — bug laten: ganti bulan di dropdown tidak benar-benar mengubah angka
+  // ini). Sekarang selalu difilter ke DateRange yang aktif — default satu
+  // bulan penuh (monthBounds(period)) kalau user belum pilih rentang
+  // tanggal custom lewat date-range picker di OverviewHeader.
+  const { from, to } = range ?? monthBounds(period);
+  const isCustomRange = !!range;
+  const published = items.filter((i) => i.status === "published" && i.plannedDate >= from && i.plannedDate <= to);
 
   const totalTarget = targets.reduce((sum, t) => sum + t.target, 0);
   const totalDelivered = published.length;
@@ -184,13 +217,19 @@ export async function getMonthlyDelivery(clientId: string, period: string = curr
   const status: MonthlyDeliveryHero["status"] =
     totalTarget === 0 ? "on_track" : overallPct >= 100 ? "completed" : overallPct >= 60 ? "on_track" : overallPct >= 30 ? "at_risk" : "delayed";
 
+  const rangeLabel = isCustomRange
+    ? `tanggal ${new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long" }).format(new Date(`${from}T00:00:00`))} – ${new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${to}T00:00:00`))}`
+    : period === currentPeriod()
+      ? "bulan ini"
+      : "di periode ini";
+
   return {
     periodLabel: new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(new Date(`${period}-01`)),
     overallPct,
     status,
     helperText:
       totalTarget > 0
-        ? `${totalDelivered} dari ${totalTarget} konten sudah published${period === currentPeriod() ? " bulan ini" : ` di periode ini`}.`
+        ? `${totalDelivered} dari ${totalTarget} konten sudah published ${rangeLabel}${isCustomRange ? " (target tetap dihitung satu bulan penuh)" : ""}.`
         : "Belum ada target content untuk periode ini — hubungi tim Adsbangda.",
     meta: {
       periodRange: new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${period}-01`)),
