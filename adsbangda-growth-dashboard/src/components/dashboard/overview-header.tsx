@@ -1,44 +1,35 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { ChevronDown, Bell } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, ChevronLeft, ChevronRight, Bell } from "lucide-react";
 import { MobileMenuButton } from "./app-shell";
 
 interface OverviewHeaderProps {
   clientName: string;
   periodLabel: string;
-  /** "YYYY-MM" periode yang sedang aktif — dipakai buat highlight opsi terpilih, batas min/max date input, & generate href dropdown. */
+  /** "YYYY-MM" periode yang sedang aktif — dipakai buat bulan default kalender & generate href. */
   currentPeriod: string;
-  /** Rentang tanggal custom yang lagi aktif ("YYYY-MM-DD"), kalau ada — dipakai buat pre-fill input & label tombol. */
+  /** Rentang tanggal custom yang lagi aktif ("YYYY-MM-DD"), kalau ada — dipakai buat pre-select kalender & label tombol. */
   dateFrom?: string;
   dateTo?: string;
   hasAttention: boolean;
 }
 
-/** 6 bulan terakhir (termasuk bulan berjalan) — dropdown period picker generate rolling window, bukan query semua periode yang pernah ada di DB (lebih sederhana & cukup untuk kebutuhan "lihat progress bulan lalu"). */
-function recentPeriods(count = 6): { value: string; label: string }[] {
-  const now = new Date();
-  return Array.from({ length: count }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const label = new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(d);
-    return { value, label };
-  });
+const WEEKDAYS = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+
+function pad(n: number) {
+  return String(n).padStart(2, "0");
 }
 
-function monthBounds(period: string): { min: string; max: string } {
-  const [y, m] = period.split("-").map(Number);
-  const min = `${period}-01`;
-  const lastDay = new Date(y, m, 0).getDate();
-  const max = `${period}-${String(lastDay).padStart(2, "0")}`;
-  return { min, max };
+function toISO(y: number, m: number, d: number) {
+  return `${y}-${pad(m + 1)}-${pad(d)}`;
 }
 
 function formatRangeLabel(from: string, to: string): string {
   const fmt = (iso: string, withYear: boolean) =>
     new Intl.DateTimeFormat("id-ID", { day: "numeric", month: withYear ? "long" : "short", year: withYear ? "numeric" : undefined }).format(new Date(`${iso}T00:00:00`));
-  return `${fmt(from, false)} – ${fmt(to, true)}`;
+  return from === to ? fmt(from, true) : `${fmt(from, false)} – ${fmt(to, true)}`;
 }
 
 /** Dropdown generik — tutup sendiri kalau klik di luar area-nya. */
@@ -55,26 +46,83 @@ function useClickOutside(onClose: () => void) {
 }
 
 export function OverviewHeader({ clientName, periodLabel, currentPeriod, dateFrom, dateTo, hasAttention }: OverviewHeaderProps) {
+  const router = useRouter();
   const [periodOpen, setPeriodOpen] = useState(false);
   const periodRef = useClickOutside(() => setPeriodOpen(false));
-  const periods = recentPeriods();
-  const { min, max } = monthBounds(currentPeriod);
+
+  // Bulan yang lagi ditampilkan di grid kalender — BISA beda dari `currentPeriod`
+  // (misal user klik panah ‹ › buat lihat-lihat bulan lain dulu SEBELUM klik
+  // tanggal & Terapkan) — cuma state tampilan lokal, belum mengubah data
+  // apa pun sampai user benar-benar klik Terapkan.
+  const [viewYear, viewMonthState] = (dateFrom ?? `${currentPeriod}-01`).split("-").map(Number);
+  const [viewMonth, setViewMonth] = useState({ year: viewYear, month: viewMonthState - 1 });
+
+  // Tanggal yang lagi dipilih di kalender (belum tentu sudah "Terapkan") —
+  // klik pertama = mulai seleksi baru, klik kedua = jadi rentang, klik
+  // sekali lagi setelah rentang lengkap = mulai seleksi baru lagi.
+  const [selStart, setSelStart] = useState<string | null>(dateFrom ?? null);
+  const [selEnd, setSelEnd] = useState<string | null>(dateTo ?? null);
+
   const hasCustomRange = !!dateFrom && !!dateTo;
   const buttonLabel = hasCustomRange ? formatRangeLabel(dateFrom!, dateTo!) : periodLabel;
+  const monthLabel = new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(new Date(viewMonth.year, viewMonth.month, 1));
+
+  function handleDayClick(iso: string) {
+    if (!selStart || (selStart && selEnd)) {
+      // Belum ada seleksi, atau seleksi sebelumnya sudah lengkap (2 tanggal)
+      // → mulai seleksi baru dari tanggal yang baru diklik ini.
+      setSelStart(iso);
+      setSelEnd(null);
+    } else {
+      // Sudah ada 1 tanggal terpilih (selStart), ini klik kedua → jadi
+      // rentang. Urutan dibalik otomatis kalau tanggal kedua lebih awal.
+      if (iso < selStart) {
+        setSelEnd(selStart);
+        setSelStart(iso);
+      } else {
+        setSelEnd(iso);
+      }
+    }
+  }
+
+  function applySelection() {
+    if (!selStart) return;
+    const from = selStart;
+    const to = selEnd ?? selStart;
+    const period = `${viewMonth.year}-${pad(viewMonth.month + 1)}`;
+    router.push(`/?period=${period}&from=${from}&to=${to}`);
+    setPeriodOpen(false);
+  }
+
+  function resetToFullMonth() {
+    const period = `${viewMonth.year}-${pad(viewMonth.month + 1)}`;
+    setSelStart(null);
+    setSelEnd(null);
+    router.push(period === currentPeriod && !hasCustomRange ? "/" : `/?period=${period}`);
+    setPeriodOpen(false);
+  }
+
+  function changeMonth(delta: number) {
+    setViewMonth((v) => {
+      const d = new Date(v.year, v.month + delta, 1);
+      return { year: d.getFullYear(), month: d.getMonth() };
+    });
+  }
+
+  // Grid kalender bulan yang lagi ditampilkan — sel kosong (null) di awal
+  // buat nge-geser hari pertama ke kolom weekday yang benar (Minggu = 0).
+  const firstWeekday = new Date(viewMonth.year, viewMonth.month, 1).getDay();
+  const daysInMonth = new Date(viewMonth.year, viewMonth.month + 1, 0).getDate();
+  const cells: (string | null)[] = [...Array(firstWeekday).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => toISO(viewMonth.year, viewMonth.month, i + 1))];
 
   return (
-    // z-20 + relative DI SINI (bukan cuma di dropdown-nya) — supaya dropdown
-    // yang di-render sebagai children pasti tampil DI ATAS card apa pun yang
-    // ada di bawahnya di alur halaman (mis. Channel Overview yang sekarang
-    // jadi card pertama tepat di bawah header ini), bukan ketutup/ketimpa.
-    //
-    // PAKAI "z-20!" (bukan "z-20" polos) — SENGAJA, karena ada CSS global
+    // z-20! (bukan z-20 polos) — SENGAJA, karena ada CSS global
     // `.page-backdrop > *` (globals.css) yang otomatis kasih z-index:1 ke
-    // SEMUA anak langsung page-backdrop (termasuk header ini), dan aturan
-    // itu di-definisikan SETELAH utility Tailwind di stylesheet — jadi
-    // z-20 biasa kalah/ketimpa balik jadi 1 walau ditulis di JSX. "z-20!"
-    // (syntax important modifier Tailwind v4 — tanda "!" di BELAKANG nama
-    // utility, beda dari v3 yang di depan) memaksa menang dari override itu.
+    // SEMUA anak langsung page-backdrop (termasuk header ini), didefinisikan
+    // SETELAH utility Tailwind, jadi z-20 biasa ketimpa balik jadi 1. "z-20!"
+    // (important modifier Tailwind v4 — tanda "!" di BELAKANG nama utility)
+    // memaksa menang dari override itu, supaya dropdown kalender tampil DI
+    // ATAS card apa pun di bawahnya (mis. Channel Overview).
     <div className="relative z-20! flex flex-wrap items-center justify-between gap-4 border-b border-border bg-surface/80 px-5 py-4 backdrop-blur lg:px-8">
       <div className="flex items-center gap-3">
         {/* Tanpa ini, sidebar desktop (hidden di bawah breakpoint lg) tidak
@@ -88,13 +136,11 @@ export function OverviewHeader({ clientName, periodLabel, currentPeriod, dateFro
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Period & date-range picker — pilih bulan (6 bulan terakhir) ATAU
-            rentang tanggal spesifik di dalam bulan itu (mis. tanggal 1–10).
-            Cuma memengaruhi Monthly Delivery & "What AdsBangda Did" (dua-
-            duanya konsep "aktivitas/konten pada tanggal tertentu") — bagian
-            lain di Overview (Meta Ads, Website, Platform Performance dst)
-            tetap nunjukin snapshot performance TERBARU apa pun yang dipilih
-            di sini, karena itu bukan data yang "terjadi pada tanggal X". */}
+        {/* Kalender — klik 1 tanggal buat lihat hari itu saja, atau klik 2
+            tanggal buat lihat rentangnya. Cuma memengaruhi Monthly Delivery
+            & "What AdsBangda Did" (konsep "terjadi pada tanggal tertentu")
+            — Meta Ads/Website/Platform Performance tetap nunjukin snapshot
+            performance TERBARU apa pun yang dipilih di sini. */}
         <div className="relative" ref={periodRef}>
           <button
             type="button"
@@ -107,80 +153,73 @@ export function OverviewHeader({ clientName, periodLabel, currentPeriod, dateFro
           </button>
 
           {periodOpen && (
-            <div className="absolute right-0 top-full z-30 mt-2 w-72 overflow-hidden rounded-[var(--radius-md)] border border-border bg-surface shadow-[var(--shadow-md)]">
-              <div className="py-1.5">
-                {periods.map((p) => (
-                  <Link
-                    key={p.value}
-                    href={p.value === periods[0].value ? "/" : `/?period=${p.value}`}
-                    onClick={() => setPeriodOpen(false)}
-                    className={`flex items-center justify-between px-3.5 py-2 text-sm capitalize transition-colors hover:bg-black/[0.03] ${
-                      p.value === currentPeriod && !hasCustomRange ? "font-semibold text-accent" : "text-ink"
-                    }`}
-                  >
-                    {p.label}
-                    {p.value === currentPeriod && !hasCustomRange && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
-                  </Link>
-                ))}
+            <div className="absolute right-0 top-full z-30 mt-2 w-72 rounded-[var(--radius-md)] border border-border bg-surface p-3.5 shadow-[var(--shadow-md)]">
+              <div className="mb-3 flex items-center justify-between">
+                <button type="button" onClick={() => changeMonth(-1)} aria-label="Bulan sebelumnya" className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition-colors hover:bg-black/[0.05] hover:text-ink">
+                  <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+                </button>
+                <p className="text-sm font-semibold capitalize text-ink">{monthLabel}</p>
+                <button type="button" onClick={() => changeMonth(1)} aria-label="Bulan berikutnya" className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition-colors hover:bg-black/[0.05] hover:text-ink">
+                  <ChevronRight className="h-4 w-4" strokeWidth={2} />
+                </button>
               </div>
 
-              {/* Rentang tanggal custom di dalam bulan yang lagi dipilih di atas —
-                  native <input type="date"> browser sudah punya kalender bawaan,
-                  jadi tidak perlu bikin komponen kalender kustom dari nol. Submit
-                  via GET form biasa (bukan JS fetch) supaya URL-nya
-                  ?period=...&from=...&to=... langsung ke-generate otomatis oleh
-                  browser dari nama field di bawah. */}
-              <form action="/" method="get" className="border-t border-border p-3.5">
-                <p className="mb-2 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Atau pilih rentang tanggal</p>
-                <input type="hidden" name="period" value={currentPeriod} />
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    name="from"
-                    defaultValue={dateFrom ?? min}
-                    min={min}
-                    max={max}
-                    required
-                    className="w-full min-w-0 rounded-[var(--radius-sm)] border border-border px-2 py-1.5 text-xs text-ink outline-none focus:border-ink"
-                  />
-                  <span className="shrink-0 text-xs text-muted">–</span>
-                  <input
-                    type="date"
-                    name="to"
-                    defaultValue={dateTo ?? max}
-                    min={min}
-                    max={max}
-                    required
-                    className="w-full min-w-0 rounded-[var(--radius-sm)] border border-border px-2 py-1.5 text-xs text-ink outline-none focus:border-ink"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="mt-2.5 w-full rounded-[var(--radius-sm)] bg-ink px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent"
-                >
-                  Terapkan
-                </button>
-                {hasCustomRange && (
-                  <Link
-                    href={`/?period=${currentPeriod}`}
-                    onClick={() => setPeriodOpen(false)}
-                    className="mt-1.5 flex items-center justify-center text-xs text-muted hover:text-ink hover:underline"
-                  >
-                    Reset ke satu bulan penuh
-                  </Link>
+              <div className="grid grid-cols-7 gap-y-1 text-center">
+                {WEEKDAYS.map((d) => (
+                  <span key={d} className="font-data text-[10px] font-semibold text-muted">
+                    {d}
+                  </span>
+                ))}
+                {cells.map((iso, i) => {
+                  if (!iso) return <span key={i} />;
+                  const isStart = iso === selStart;
+                  const isEnd = iso === selEnd;
+                  const inRange = !!selStart && !!selEnd && iso > selStart && iso < selEnd;
+                  const isToday = iso === toISO(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+                  return (
+                    <button
+                      key={iso}
+                      type="button"
+                      onClick={() => handleDayClick(iso)}
+                      className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full font-data text-xs transition-colors ${
+                        isStart || isEnd
+                          ? "bg-accent font-bold text-white"
+                          : inRange
+                            ? "bg-accent-soft text-accent"
+                            : isToday
+                              ? "font-semibold text-accent"
+                              : "text-ink hover:bg-black/[0.05]"
+                      }`}
+                    >
+                      {Number(iso.slice(-2))}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
+                <p className="text-xs text-muted">{selStart ? formatRangeLabel(selStart, selEnd ?? selStart) : "Pilih tanggal"}</p>
+                {(selStart || hasCustomRange) && (
+                  <button type="button" onClick={resetToFullMonth} className="text-xs text-muted underline hover:text-ink">
+                    Reset
+                  </button>
                 )}
-              </form>
+              </div>
+              <button
+                type="button"
+                onClick={applySelection}
+                disabled={!selStart}
+                className="mt-2 w-full rounded-[var(--radius-sm)] bg-ink px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Terapkan
+              </button>
             </div>
           )}
         </div>
 
-        {/* Notifikasi — SEKARANG cuma indikator visual (titik/badge merah
-            kalau ada yang butuh perhatian), BUKAN lagi dropdown yang bisa
-            diklik. Detailnya sendiri sudah selalu kelihatan di card "Needs
-            Your Attention" & "What AdsBangda Did" di body Overview, jadi
-            dropdown terpisah di sini cuma duplikasi — cukup jadi penanda
-            "ada info baru" yang mengarahkan mata ke bawah, bukan tempat baca
-            detailnya. */}
+        {/* Notifikasi — cuma indikator visual (titik kalau ada yang butuh
+            perhatian), BUKAN dropdown — detailnya sudah selalu kelihatan di
+            card "Needs Your Attention" & "What AdsBangda Did" di body. */}
         <span
           aria-label={hasAttention ? "Ada yang butuh perhatian — lihat card Needs Your Attention" : "Tidak ada yang butuh perhatian"}
           title={hasAttention ? "Ada yang butuh perhatian — lihat card Needs Your Attention" : "Tidak ada yang butuh perhatian"}
