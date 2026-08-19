@@ -187,6 +187,19 @@ export interface SocialPlatformSummary {
   items: { contentType: string; completed: number; target: number }[];
 }
 
+/** Baris tabel "Platform Performance" di Overview — lihat getPlatformPerformanceTable() di lib/data.ts. */
+export interface PlatformPerformanceRow {
+  platform: string;
+  followers?: number;
+  followersDelta?: number | null;
+  reach?: number;
+  reachDelta?: number | null;
+  engagementRate?: number;
+  engagementDelta?: number | null;
+  contentCount: number;
+  contentDelta?: number | null;
+}
+
 export interface WebsiteActivityEntry {
   id: string;
   clientId: string;

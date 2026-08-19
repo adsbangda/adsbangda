@@ -21,6 +21,7 @@ import type {
   Goal,
   ContentTarget,
   SocialPlatformSummary,
+  PlatformPerformanceRow,
   WebsiteActivityEntry,
   ApprovalHistoryEntry,
 } from "./types";
@@ -173,6 +174,18 @@ export const mockSocialMediaBreakdown: SocialPlatformSummary[] = [
     platform: "tiktok",
     items: [{ contentType: "video", completed: 8, target: 12 }],
   },
+];
+
+// Data untuk card "Platform Performance" di Overview — independen dari
+// mockSocial di atas (yang cuma isi Instagram+TikTok) karena tabel ini
+// perlu contoh SEMUA platform sekaligus buat demo layout tabelnya.
+export const mockPlatformPerformanceTable: PlatformPerformanceRow[] = [
+  { platform: "instagram", followers: 68400, followersDelta: 11.2, reach: 812100, reachDelta: 17.3, engagementRate: 4.21, engagementDelta: 0.9, contentCount: 42, contentDelta: 16.7 },
+  { platform: "tiktok", followers: 32700, followersDelta: 15.8, reach: 356200, reachDelta: 22.1, engagementRate: 5.32, engagementDelta: 1.3, contentCount: 18, contentDelta: 28.6 },
+  { platform: "facebook", followers: 18900, followersDelta: 6.4, reach: 198700, reachDelta: 12.3, engagementRate: 2.45, engagementDelta: 0.4, contentCount: 16, contentDelta: 14.3 },
+  { platform: "linkedin", followers: 5200, followersDelta: 8.7, reach: 41900, reachDelta: 9.8, engagementRate: 1.85, engagementDelta: 0.2, contentCount: 6, contentDelta: 20 },
+  { platform: "x", followers: 2100, followersDelta: -1.3, reach: 12600, reachDelta: 2.1, engagementRate: 0.95, engagementDelta: -0.1, contentCount: 4, contentDelta: 0 },
+  { platform: "threads", followers: 1300, followersDelta: 3.2, reach: 5800, reachDelta: 4.8, engagementRate: 1.22, engagementDelta: 0.3, contentCount: 2, contentDelta: null },
 ];
 
 export const mockUpcomingEvents: UpcomingEvent[] = [

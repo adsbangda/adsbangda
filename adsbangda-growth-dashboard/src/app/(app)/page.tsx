@@ -9,7 +9,7 @@ import { ChannelOverview } from "@/components/dashboard/channel-overview";
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { WeeklyContentCalendar } from "@/components/dashboard/weekly-content-calendar";
 import { SocialMediaPerformance } from "@/components/dashboard/social-media-performance";
-import { SocialMediaPerformanceSummary } from "@/components/dashboard/social-media-performance-summary";
+import { PlatformPerformanceTable } from "@/components/dashboard/platform-performance-table";
 import { MetaAdsSummary } from "@/components/dashboard/meta-ads-summary";
 import { WebsiteSummary } from "@/components/dashboard/website-summary";
 import { MomentumBanner } from "@/components/dashboard/momentum-banner";
@@ -24,6 +24,7 @@ import {
   getUpcomingEvents,
   getWeeklyCalendar,
   getSocialMediaBreakdown,
+  getPlatformPerformanceTable,
   getPerformanceSummary,
   currentPeriod,
 } from "@/lib/data";
@@ -47,13 +48,14 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
   // sumber kebenaran "service aktif" — tidak ada konfigurasi baru, tidak
   // ada hardcode per-client.
   //
-  // `period` (dari dropdown tanggal di OverviewHeader) HANYA mempengaruhi
-  // Monthly Delivery & Content Delivery per platform (dua-duanya konsep
-  // "target bulan X") — Quick Stats, Meta Ads/Website/Social performance,
+  // `period` (dari dropdown tanggal di OverviewHeader) mempengaruhi Monthly
+  // Delivery, Content Delivery per platform, DAN kolom Content di Platform
+  // Performance (dihitung per-bulan) — Quick Stats, Meta Ads/Website
+  // performance, Followers/Reach/Engagement di Platform Performance,
   // Activity, dan Content Calendar tetap nunjukin snapshot/data TERBARU
-  // apa pun periode yang dipilih, karena memang bukan konsep "per-bulan"
-  // yang sama (snapshot mingguan, bukan target bulanan).
-  const [delivery, quickStats, attentionItems, activity, channelRows, upcomingEvents, weeklyCalendar, socialBreakdown, performanceSummary] = await Promise.all([
+  // apa pun periode yang dipilih, karena itu snapshot mingguan, bukan
+  // konsep target bulanan.
+  const [delivery, quickStats, attentionItems, activity, channelRows, upcomingEvents, weeklyCalendar, socialBreakdown, platformPerformance, performanceSummary] = await Promise.all([
     getMonthlyDelivery(client.id, period),
     getQuickStats(client.id),
     getAttentionItems(client.id),
@@ -62,6 +64,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
     getUpcomingEvents(client.id),
     getWeeklyCalendar(client.id),
     client.socialMediaActive ? getSocialMediaBreakdown(client.id, period) : Promise.resolve([]),
+    client.socialMediaActive ? getPlatformPerformanceTable(client.id, period) : Promise.resolve([]),
     client.metaAdsActive || client.websiteActive || client.socialMediaActive ? getPerformanceSummary(client.id) : Promise.resolve(null),
   ]);
 
@@ -112,26 +115,25 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
 
             {quickStats.length > 0 && <QuickStats stats={quickStats} />}
 
-            {/* Social Media Performance — Followers/Reach/Impressions/Profile
-                Visit per platform. TERPISAH dari "Content Delivery" di atas
-                (target vs actual konten, sumber data beda). Engagement Rate
-                SENGAJA tidak diulang di sini — sudah ada di "Engagement per
-                Platform" (ChannelOverview) di halaman /social-media. Sebelumnya
-                belum ada sama sekali di Overview walau datanya sudah lama
-                diisi admin. Fleksibel sama seperti Meta Ads/Website — SEMUA
-                platform yang pernah ada datanya otomatis muncul, section
-                hilang total kalau socialMediaActive false atau belum ada data. */}
+            {/* Platform Performance — tabel Followers/Reach/Engagement/
+                Content per platform, masing-masing dengan indikator naik-
+                turun vs periode sebelumnya. TERPISAH dari "Content
+                Delivery" di atas (target vs actual konten, sumber data
+                beda). Sebelumnya belum ada sama sekali di Overview walau
+                datanya sudah lama diisi admin. Fleksibel — SEMUA platform
+                yang pernah ada datanya otomatis muncul, section hilang
+                total kalau socialMediaActive false atau belum ada data. */}
             {client.socialMediaActive && (
               <Card padding="lg">
                 <SectionHeading
-                  title="Social Media Performance"
+                  title="Platform Performance"
                   action={
                     <a href="/social-media" className="font-data text-xs font-semibold text-accent hover:underline">
                       Lihat detail
                     </a>
                   }
                 />
-                <SocialMediaPerformanceSummary metrics={performanceSummary?.social ?? []} />
+                <PlatformPerformanceTable rows={platformPerformance} />
               </Card>
             )}
 
