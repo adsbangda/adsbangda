@@ -12,7 +12,6 @@ import {
   Folder,
   LogOut,
   Mail,
-  MessageCircle,
   ChevronDown,
   ArrowUpRight,
   X,
@@ -33,7 +32,6 @@ const NAV_ITEMS = [
   { href: "/files", label: "Files", icon: Folder },
 ];
 
-const WA_PHONE = "6282289348724";
 const SUPPORT_EMAIL = "support@adsbangda.com";
 
 export function Sidebar({ clientName, isAdmin = false, onNavigate }: { clientName: string; isAdmin?: boolean; onNavigate?: () => void }) {
@@ -99,20 +97,11 @@ export function Sidebar({ clientName, isAdmin = false, onNavigate }: { clientNam
           <p className="mb-1 text-xs font-semibold text-ink">Need help?</p>
           <p className="mb-2.5 text-[11px] leading-relaxed text-muted">Our team is ready to support you.</p>
           <a
-            href={`https://wa.me/${WA_PHONE}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="flex items-center justify-center gap-1.5 rounded-[var(--radius-sm)] bg-ink px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-accent"
           >
-            <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.75} />
+            <Mail className="h-3.5 w-3.5" strokeWidth={1.75} />
             Contact Us
-          </a>
-          <a
-            href={`mailto:${SUPPORT_EMAIL}`}
-            className="mt-1.5 flex items-center justify-center gap-1.5 text-[11px] text-muted transition-colors hover:text-ink"
-          >
-            <Mail className="h-3 w-3 shrink-0" strokeWidth={1.75} />
-            <span className="truncate">{SUPPORT_EMAIL}</span>
           </a>
         </div>
 
