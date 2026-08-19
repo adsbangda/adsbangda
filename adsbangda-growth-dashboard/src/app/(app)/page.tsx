@@ -9,6 +9,7 @@ import { ChannelOverview } from "@/components/dashboard/channel-overview";
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { WeeklyContentCalendar } from "@/components/dashboard/weekly-content-calendar";
 import { SocialMediaPerformance } from "@/components/dashboard/social-media-performance";
+import { SocialFollowersSummary } from "@/components/dashboard/social-followers-summary";
 import { MetaAdsSummary } from "@/components/dashboard/meta-ads-summary";
 import { WebsiteSummary } from "@/components/dashboard/website-summary";
 import { MomentumBanner } from "@/components/dashboard/momentum-banner";
@@ -44,7 +45,7 @@ export default async function OverviewPage() {
     getUpcomingEvents(client.id),
     getWeeklyCalendar(client.id),
     client.socialMediaActive ? getSocialMediaBreakdown(client.id) : Promise.resolve([]),
-    client.metaAdsActive || client.websiteActive ? getPerformanceSummary(client.id) : Promise.resolve(null),
+    client.metaAdsActive || client.websiteActive || client.socialMediaActive ? getPerformanceSummary(client.id) : Promise.resolve(null),
   ]);
 
   return (
@@ -93,6 +94,27 @@ export default async function OverviewPage() {
             </div>
 
             {quickStats.length > 0 && <QuickStats stats={quickStats} />}
+
+            {/* Social Media Followers — card TERPISAH dari "Social Media
+                Performance" di atas (yang isinya content delivery target
+                vs actual, bukan followers). Sebelumnya belum ada sama
+                sekali di Overview walau datanya sudah lama diisi admin.
+                Fleksibel sama seperti Meta Ads/Website — SEMUA platform
+                yang pernah ada datanya otomatis muncul, section hilang
+                total kalau socialMediaActive false atau belum ada data. */}
+            {client.socialMediaActive && (
+              <Card padding="lg">
+                <SectionHeading
+                  title="Social Media Followers"
+                  action={
+                    <a href="/social-media" className="font-data text-xs font-semibold text-accent hover:underline">
+                      Lihat detail
+                    </a>
+                  }
+                />
+                <SocialFollowersSummary metrics={performanceSummary?.social ?? []} />
+              </Card>
+            )}
 
             {/* Meta Ads & Website Performance — berdampingan kalau dua-duanya
                 aktif, masing-masing full width kalau cuma satu yang aktif,
