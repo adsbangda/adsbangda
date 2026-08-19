@@ -17,6 +17,7 @@ import {
   mapReportItem,
   mapFileEntry,
   mapActivityEntry,
+  activityDayLabel,
   mapQuickStat,
 } from "./mappers";
 import {
@@ -139,7 +140,7 @@ export async function getAttentionItems(clientId: string): Promise<AttentionItem
 }
 
 export async function getRecentActivity(clientId: string) {
-  if (!isSupabaseConfigured) return mockActivity;
+  if (!isSupabaseConfigured) return mockActivity.map((a) => ({ ...a, day: activityDayLabel(a.occurredAt) }));
 
   const supabase = await createClient();
   const { data } = await supabase!

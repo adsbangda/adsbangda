@@ -16,6 +16,7 @@ import {
   mapFileEntry,
   mapAttentionItem,
   mapActivityEntry,
+  activityDayLabel,
   mapPerformanceMetric,
   mapGoal,
   mapContentTarget,
@@ -143,6 +144,36 @@ export async function adminListClientsOverview(): Promise<ClientOverviewRow[]> {
 export async function adminGetClient(clientId: string): Promise<Client | null> {
   const clients = await adminListClients();
   return clients.find((c) => c.id === clientId) ?? null;
+}
+
+/**
+ * Upload file logo client ke Supabase Storage (bucket `client-logos`, lihat
+ * migration 0014) dan balikin URL publiknya. Dipanggil dari Server Action
+ * halaman "New Client" / "Client Information" SEBELUM adminCreateClient /
+ * adminUpdateClient — hasil URL-nya dipakai sebagai `logoUrl` seperti biasa,
+ * jadi sisi penyimpanan `clients.logo_url` sendiri TIDAK berubah sama sekali
+ * (masih string URL) — cuma sumbernya sekarang upload langsung, bukan lagi
+ * harus di-hosting manual di tempat lain dulu.
+ *
+ * Return `undefined` di mode demo (tidak ada Storage beneran buat disimpan)
+ * — pemanggil harus fallback ke logoUrl lama kalau ini `undefined`.
+ */
+export async function uploadClientLogo(file: File): Promise<string | undefined> {
+  await requireAdmin();
+  if (!file || file.size === 0) return undefined;
+  if (!isSupabaseConfigured) return undefined;
+
+  const supabase = await createClient();
+  const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+  const path = `logos/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase!.storage.from("client-logos").upload(path, file, {
+    upsert: true,
+    contentType: file.type || undefined,
+  });
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase!.storage.from("client-logos").getPublicUrl(path);
+  return data.publicUrl;
 }
 
 export async function adminCreateClient(input: { name: string; industry: string; status: Client["status"]; website?: string; description?: string; logoUrl?: string }) {
@@ -468,23 +499,73 @@ export async function adminListActivity(clientId: string): Promise<ActivityEntry
 
 export async function adminCreateActivity(
   clientId: string,
-  input: { day: string; title: string; description: string; done: boolean }
+  input: { occurredAt: string; title: string; description: string; done: boolean; thumbnailCount?: number }
 ) {
   await requireAdmin();
   if (!isSupabaseConfigured) {
     if (!isDemoClient(clientId)) return;
-    mockActivity.unshift({ id: uid(), ...input });
+    mockActivity.unshift({
+      id: uid(),
+      day: activityDayLabel(input.occurredAt),
+      occurredAt: input.occurredAt,
+      title: input.title,
+      description: input.description,
+      done: input.done,
+      thumbnailCount: input.thumbnailCount,
+    });
     return;
   }
 
   const supabase = await createClient();
   const { error } = await supabase!.from("activity_log").insert({
     client_id: clientId,
-    day_label: input.day,
+    // day_label kolomnya NOT NULL di skema lama — diisi hasil hitung SAAT
+    // insert cuma buat memenuhi constraint itu, TIDAK PERNAH dibaca lagi
+    // (lihat activityDayLabel() di mappers.ts — day selalu dihitung ULANG
+    // dari occurred_at tiap kali dibaca, supaya tidak basi).
+    day_label: activityDayLabel(input.occurredAt),
+    occurred_at: input.occurredAt,
     title: input.title,
     description: input.description,
     done: input.done,
+    thumbnail_count: input.thumbnailCount ?? null,
   });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminUpdateActivity(
+  entryId: string,
+  input: Partial<{ occurredAt: string; title: string; description: string; done: boolean; thumbnailCount: number | null }>
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const entry = mockActivity.find((a) => a.id === entryId);
+    if (entry) {
+      if (input.occurredAt !== undefined) {
+        entry.occurredAt = input.occurredAt;
+        entry.day = activityDayLabel(input.occurredAt);
+      }
+      if (input.title !== undefined) entry.title = input.title;
+      if (input.description !== undefined) entry.description = input.description;
+      if (input.done !== undefined) entry.done = input.done;
+      if (input.thumbnailCount !== undefined) entry.thumbnailCount = input.thumbnailCount ?? undefined;
+    }
+    return;
+  }
+
+  const supabase = await createClient();
+  const payload: Record<string, unknown> = {};
+  if (input.occurredAt !== undefined) {
+    payload.occurred_at = input.occurredAt;
+    payload.day_label = activityDayLabel(input.occurredAt);
+  }
+  if (input.title !== undefined) payload.title = input.title;
+  if (input.description !== undefined) payload.description = input.description;
+  if (input.done !== undefined) payload.done = input.done;
+  if (input.thumbnailCount !== undefined) payload.thumbnail_count = input.thumbnailCount;
+  if (Object.keys(payload).length === 0) return;
+
+  const { error } = await supabase!.from("activity_log").update(payload).eq("id", entryId);
   if (error) throw new Error(error.message);
 }
 

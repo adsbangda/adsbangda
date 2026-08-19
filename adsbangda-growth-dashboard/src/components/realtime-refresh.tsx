@@ -18,9 +18,10 @@ import { createClient } from "@/lib/supabase/client";
  * channel_overview/upcoming_events — tabel-tabel skema awal yang sudah
  * tidak dibaca lagi oleh lib/data.ts (lihat komentar di getMonthlyDelivery/
  * getAttentionItems/getChannelOverview/getUpcomingEvents), jadi tidak ada
- * gunanya dipantau. quick_stats & activity_log masih dipantau walau juga
- * belum ada admin UI yang menulis ke situ — biar konsisten sampai
- * getQuickStats()/getRecentActivity() ikut di-rewire ke sumber data asli.
+ * gunanya dipantau. quick_stats masih dipantau walau belum ada admin UI
+ * yang menulis ke situ — biar konsisten sampai getQuickStats() ikut
+ * di-rewire ke sumber data asli (activity_log SUDAH ada admin UI-nya,
+ * Admin → [client] → Activity Log).
  */
 const CLIENT_SCOPED_TABLES: { table: string; filterColumn: "id" | "client_id" | null }[] = [
   { table: "clients", filterColumn: "id" },

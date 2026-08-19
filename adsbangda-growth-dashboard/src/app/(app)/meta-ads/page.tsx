@@ -6,8 +6,8 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { DateRangeTabs } from "@/components/dashboard/date-range-tabs";
 import { getCurrentClient, getPerformanceSummary } from "@/lib/data";
-import { formatIDR, formatNumber, formatMultiplier } from "@/lib/utils";
-import { Target, Wallet, Eye, MousePointerClick, TrendingUp } from "lucide-react";
+import { formatIDR, formatNumber, formatMultiplier, formatPercent } from "@/lib/utils";
+import { Target, Wallet, Eye, MousePointerClick, TrendingUp, UserCheck } from "lucide-react";
 
 function shortDate(iso: string) {
   return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short" }).format(new Date(iso));
@@ -54,6 +54,16 @@ export default async function MetaAdsPage() {
             iconBg="bg-accent-soft"
             delta={cplDelta !== null ? { value: `${Math.abs(cplDelta)}%`, direction: cplDelta <= 0 ? "up" : "down" } : undefined}
           />
+          <KpiCard
+            label="Menjadi Client"
+            value={formatNumber(latest?.closing ?? 0)}
+            icon={UserCheck}
+            iconColor="text-accent"
+            iconBg="bg-accent-soft"
+          />
+          {latest?.conversionRate != null && (
+            <KpiCard label="Conversion Rate" value={formatPercent(latest.conversionRate)} icon={Target} iconColor="text-accent" iconBg="bg-accent-soft" />
+          )}
           {latest?.roas != null && (
             <KpiCard
               label="ROAS"

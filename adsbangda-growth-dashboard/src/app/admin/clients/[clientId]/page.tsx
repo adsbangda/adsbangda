@@ -6,6 +6,7 @@ import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { buttonVariants } from "@/components/dashboard/button";
 import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
+import { LogoUploadField } from "@/components/admin/logo-upload-field";
 import {
   adminGetClient,
   adminUpdateClient,
@@ -17,6 +18,7 @@ import {
   adminListPerformanceMetrics,
   adminListReports,
   adminListWebsiteActivity,
+  uploadClientLogo,
 } from "@/lib/admin-data";
 import { formatDateID, formatDecimal } from "@/lib/utils";
 import type { Client, SocialPlatform } from "@/lib/types";
@@ -40,13 +42,17 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
 
   async function updateClientAction(formData: FormData) {
     "use server";
+    const logoFile = formData.get("logoFile");
+    const uploadedLogoUrl = logoFile instanceof File ? await uploadClientLogo(logoFile) : undefined;
+    const removeLogo = formData.get("removeLogo") === "on";
+
     await adminUpdateClient(clientId, {
       name: String(formData.get("name") ?? "").trim(),
       industry: String(formData.get("industry") ?? "").trim(),
       website: String(formData.get("website") ?? "").trim(),
-      logoUrl: String(formData.get("logoUrl") ?? "").trim(),
       description: String(formData.get("description") ?? "").trim(),
       status: String(formData.get("status") ?? currentStatus) as Client["status"],
+      ...(uploadedLogoUrl ? { logoUrl: uploadedLogoUrl } : removeLogo ? { logoUrl: "" } : {}),
     });
     revalidatePath(path);
   }
@@ -115,7 +121,9 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
             <option value="paused">Paused</option>
             <option value="archived">Archived</option>
           </select>
-          <input name="logoUrl" type="url" defaultValue={client.logoUrl ?? ""} placeholder="Logo URL (opsional)" className={`${inputClass} sm:col-span-2 lg:col-span-1`} />
+          <div className="sm:col-span-2 lg:col-span-1">
+            <LogoUploadField name="logoFile" clientName={client.name} currentLogoUrl={client.logoUrl} showRemoveOption />
+          </div>
           <textarea
             name="description"
             defaultValue={client.description ?? ""}

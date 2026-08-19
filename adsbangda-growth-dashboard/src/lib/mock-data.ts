@@ -283,10 +283,17 @@ export const mockFiles: FileEntry[] = [
   { id: "f4", name: "Content Plan — Agustus 2026.xlsx", category: "Perencanaan", fileUrl: "#", updatedAt: "2026-08-01", sizeLabel: "96 KB" },
 ];
 
+// Dipakai buat ac1/ac2 di bawah biar "Hari ini"/"Kemarin" selalu match
+// tanggal server saat ini (mock data statis lain tetap fixed date, tidak
+// masalah karena cuma demo).
+const _now = new Date();
+const _isoDaysAgo = (n: number) => new Date(_now.getTime() - n * 86400000).toISOString();
+
 export const mockActivity: ActivityEntry[] = [
   {
     id: "ac1",
     day: "Hari ini",
+    occurredAt: _isoDaysAgo(0),
     title: "Optimasi Meta Ads Campaign",
     description: "Menyesuaikan audience dan penempatan iklan untuk meningkatkan performa.",
     done: true,
@@ -294,6 +301,7 @@ export const mockActivity: ActivityEntry[] = [
   {
     id: "ac2",
     day: "Kemarin",
+    occurredAt: _isoDaysAgo(1),
     title: "3 Konten Instagram Dipublikasikan",
     description: "1 Carousel • 1 Reel • 1 Story",
     done: true,
@@ -302,6 +310,7 @@ export const mockActivity: ActivityEntry[] = [
   {
     id: "ac3",
     day: "9 Agustus 2026",
+    occurredAt: "2026-08-09T10:00:00.000Z",
     title: "Content Strategy Weekly Meeting",
     description: "Membahas ide konten mingguan dan campaign berjalan.",
     done: false,
@@ -309,6 +318,7 @@ export const mockActivity: ActivityEntry[] = [
   {
     id: "ac4",
     day: "8 Agustus 2026",
+    occurredAt: "2026-08-08T15:00:00.000Z",
     title: "Desain 6 Konten Feed & 10 Story",
     description: "Pembuatan desain konten untuk minggu ke-2 bulan ini.",
     done: false,

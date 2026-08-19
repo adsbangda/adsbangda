@@ -11,11 +11,17 @@ import type { PerformanceMetric } from "@/lib/types";
  * di dalam sini masih dibedakan "aktif tapi belum ada data" (tampilkan
  * empty state) vs section yang memang tidak pernah dirender sama sekali.
  *
- * Semua KPI (termasuk Budget Terpakai) satu mini-stat-grid yang sama —
- * BUKAN box terpisah lebar tetap. auto-fit + minmax bikin kolomnya
- * otomatis proporsional baik card sendirian (full width, service lain
- * nonaktif) maupun berdampingan sama Website (setengah lebar) — tidak ada
- * lagi ruang kosong atau kotak yang "ketinggalan" ukurannya.
+ * Semua KPI singkat (Leads, Menjadi Client, Conversion Rate, CPL, ROAS)
+ * satu mini-stat-grid auto-fit — proporsional baik card sendirian (full
+ * width) maupun berdampingan sama Website (setengah lebar).
+ *
+ * Budget Terpakai SENGAJA di luar grid itu (bukan ikut jadi salah satu
+ * cell col-span-2) — dicoba dulu ikut grid tapi hasilnya kadang nyisain
+ * gap kosong ganjil tergantung berapa banyak KPI lain yang tampil (grid
+ * auto-fit tidak tahu ada 1 cell lebih lebar pas hitung wrap). Progress
+ * bar butuh baris sendiri yang full-width supaya konsisten di semua lebar
+ * layar, jadi taruh sebagai block terpisah di bawah grid — sama pola yang
+ * dipakai "Goal Achievement" di Admin → Meta Ads.
  *
  * `budgetTarget` datang dari `Client.metaAdsBudgetTarget` (persisten, diisi
  * admin sekali di Admin → Meta Ads) — BUKAN dari snapshot performance_metrics,
@@ -32,25 +38,28 @@ export function MetaAdsSummary({ metrics, budgetTarget }: { metrics: Performance
   const budgetPct = budgetTarget && budgetTarget > 0 ? Math.min(100, Math.round(((latest.spend ?? 0) / budgetTarget) * 100)) : null;
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] items-stretch gap-2.5">
-      <MiniStat label="Lead Masuk" value={formatNumber(latest.leads ?? 0)} deltaPct={pctDelta(latest.leads, previous?.leads)} color="blue" />
-      <MiniStat label="Menjadi Client" value={formatNumber(latest.closing ?? 0)} deltaPct={pctDelta(latest.closing, previous?.closing)} color="green" />
-      {latest.conversionRate != null && (
-        <MiniStat label="Conversion Rate" value={formatPercent(latest.conversionRate)} deltaPct={pctDelta(latest.conversionRate, previous?.conversionRate)} color="purple" />
-      )}
-      <MiniStat label="Cost per Lead" value={formatIDR(latest.costPerLead ?? 0)} deltaPct={pctDelta(latest.costPerLead, previous?.costPerLead)} deltaGoodDirection="down" color="orange" />
-      {latest.roas != null && <MiniStat label="ROAS" value={formatMultiplier(latest.roas)} deltaPct={pctDelta(latest.roas, previous?.roas)} color="green" />}
+    <div className="space-y-3">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] items-stretch gap-2.5">
+        <MiniStat label="Lead Masuk" value={formatNumber(latest.leads ?? 0)} deltaPct={pctDelta(latest.leads, previous?.leads)} color="blue" />
+        <MiniStat label="Menjadi Client" value={formatNumber(latest.closing ?? 0)} deltaPct={pctDelta(latest.closing, previous?.closing)} color="green" />
+        {latest.conversionRate != null && (
+          <MiniStat label="Conversion Rate" value={formatPercent(latest.conversionRate)} deltaPct={pctDelta(latest.conversionRate, previous?.conversionRate)} color="purple" />
+        )}
+        <MiniStat label="Cost per Lead" value={formatIDR(latest.costPerLead ?? 0)} deltaPct={pctDelta(latest.costPerLead, previous?.costPerLead)} deltaGoodDirection="down" color="orange" />
+        {latest.roas != null && <MiniStat label="ROAS" value={formatMultiplier(latest.roas)} deltaPct={pctDelta(latest.roas, previous?.roas)} color="green" />}
+      </div>
 
       {budgetPct != null && (
-        <div className="col-span-2 min-w-0 rounded-[var(--radius-md)] border border-border p-2.5">
-          <p className="font-data text-[10px] font-semibold text-muted">Budget Terpakai</p>
-          <p className="mt-1 font-data text-[15px] font-extrabold leading-none text-ink">{formatIDR(latest.spend ?? 0)}</p>
-          <p className="mt-1.5 text-[11px] text-muted">dari {formatIDR(budgetTarget!)}</p>
-          <div className="mt-1.5 flex items-center gap-2">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/[0.06]">
+        <div className="rounded-[var(--radius-md)] border border-border bg-accent-soft p-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="font-data text-[15px] font-extrabold leading-none text-ink">{formatIDR(latest.spend ?? 0)}</p>
+            <p className="shrink-0 font-data text-[11px] font-semibold text-muted">dari {formatIDR(budgetTarget!)}</p>
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/70">
               <div className="h-full rounded-full bg-accent" style={{ width: `${budgetPct}%` }} />
             </div>
-            <span className="font-data text-[11px] font-bold text-ink">{budgetPct}%</span>
+            <span className="shrink-0 font-data text-[11px] font-bold text-accent">{budgetPct}% Budget Terpakai</span>
           </div>
         </div>
       )}

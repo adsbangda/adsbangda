@@ -198,10 +198,31 @@ export function mapAttentionItem(row: Record<string, unknown>): AttentionItem {
   };
 }
 
+/**
+ * Label hari relatif ("Hari ini"/"Kemarin"/tanggal) DIHITUNG dari
+ * `occurred_at`, bukan dibaca mentah-mentah dari kolom `day_label` di DB.
+ * Kalau day_label yang disimpan langsung dipakai, entry yang admin buat
+ * hari ini dengan label "Hari ini" akan SALAH selamanya begitu besoknya
+ * tiba (tetap tertulis "Hari ini" walau sudah kemarin) — jadi kolom
+ * `day_label` di DB sekarang cuma bekas skema lama, sengaja diabaikan di
+ * sini demi selalu akurat kapan pun dibaca.
+ */
+export function activityDayLabel(occurredAtISO: string): string {
+  const occurred = new Date(occurredAtISO);
+  const now = new Date();
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round((startOfDay(now) - startOfDay(occurred)) / 86400000);
+
+  if (diffDays === 0) return "Hari ini";
+  if (diffDays === 1) return "Kemarin";
+  return new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric" }).format(occurred);
+}
+
 export function mapActivityEntry(row: Record<string, unknown>): ActivityEntry {
   return {
     id: row.id as string,
-    day: row.day_label as string,
+    day: activityDayLabel(row.occurred_at as string),
+    occurredAt: row.occurred_at as string,
     title: row.title as string,
     description: (row.description as string) ?? "",
     done: row.done as boolean,

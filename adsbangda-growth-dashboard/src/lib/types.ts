@@ -285,8 +285,10 @@ export interface QuickStat {
 
 export interface ActivityEntry {
   id: string;
-  /** Grouping label — "Hari ini", "Kemarin", or a date like "9 Agustus 2026". */
+  /** Grouping label — "Hari ini", "Kemarin", or a date like "9 Agustus 2026". Dihitung dari `occurredAt`, lihat activityDayLabel() di mappers.ts. */
   day: string;
+  /** ISO datetime asli — dipakai Admin buat form edit (day cuma buat tampilan Client Portal). */
+  occurredAt: string;
   title: string;
   description: string;
   done: boolean;
