@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { Briefcase, Users, FileText, ArrowRight, Globe, AlertCircle, Clock } from "lucide-react";
+import { Briefcase, Users, FileText, ArrowRight, AlertCircle, Clock } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
+import { MetaAdsSummary } from "@/components/dashboard/meta-ads-summary";
+import { WebsiteSummary } from "@/components/dashboard/website-summary";
 import { buttonVariants } from "@/components/dashboard/button";
 import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { LogoUploadField } from "@/components/admin/logo-upload-field";
@@ -201,72 +203,41 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
         </Card>
       )}
 
-      {(client.metaAdsActive || (client.websiteActive && latestWebsite)) && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {/* Meta Ads & Website — pakai KOMPONEN YANG SAMA PERSIS dengan Client
+          Overview (MetaAdsSummary/WebsiteSummary), bukan grid custom
+          terpisah — supaya angka & layout yang admin lihat SELALU identik
+          dengan yang client lihat (auto-fit grid, full width, tidak ada
+          gap aneh), sambil tetap dibungkus "versi admin": Card dengan
+          SectionHeading + tombol "Kelola" (bukan seluruh card jadi link),
+          konsisten dengan pola Social Media Goals/Performance di bawah. */}
+      {(client.metaAdsActive || client.websiteActive) && (
+        <div className={`grid grid-cols-1 items-start gap-4 ${client.metaAdsActive && client.websiteActive ? "lg:grid-cols-2" : ""}`}>
           {client.metaAdsActive && (
-            <Link href={`/admin/clients/${clientId}/meta-ads`}>
-              <Card interactive padding="lg" className="h-full">
-                <p className="mb-3 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Meta Ads</p>
-                {!latestMeta ? (
-                  <p className="text-xs text-muted">Belum ada data Meta Ads.</p>
-                ) : (
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <p className="font-data text-lg font-bold text-ink">{latestMeta.leads ?? "—"}</p>
-                      <p className="text-[11px] text-muted">Leads</p>
-                    </div>
-                    <div>
-                      <p className="font-data text-lg font-bold text-ink">{latestMeta.spend != null ? `Rp${formatDecimal(latestMeta.spend / 1000000)}M` : "—"}</p>
-                      <p className="text-[11px] text-muted">Spend</p>
-                    </div>
-                    <div>
-                      <p className="font-data text-lg font-bold text-ink">{latestMeta.clicks ?? "—"}</p>
-                      <p className="text-[11px] text-muted">Clicks</p>
-                    </div>
-                    <div>
-                      <p className="font-data text-lg font-bold text-ink">{latestMeta.cpc != null ? `Rp${formatDecimal(latestMeta.cpc / 1000)}K` : "—"}</p>
-                      <p className="text-[11px] text-muted">CPC</p>
-                    </div>
-                    <div>
-                      <p className="font-data text-lg font-bold text-ink">{latestMeta.costPerLead != null ? `Rp${formatDecimal(latestMeta.costPerLead / 1000)}K` : "—"}</p>
-                      <p className="text-[11px] text-muted">CPL</p>
-                    </div>
-                    <div>
-                      <p className="font-data text-lg font-bold text-ink">{latestMeta.closing ?? "—"}</p>
-                      <p className="text-[11px] text-muted">Closing</p>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </Link>
+            <Card padding="lg">
+              <SectionHeading
+                title="Meta Ads"
+                action={
+                  <Link href={`/admin/clients/${clientId}/meta-ads`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                    Kelola <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                }
+              />
+              <MetaAdsSummary metrics={[...metaMetrics].reverse()} budgetTarget={client.metaAdsBudgetTarget} />
+            </Card>
           )}
 
-          {client.websiteActive && latestWebsite && (
-            <Link href={`/admin/clients/${clientId}/website`}>
-              <Card interactive padding="lg" className="h-full">
-                <p className="mb-3 flex items-center gap-1.5 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  <Globe className="h-3.5 w-3.5" /> Website
-                </p>
-                {!latestWebsite ? (
-                  <p className="text-xs text-muted">Belum ada data Website.</p>
-                ) : (
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <p className="font-data text-xl font-bold text-ink">{latestWebsite.visitors != null ? `${formatDecimal(latestWebsite.visitors / 1000)}K` : "—"}</p>
-                      <p className="text-[11px] text-muted">Visitors</p>
-                    </div>
-                    <div>
-                      <p className="font-data text-xl font-bold text-ink">{latestWebsite.sessions != null ? `${formatDecimal(latestWebsite.sessions / 1000)}K` : "—"}</p>
-                      <p className="text-[11px] text-muted">Sessions</p>
-                    </div>
-                    <div>
-                      <p className="font-data text-xl font-bold text-ink">{latestWebsite.conversions ?? "—"}</p>
-                      <p className="text-[11px] text-muted">Leads</p>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            </Link>
+          {client.websiteActive && (
+            <Card padding="lg">
+              <SectionHeading
+                title="Website"
+                action={
+                  <Link href={`/admin/clients/${clientId}/website`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                    Kelola <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                }
+              />
+              <WebsiteSummary metrics={[...websiteMetrics].reverse()} />
+            </Card>
           )}
         </div>
       )}
