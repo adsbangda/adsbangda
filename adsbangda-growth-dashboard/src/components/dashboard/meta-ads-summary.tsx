@@ -16,8 +16,12 @@ import type { PerformanceMetric } from "@/lib/types";
  * otomatis proporsional baik card sendirian (full width, service lain
  * nonaktif) maupun berdampingan sama Website (setengah lebar) — tidak ada
  * lagi ruang kosong atau kotak yang "ketinggalan" ukurannya.
+ *
+ * `budgetTarget` datang dari `Client.metaAdsBudgetTarget` (persisten, diisi
+ * admin sekali di Admin → Meta Ads) — BUKAN dari snapshot performance_metrics,
+ * jadi tidak perlu diisi ulang tiap kali admin input Leads/Spend mingguan.
  */
-export function MetaAdsSummary({ metrics }: { metrics: PerformanceMetric[] }) {
+export function MetaAdsSummary({ metrics, budgetTarget }: { metrics: PerformanceMetric[]; budgetTarget?: number }) {
   const latest = metrics.at(-1);
   const previous = metrics.at(-2);
 
@@ -25,7 +29,7 @@ export function MetaAdsSummary({ metrics }: { metrics: PerformanceMetric[] }) {
     return <EmptyState icon={Megaphone} title="Belum ada data Meta Ads" description="Data akan muncul begitu tim Adsbangda mengisi performance mingguan." />;
   }
 
-  const budgetPct = latest.budgetTarget && latest.budgetTarget > 0 ? Math.min(100, Math.round(((latest.spend ?? 0) / latest.budgetTarget) * 100)) : null;
+  const budgetPct = budgetTarget && budgetTarget > 0 ? Math.min(100, Math.round(((latest.spend ?? 0) / budgetTarget) * 100)) : null;
 
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] items-stretch gap-2.5">
@@ -41,7 +45,7 @@ export function MetaAdsSummary({ metrics }: { metrics: PerformanceMetric[] }) {
         <div className="col-span-2 min-w-0 rounded-[var(--radius-md)] border border-border p-2.5">
           <p className="font-data text-[10px] font-semibold text-muted">Budget Terpakai</p>
           <p className="mt-1 font-data text-[15px] font-extrabold leading-none text-ink">{formatIDR(latest.spend ?? 0)}</p>
-          <p className="mt-1.5 text-[11px] text-muted">dari {formatIDR(latest.budgetTarget!)}</p>
+          <p className="mt-1.5 text-[11px] text-muted">dari {formatIDR(budgetTarget!)}</p>
           <div className="mt-1.5 flex items-center gap-2">
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/[0.06]">
               <div className="h-full rounded-full bg-accent" style={{ width: `${budgetPct}%` }} />

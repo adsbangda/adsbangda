@@ -175,6 +175,7 @@ export async function adminUpdateClient(
     socialMediaActive: boolean;
     metaAdsActive: boolean;
     websiteActive: boolean;
+    metaAdsBudgetTarget: number | null;
   }>
 ) {
   await requireAdmin();
@@ -190,6 +191,7 @@ export async function adminUpdateClient(
       if (input.socialMediaActive !== undefined) client.socialMediaActive = input.socialMediaActive;
       if (input.metaAdsActive !== undefined) client.metaAdsActive = input.metaAdsActive;
       if (input.websiteActive !== undefined) client.websiteActive = input.websiteActive;
+      if (input.metaAdsBudgetTarget !== undefined) client.metaAdsBudgetTarget = input.metaAdsBudgetTarget ?? undefined;
     }
     return;
   }
@@ -205,6 +207,7 @@ export async function adminUpdateClient(
   if (input.socialMediaActive !== undefined) payload.social_media_active = input.socialMediaActive;
   if (input.metaAdsActive !== undefined) payload.meta_ads_active = input.metaAdsActive;
   if (input.websiteActive !== undefined) payload.website_active = input.websiteActive;
+  if (input.metaAdsBudgetTarget !== undefined) payload.meta_ads_budget_target = input.metaAdsBudgetTarget;
   if (Object.keys(payload).length === 0) return;
   const { error } = await supabase!.from("clients").update(payload).eq("id", clientId);
   if (error) throw new Error(error.message);
@@ -1193,7 +1196,6 @@ export async function adminCreatePerformanceMetric(
       cpc: cpc ?? null,
       roas: input.roas ?? null,
       target_leads: input.targetLeads ?? null,
-      budget_target: input.budgetTarget ?? null,
       closing: input.closing ?? null,
       conversion_rate: input.leads && input.closing ? Math.round((input.closing / input.leads) * 1000) / 10 : null,
     })
@@ -1243,7 +1245,6 @@ export async function adminUpdatePerformanceMetric(
   if (cpc !== undefined) payload.cpc = cpc;
   if (input.roas !== undefined) payload.roas = input.roas;
   if (input.targetLeads !== undefined) payload.target_leads = input.targetLeads;
-  if (input.budgetTarget !== undefined) payload.budget_target = input.budgetTarget;
   if (input.closing !== undefined) payload.closing = input.closing;
   if (conversionRate !== undefined) payload.conversion_rate = conversionRate;
   if (Object.keys(payload).length === 0) return;

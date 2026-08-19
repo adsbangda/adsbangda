@@ -109,7 +109,7 @@ export default async function OverviewPage() {
                         </a>
                       }
                     />
-                    <MetaAdsSummary metrics={performanceSummary?.metaAds ?? []} />
+                    <MetaAdsSummary metrics={performanceSummary?.metaAds ?? []} budgetTarget={client.metaAdsBudgetTarget} />
                   </Card>
                 )}
                 {client.websiteActive && (

@@ -53,6 +53,14 @@ export interface Client {
   metaAdsActive?: boolean;
   websiteActive?: boolean;
   /**
+   * Budget iklan Meta Ads bulanan yang disepakati — persisten di level
+   * client, diisi/diubah sesekali lewat Admin → Meta Ads (card terpisah
+   * dari form Performance Data mingguan), BUKAN diketik ulang tiap kali
+   * admin input snapshot leads/spend. Dipakai buat "Budget Terpakai" di
+   * Overview & halaman Meta Ads (spend snapshot terbaru / angka ini).
+   */
+  metaAdsBudgetTarget?: number;
+  /**
    * Tenant tertinggi (agency-level). Optional di tipe supaya mock-data mode
    * demo tidak wajib mengisinya — di mode live selalu terisi (kolom NOT NULL
    * di DB, default ke organization "Adsbangda" lewat migration 0004).
@@ -121,7 +129,13 @@ export interface PerformanceMetric {
   roas?: number;
   /** Opsional — kalau diisi, Meta Ads bisa tampilkan Goal Achievement %. */
   targetLeads?: number;
-  /** Budget iklan yang disepakati untuk periode ini — dipakai buat "Budget Terpakai" (spend / budgetTarget) di Overview. */
+  /**
+   * @deprecated Sejak migration 0013, budget target Meta Ads pindah jadi
+   * persisten di level client (`Client.metaAdsBudgetTarget`) — TIDAK lagi
+   * diisi per snapshot. Field ini dibiarkan ada di tipe (kolom lama di DB
+   * masih ada) supaya data historis lama tidak error kalau kebaca, tapi
+   * jangan ditulis/dibaca lagi di kode baru. Pakai `Client.metaAdsBudgetTarget`.
+   */
   budgetTarget?: number;
   /** Deal yang benar-benar closing dari leads Meta Ads. */
   closing?: number;

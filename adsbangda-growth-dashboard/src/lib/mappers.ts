@@ -35,6 +35,7 @@ export function mapClient(row: Record<string, unknown>): Client {
     socialMediaActive: (row.social_media_active as boolean | null) ?? false,
     metaAdsActive: (row.meta_ads_active as boolean | null) ?? false,
     websiteActive: (row.website_active as boolean | null) ?? false,
+    metaAdsBudgetTarget: (row.meta_ads_budget_target as number | null) ?? undefined,
     organizationId: row.organization_id as string | undefined,
   };
 }

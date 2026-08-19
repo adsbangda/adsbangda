@@ -24,7 +24,10 @@ export default async function MetaAdsPage() {
   const leadDelta = pct(latest?.leads, previous?.leads);
   const cplDelta = pct(latest?.costPerLead, previous?.costPerLead);
   const roasDelta = pct(latest?.roas, previous?.roas);
-  const budgetPct = latest?.budgetTarget && latest.budgetTarget > 0 ? Math.min(100, Math.round(((latest.spend ?? 0) / latest.budgetTarget) * 100)) : null;
+  // Budget target persisten di level client (diisi admin sekali di Admin →
+  // Meta Ads → Budget Target), BUKAN per snapshot — lihat Client.metaAdsBudgetTarget.
+  const budgetTarget = client.metaAdsBudgetTarget;
+  const budgetPct = budgetTarget && budgetTarget > 0 ? Math.min(100, Math.round(((latest?.spend ?? 0) / budgetTarget) * 100)) : null;
 
   const leadsChart = metaAds.map((m) => ({ label: shortDate(m.date), value: m.leads ?? 0 }));
   const metaAdsChannels = channelSummary.filter((c) => c.channel.toLowerCase().includes("meta"));
@@ -70,7 +73,7 @@ export default async function MetaAdsPage() {
             <SectionHeading title="Budget Terpakai" />
             <div className="flex items-baseline justify-between">
               <p className="font-display text-2xl font-extrabold text-ink">{formatIDR(latest?.spend ?? 0)}</p>
-              <p className="text-sm text-muted">dari {formatIDR(latest!.budgetTarget!)}</p>
+              <p className="text-sm text-muted">dari {formatIDR(budgetTarget!)}</p>
             </div>
             <div className="mt-3 flex items-center gap-3">
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-black/[0.06]">

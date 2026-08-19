@@ -1,12 +1,19 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { Trash2, Plus, Wallet, Eye, Target, Megaphone, MousePointerClick, Pencil } from "lucide-react";
+import { Trash2, Plus, Wallet, Eye, Target, Megaphone, MousePointerClick, Pencil, PiggyBank } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { ProgressBar } from "@/components/dashboard/progress-bar";
 import { buttonVariants } from "@/components/dashboard/button";
-import { adminListPerformanceMetrics, adminCreatePerformanceMetric, adminUpdatePerformanceMetric, adminDeletePerformanceMetric } from "@/lib/admin-data";
+import {
+  adminListPerformanceMetrics,
+  adminCreatePerformanceMetric,
+  adminUpdatePerformanceMetric,
+  adminDeletePerformanceMetric,
+  adminGetClient,
+  adminUpdateClient,
+} from "@/lib/admin-data";
 import { formatDateID } from "@/lib/utils";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
@@ -35,9 +42,11 @@ export default async function AdminClientMetaAdsPage({
   const { clientId } = await params;
   const { edit } = await searchParams;
   const path = `/admin/clients/${clientId}/meta-ads`;
-  const metrics = await adminListPerformanceMetrics(clientId, "meta_ads");
+  const [client, metrics] = await Promise.all([adminGetClient(clientId), adminListPerformanceMetrics(clientId, "meta_ads")]);
   const latest = metrics[0];
   const goalAchievementPct = latest?.targetLeads && latest.targetLeads > 0 && latest.leads != null ? Math.round((latest.leads / latest.targetLeads) * 100) : null;
+  const budgetTarget = client?.metaAdsBudgetTarget;
+  const budgetPct = budgetTarget && budgetTarget > 0 && latest?.spend != null ? Math.min(100, Math.round((latest.spend / budgetTarget) * 100)) : null;
 
   async function addMetric(formData: FormData) {
     "use server";
@@ -51,7 +60,6 @@ export default async function AdminClientMetaAdsPage({
       ctr: Number(formData.get("ctr") ?? 0) || undefined,
       roas: Number(formData.get("roas") ?? 0) || undefined,
       targetLeads: Number(formData.get("targetLeads") ?? 0) || undefined,
-      budgetTarget: Number(formData.get("budgetTarget") ?? 0) || undefined,
       closing: Number(formData.get("closing") ?? 0) || undefined,
     });
     revalidatePath(path);
@@ -69,7 +77,6 @@ export default async function AdminClientMetaAdsPage({
       ctr: Number(formData.get("ctr") ?? 0) || undefined,
       roas: Number(formData.get("roas") ?? 0) || undefined,
       targetLeads: Number(formData.get("targetLeads") ?? 0) || undefined,
-      budgetTarget: Number(formData.get("budgetTarget") ?? 0) || undefined,
       closing: Number(formData.get("closing") ?? 0) || undefined,
     });
     revalidatePath(path);
@@ -78,6 +85,13 @@ export default async function AdminClientMetaAdsPage({
   async function deleteMetricAction(formData: FormData) {
     "use server";
     await adminDeletePerformanceMetric(String(formData.get("id")), "meta_ads");
+    revalidatePath(path);
+  }
+
+  async function updateBudgetTargetAction(formData: FormData) {
+    "use server";
+    const raw = Number(formData.get("metaAdsBudgetTarget") ?? 0);
+    await adminUpdateClient(clientId, { metaAdsBudgetTarget: raw > 0 ? raw : null });
     revalidatePath(path);
   }
 
@@ -129,6 +143,50 @@ export default async function AdminClientMetaAdsPage({
         {latest && <p className="mt-2 text-xs text-muted">Snapshot terbaru: {formatDateID(latest.date)}</p>}
       </div>
 
+      {/* Budget Target — SENGAJA card terpisah dari Performance Data. Ini angka
+          yang biasanya tetap sama selama beberapa minggu/bulan (budget bulanan
+          yang disepakati dengan client), jadi disimpan persisten di level
+          client (bukan per snapshot) — admin cuma perlu isi/ubah sesekali,
+          tidak perlu ketik ulang tiap kali input Leads/Spend mingguan. */}
+      <Card padding="lg">
+        <SectionHeading
+          title="Budget Target"
+          description="Budget iklan bulanan yang disepakati dengan client — sekali diisi, dipakai terus buat hitung 'Budget Terpakai' di setiap snapshot baru sampai kamu ubah lagi di sini."
+        />
+        {budgetPct != null && (
+          <div className="mb-4 rounded-[var(--radius-md)] border border-border p-3">
+            <div className="flex items-baseline justify-between">
+              <p className="font-data text-lg font-extrabold text-ink">Rp{(latest?.spend ?? 0).toLocaleString("id-ID")}</p>
+              <p className="text-xs text-muted">dari Rp{budgetTarget!.toLocaleString("id-ID")}</p>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/[0.06]">
+                <div className="h-full rounded-full bg-accent" style={{ width: `${budgetPct}%` }} />
+              </div>
+              <span className="font-data text-xs font-bold text-ink">{budgetPct}%</span>
+            </div>
+          </div>
+        )}
+        <form action={updateBudgetTargetAction} className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="metaAdsBudgetTarget" className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
+              Budget Bulanan (Rp)
+            </label>
+            <input
+              id="metaAdsBudgetTarget"
+              name="metaAdsBudgetTarget"
+              type="number"
+              defaultValue={budgetTarget ?? ""}
+              placeholder="mis. 10000000"
+              className={inputClass}
+            />
+          </div>
+          <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
+            <PiggyBank className="h-3.5 w-3.5" /> Simpan Budget Target
+          </button>
+        </form>
+      </Card>
+
       <Card padding="lg">
         <SectionHeading title="Add Performance Data" description="CPC & CPL dihitung otomatis dari Spend/Clicks/Leads — tidak perlu diketik manual. Target Leads & Closing opsional." />
         <form action={addMetric} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -141,7 +199,6 @@ export default async function AdminClientMetaAdsPage({
           <input name="ctr" type="number" step="0.01" placeholder="CTR (%)" className={inputClass} />
           <input name="closing" type="number" placeholder="Closing (opsional)" className={inputClass} />
           <input name="targetLeads" type="number" placeholder="Target Leads (opsional)" className={inputClass} />
-          <input name="budgetTarget" type="number" placeholder="Budget Target Rp (opsional)" className={inputClass} />
           <input name="roas" type="number" step="0.1" placeholder="ROAS (x, opsional)" className={inputClass} />
           <button type="submit" className={buttonVariants({ variant: "primary", size: "sm", className: "sm:col-span-3 lg:col-span-6 justify-center" })}>
             <Plus className="h-3.5 w-3.5" /> Save Data
@@ -163,7 +220,6 @@ export default async function AdminClientMetaAdsPage({
                     <input name="date" type="date" defaultValue={m.date} required className={inputClass} />
                     <input name="leads" type="number" defaultValue={m.leads ?? ""} placeholder="Leads" className={inputClass} />
                     <input name="targetLeads" type="number" defaultValue={m.targetLeads ?? ""} placeholder="Target Leads" className={inputClass} />
-                    <input name="budgetTarget" type="number" defaultValue={m.budgetTarget ?? ""} placeholder="Budget Target Rp" className={inputClass} />
                     <input name="spend" type="number" defaultValue={m.spend ?? ""} placeholder="Spend" className={inputClass} />
                     <input name="reach" type="number" defaultValue={m.reach ?? ""} placeholder="Reach" className={inputClass} />
                     <input name="impressions" type="number" defaultValue={m.impressions ?? ""} placeholder="Impressions" className={inputClass} />
