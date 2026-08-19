@@ -194,8 +194,8 @@ export interface PlatformPerformanceRow {
   followersDelta?: number | null;
   reach?: number;
   reachDelta?: number | null;
-  engagementRate?: number;
-  engagementDelta?: number | null;
+  impressions?: number;
+  impressionsDelta?: number | null;
   profileVisit?: number;
   profileVisitDelta?: number | null;
 }

@@ -378,8 +378,8 @@ export async function getPlatformPerformanceTable(clientId: string): Promise<Pla
       followersDelta: pct(latest?.followers, previous?.followers),
       reach: latest?.reach,
       reachDelta: pct(latest?.reach, previous?.reach),
-      engagementRate: latest?.engagementRate,
-      engagementDelta: pct(latest?.engagementRate, previous?.engagementRate),
+      impressions: latest?.impressions,
+      impressionsDelta: pct(latest?.impressions, previous?.impressions),
       profileVisit: latest?.visitors,
       profileVisitDelta: pct(latest?.visitors, previous?.visitors),
     };

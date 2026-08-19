@@ -180,12 +180,12 @@ export const mockSocialMediaBreakdown: SocialPlatformSummary[] = [
 // mockSocial di atas (yang cuma isi Instagram+TikTok) karena tabel ini
 // perlu contoh SEMUA platform sekaligus buat demo layout tabelnya.
 export const mockPlatformPerformanceTable: PlatformPerformanceRow[] = [
-  { platform: "instagram", followers: 68400, followersDelta: 11.2, reach: 812100, reachDelta: 17.3, engagementRate: 4.21, engagementDelta: 0.9, profileVisit: 1810, profileVisitDelta: 16.7 },
-  { platform: "tiktok", followers: 32700, followersDelta: 15.8, reach: 356200, reachDelta: 22.1, engagementRate: 5.32, engagementDelta: 1.3, profileVisit: 920, profileVisitDelta: 28.6 },
-  { platform: "facebook", followers: 18900, followersDelta: 6.4, reach: 198700, reachDelta: 12.3, engagementRate: 2.45, engagementDelta: 0.4, profileVisit: 640, profileVisitDelta: 14.3 },
-  { platform: "linkedin", followers: 5200, followersDelta: 8.7, reach: 41900, reachDelta: 9.8, engagementRate: 1.85, engagementDelta: 0.2, profileVisit: 210, profileVisitDelta: 20 },
-  { platform: "x", followers: 2100, followersDelta: -1.3, reach: 12600, reachDelta: 2.1, engagementRate: 0.95, engagementDelta: -0.1, profileVisit: 85, profileVisitDelta: 0 },
-  { platform: "threads", followers: 1300, followersDelta: 3.2, reach: 5800, reachDelta: 4.8, engagementRate: 1.22, engagementDelta: 0.3, profileVisit: 40, profileVisitDelta: null },
+  { platform: "instagram", followers: 68400, followersDelta: 11.2, reach: 812100, reachDelta: 17.3, impressions: 1240000, impressionsDelta: 14.6, profileVisit: 1810, profileVisitDelta: 16.7 },
+  { platform: "tiktok", followers: 32700, followersDelta: 15.8, reach: 356200, reachDelta: 22.1, impressions: 598000, impressionsDelta: 19.4, profileVisit: 920, profileVisitDelta: 28.6 },
+  { platform: "facebook", followers: 18900, followersDelta: 6.4, reach: 198700, reachDelta: 12.3, impressions: 287000, impressionsDelta: 9.8, profileVisit: 640, profileVisitDelta: 14.3 },
+  { platform: "linkedin", followers: 5200, followersDelta: 8.7, reach: 41900, reachDelta: 9.8, impressions: 58000, impressionsDelta: 11.2, profileVisit: 210, profileVisitDelta: 20 },
+  { platform: "x", followers: 2100, followersDelta: -1.3, reach: 12600, reachDelta: 2.1, impressions: 18400, impressionsDelta: -0.8, profileVisit: 85, profileVisitDelta: 0 },
+  { platform: "threads", followers: 1300, followersDelta: 3.2, reach: 5800, reachDelta: 4.8, impressions: 8900, impressionsDelta: 5.5, profileVisit: 40, profileVisitDelta: null },
 ];
 
 export const mockUpcomingEvents: UpcomingEvent[] = [
