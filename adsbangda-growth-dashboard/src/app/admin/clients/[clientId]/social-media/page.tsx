@@ -29,6 +29,7 @@ import { CONTENT_TYPES_BY_PLATFORM, type SocialPlatform, type GoalStatus, type C
 import { QuickStatusSelect } from "@/components/admin/quick-status-select";
 import { PillTabs } from "@/components/admin/pill-tabs";
 import { formatDateID, formatPercent, cn } from "@/lib/utils";
+import { FormattedNumberInput } from "@/components/dashboard/formatted-number-input";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 const SOCIAL_PLATFORMS: SocialPlatform[] = ["instagram", "facebook", "tiktok", "x", "linkedin", "threads"];
@@ -589,11 +590,11 @@ async function PerformancePanel({
         <form action={addMetric} className="mt-6 grid grid-cols-2 gap-2 border-t border-border pt-4 sm:grid-cols-6">
           <input type="hidden" name="platform" value={activePlatform} />
           <input name="date" type="date" required className={inputClass} />
-          <input name="followers" type="number" placeholder="Followers" className={inputClass} />
-          <input name="reach" type="number" placeholder="Reach" className={inputClass} />
-          <input name="impressions" type="number" placeholder="Impressions" className={inputClass} />
-          <input name="engagementRate" type="number" step="0.01" placeholder="Engagement %" className={inputClass} />
-          <input name="visitors" type="number" placeholder="Profile Visits" className={inputClass} />
+          <FormattedNumberInput name="followers" placeholder="Followers" className={inputClass} />
+          <FormattedNumberInput name="reach" placeholder="Reach" className={inputClass} />
+          <FormattedNumberInput name="impressions" placeholder="Impressions" className={inputClass} />
+          <FormattedNumberInput name="engagementRate" allowDecimal placeholder="Engagement %" className={inputClass} />
+          <FormattedNumberInput name="visitors" placeholder="Profile Visits" className={inputClass} />
           <button type="submit" className={buttonVariants({ variant: "primary", size: "sm", className: "sm:col-span-6 justify-center" })}>
             <Plus className="h-3.5 w-3.5" /> Save Data
           </button>

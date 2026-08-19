@@ -15,6 +15,7 @@ import {
   adminUpdateClient,
 } from "@/lib/admin-data";
 import { formatDateID, formatPercent, formatMultiplier } from "@/lib/utils";
+import { FormattedNumberInput } from "@/components/dashboard/formatted-number-input";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 
@@ -172,14 +173,7 @@ export default async function AdminClientMetaAdsPage({
             <label htmlFor="metaAdsBudgetTarget" className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
               Budget Bulanan (Rp)
             </label>
-            <input
-              id="metaAdsBudgetTarget"
-              name="metaAdsBudgetTarget"
-              type="number"
-              defaultValue={budgetTarget ?? ""}
-              placeholder="mis. 10000000"
-              className={inputClass}
-            />
+            <FormattedNumberInput id="metaAdsBudgetTarget" name="metaAdsBudgetTarget" defaultValue={budgetTarget} placeholder="mis. 10.000.000" className={inputClass} />
           </div>
           <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
             <PiggyBank className="h-3.5 w-3.5" /> Simpan Budget Target
@@ -191,15 +185,15 @@ export default async function AdminClientMetaAdsPage({
         <SectionHeading title="Add Performance Data" description="CPC & CPL dihitung otomatis dari Spend/Clicks/Leads — tidak perlu diketik manual. Target Leads & Closing opsional." />
         <form action={addMetric} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           <input name="date" type="date" required className={inputClass} />
-          <input name="spend" type="number" placeholder="Ad Spend (Rp)" className={inputClass} />
-          <input name="leads" type="number" placeholder="Leads" className={inputClass} />
-          <input name="clicks" type="number" placeholder="Clicks" className={inputClass} />
-          <input name="reach" type="number" placeholder="Reach" className={inputClass} />
-          <input name="impressions" type="number" placeholder="Impressions" className={inputClass} />
-          <input name="ctr" type="number" step="0.01" placeholder="CTR (%)" className={inputClass} />
-          <input name="closing" type="number" placeholder="Closing (opsional)" className={inputClass} />
-          <input name="targetLeads" type="number" placeholder="Target Leads (opsional)" className={inputClass} />
-          <input name="roas" type="number" step="0.1" placeholder="ROAS (x, opsional)" className={inputClass} />
+          <FormattedNumberInput name="spend" placeholder="Ad Spend (Rp)" className={inputClass} />
+          <FormattedNumberInput name="leads" placeholder="Leads" className={inputClass} />
+          <FormattedNumberInput name="clicks" placeholder="Clicks" className={inputClass} />
+          <FormattedNumberInput name="reach" placeholder="Reach" className={inputClass} />
+          <FormattedNumberInput name="impressions" placeholder="Impressions" className={inputClass} />
+          <FormattedNumberInput name="ctr" allowDecimal placeholder="CTR (%)" className={inputClass} />
+          <FormattedNumberInput name="closing" placeholder="Closing (opsional)" className={inputClass} />
+          <FormattedNumberInput name="targetLeads" placeholder="Target Leads (opsional)" className={inputClass} />
+          <FormattedNumberInput name="roas" allowDecimal placeholder="ROAS (x, opsional)" className={inputClass} />
           <button type="submit" className={buttonVariants({ variant: "primary", size: "sm", className: "sm:col-span-3 lg:col-span-6 justify-center" })}>
             <Plus className="h-3.5 w-3.5" /> Save Data
           </button>
@@ -218,15 +212,15 @@ export default async function AdminClientMetaAdsPage({
                   <form action={updateMetricAction} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
                     <input type="hidden" name="id" value={m.id} />
                     <input name="date" type="date" defaultValue={m.date} required className={inputClass} />
-                    <input name="leads" type="number" defaultValue={m.leads ?? ""} placeholder="Leads" className={inputClass} />
-                    <input name="targetLeads" type="number" defaultValue={m.targetLeads ?? ""} placeholder="Target Leads" className={inputClass} />
-                    <input name="spend" type="number" defaultValue={m.spend ?? ""} placeholder="Spend" className={inputClass} />
-                    <input name="reach" type="number" defaultValue={m.reach ?? ""} placeholder="Reach" className={inputClass} />
-                    <input name="impressions" type="number" defaultValue={m.impressions ?? ""} placeholder="Impressions" className={inputClass} />
-                    <input name="clicks" type="number" defaultValue={m.clicks ?? ""} placeholder="Clicks" className={inputClass} />
-                    <input name="ctr" type="number" step="0.01" defaultValue={m.ctr ?? ""} placeholder="CTR" className={inputClass} />
-                    <input name="closing" type="number" defaultValue={m.closing ?? ""} placeholder="Closing" className={inputClass} />
-                    <input name="roas" type="number" step="0.1" defaultValue={m.roas ?? ""} placeholder="ROAS" className={inputClass} />
+                    <FormattedNumberInput name="leads" defaultValue={m.leads} placeholder="Leads" className={inputClass} />
+                    <FormattedNumberInput name="targetLeads" defaultValue={m.targetLeads} placeholder="Target Leads" className={inputClass} />
+                    <FormattedNumberInput name="spend" defaultValue={m.spend} placeholder="Spend" className={inputClass} />
+                    <FormattedNumberInput name="reach" defaultValue={m.reach} placeholder="Reach" className={inputClass} />
+                    <FormattedNumberInput name="impressions" defaultValue={m.impressions} placeholder="Impressions" className={inputClass} />
+                    <FormattedNumberInput name="clicks" defaultValue={m.clicks} placeholder="Clicks" className={inputClass} />
+                    <FormattedNumberInput name="ctr" allowDecimal defaultValue={m.ctr} placeholder="CTR" className={inputClass} />
+                    <FormattedNumberInput name="closing" defaultValue={m.closing} placeholder="Closing" className={inputClass} />
+                    <FormattedNumberInput name="roas" allowDecimal defaultValue={m.roas} placeholder="ROAS" className={inputClass} />
                     <span className="flex items-center font-data text-[11px] text-muted">CPC/CPL dihitung otomatis</span>
                     <div className="flex gap-2">
                       <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>

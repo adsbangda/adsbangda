@@ -16,6 +16,7 @@ import {
   adminDeleteWebsiteActivity,
 } from "@/lib/admin-data";
 import { formatDateID } from "@/lib/utils";
+import { FormattedNumberInput } from "@/components/dashboard/formatted-number-input";
 import { PillTabs } from "@/components/admin/pill-tabs";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
@@ -152,12 +153,12 @@ export default async function AdminClientWebsitePage({
             <SectionHeading title="Add Performance Data" />
             <form action={addMetric} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               <input name="date" type="date" required className={inputClass} />
-              <input name="visitors" type="number" placeholder="Visitors" className={inputClass} />
-              <input name="pageViews" type="number" placeholder="Page Views" className={inputClass} />
-              <input name="sessions" type="number" placeholder="Sessions" className={inputClass} />
-              <input name="bounceRate" type="number" step="0.1" placeholder="Bounce Rate (%)" className={inputClass} />
+              <FormattedNumberInput name="visitors" placeholder="Visitors" className={inputClass} />
+              <FormattedNumberInput name="pageViews" placeholder="Page Views" className={inputClass} />
+              <FormattedNumberInput name="sessions" placeholder="Sessions" className={inputClass} />
+              <FormattedNumberInput name="bounceRate" allowDecimal placeholder="Bounce Rate (%)" className={inputClass} />
               <input name="avgSessionDuration" placeholder="Avg Duration (2m 15s)" className={inputClass} />
-              <input name="conversions" type="number" placeholder="Leads / Form Submission" className={inputClass} />
+              <FormattedNumberInput name="conversions" placeholder="Leads / Form Submission" className={inputClass} />
               <button type="submit" className={buttonVariants({ variant: "primary", size: "sm", className: "justify-center" })}>
                 <Plus className="h-3.5 w-3.5" /> Save Data
               </button>
@@ -176,12 +177,12 @@ export default async function AdminClientWebsitePage({
                       <form action={updateMetricAction} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                         <input type="hidden" name="id" value={m.id} />
                         <input name="date" type="date" defaultValue={m.date} required className={inputClass} />
-                        <input name="visitors" type="number" defaultValue={m.visitors ?? ""} placeholder="Visitors" className={inputClass} />
-                        <input name="pageViews" type="number" defaultValue={m.pageViews ?? ""} placeholder="Page Views" className={inputClass} />
-                        <input name="sessions" type="number" defaultValue={m.sessions ?? ""} placeholder="Sessions" className={inputClass} />
-                        <input name="bounceRate" type="number" step="0.1" defaultValue={m.bounceRate ?? ""} placeholder="Bounce Rate" className={inputClass} />
+                        <FormattedNumberInput name="visitors" defaultValue={m.visitors} placeholder="Visitors" className={inputClass} />
+                        <FormattedNumberInput name="pageViews" defaultValue={m.pageViews} placeholder="Page Views" className={inputClass} />
+                        <FormattedNumberInput name="sessions" defaultValue={m.sessions} placeholder="Sessions" className={inputClass} />
+                        <FormattedNumberInput name="bounceRate" allowDecimal defaultValue={m.bounceRate} placeholder="Bounce Rate" className={inputClass} />
                         <input name="avgSessionDuration" defaultValue={m.avgSessionDuration ?? ""} placeholder="Avg Duration" className={inputClass} />
-                        <input name="conversions" type="number" defaultValue={m.conversions ?? ""} placeholder="Leads" className={inputClass} />
+                        <FormattedNumberInput name="conversions" defaultValue={m.conversions} placeholder="Leads" className={inputClass} />
                         <div className="flex gap-2">
                           <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
                             Save
