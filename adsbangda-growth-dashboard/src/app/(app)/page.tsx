@@ -25,10 +25,20 @@ import {
   getWeeklyCalendar,
   getSocialMediaBreakdown,
   getPerformanceSummary,
+  currentPeriod,
 } from "@/lib/data";
 
-export default async function OverviewPage() {
+/** Format "YYYY-MM" jadi ISO date murni buat validasi regex — dipakai supaya
+ * ?period= dari URL yang aneh/rusak (bukan diketik dari dropdown kita
+ * sendiri) tidak diteruskan mentah-mentah ke query Supabase. */
+function isValidPeriod(value: string | undefined): value is string {
+  return !!value && /^\d{4}-\d{2}$/.test(value);
+}
+
+export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
+  const { period: periodParam } = await searchParams;
   const client = await getCurrentClient();
+  const period = isValidPeriod(periodParam) ? periodParam : currentPeriod();
 
   // Setiap fetch di bawah HANYA dipanggil kalau service terkait aktif untuk
   // client ini (client.socialMediaActive/metaAdsActive/websiteActive —
@@ -36,21 +46,28 @@ export default async function OverviewPage() {
   // dengan cara sama persis oleh Admin Portal sendiri). Ini satu-satunya
   // sumber kebenaran "service aktif" — tidak ada konfigurasi baru, tidak
   // ada hardcode per-client.
+  //
+  // `period` (dari dropdown tanggal di OverviewHeader) HANYA mempengaruhi
+  // Monthly Delivery & Content Delivery per platform (dua-duanya konsep
+  // "target bulan X") — Quick Stats, Meta Ads/Website/Social performance,
+  // Activity, dan Content Calendar tetap nunjukin snapshot/data TERBARU
+  // apa pun periode yang dipilih, karena memang bukan konsep "per-bulan"
+  // yang sama (snapshot mingguan, bukan target bulanan).
   const [delivery, quickStats, attentionItems, activity, channelRows, upcomingEvents, weeklyCalendar, socialBreakdown, performanceSummary] = await Promise.all([
-    getMonthlyDelivery(client.id),
+    getMonthlyDelivery(client.id, period),
     getQuickStats(client.id),
     getAttentionItems(client.id),
     getRecentActivity(client.id),
     getChannelOverview(client),
     getUpcomingEvents(client.id),
     getWeeklyCalendar(client.id),
-    client.socialMediaActive ? getSocialMediaBreakdown(client.id) : Promise.resolve([]),
+    client.socialMediaActive ? getSocialMediaBreakdown(client.id, period) : Promise.resolve([]),
     client.metaAdsActive || client.websiteActive || client.socialMediaActive ? getPerformanceSummary(client.id) : Promise.resolve(null),
   ]);
 
   return (
     <div className="page-backdrop min-h-screen">
-      <OverviewHeader clientName={client.name} periodLabel={delivery.periodLabel} notificationCount={attentionItems.length} />
+      <OverviewHeader clientName={client.name} periodLabel={delivery.periodLabel} currentPeriod={period} attentionItems={attentionItems} />
 
       <div className="space-y-6 p-5 lg:p-8">
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">

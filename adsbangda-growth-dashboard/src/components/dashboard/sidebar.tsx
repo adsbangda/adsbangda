@@ -14,11 +14,13 @@ import {
   Mail,
   ChevronDown,
   ArrowUpRight,
+  PanelLeftClose,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InstagramGlyph } from "./platform-icons";
 import { Logo } from "./logo";
+import { useMobileMenu } from "./app-shell";
 import { signOut } from "@/app/(auth)/login/actions";
 
 const NAV_ITEMS = [
@@ -36,6 +38,7 @@ const SUPPORT_EMAIL = "support@adsbangda.com";
 
 export function Sidebar({ clientName, isAdmin = false, onNavigate }: { clientName: string; isAdmin?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { toggleCollapsed } = useMobileMenu();
 
   return (
     <div className="flex h-full w-64 flex-col border-r border-border bg-surface">
@@ -44,9 +47,20 @@ export function Sidebar({ clientName, isAdmin = false, onNavigate }: { clientNam
           <Logo tone="dark" height={26} />
           <div className="mt-2 font-data text-[10px] uppercase tracking-wider text-muted">Client Portal</div>
         </div>
-        {onNavigate && (
+        {onNavigate ? (
           <button onClick={onNavigate} aria-label="Tutup menu" className="text-muted lg:hidden">
             <X className="h-5 w-5" />
+          </button>
+        ) : (
+          // Cuma muncul di instance desktop (bukan drawer mobile) — nutup
+          // sidebar total supaya area konten (Overview dkk) lebih lebar.
+          // Buka lagi lewat tombol PanelLeftOpen yang muncul di AppShell.
+          <button
+            onClick={toggleCollapsed}
+            aria-label="Tutup sidebar"
+            className="hidden h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-black/[0.04] hover:text-ink lg:flex"
+          >
+            <PanelLeftClose className="h-4 w-4" strokeWidth={1.75} />
           </button>
         )}
       </div>

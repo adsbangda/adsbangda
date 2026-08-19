@@ -49,7 +49,7 @@ const MONTH_LABEL_ID = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", 
 
 export const DEMO_MODE = !isSupabaseConfigured;
 
-function currentPeriod() {
+export function currentPeriod() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
@@ -164,10 +164,9 @@ export async function getRecentActivity(clientId: string) {
  * situ lagi — nulis ke situ manual lewat Table Editor tidak akan pernah
  * konsisten dengan apa yang admin lihat sendiri di layarnya.
  */
-export async function getMonthlyDelivery(clientId: string): Promise<MonthlyDeliveryHero> {
+export async function getMonthlyDelivery(clientId: string, period: string = currentPeriod()): Promise<MonthlyDeliveryHero> {
   if (!isSupabaseConfigured) return mockMonthlyDelivery;
 
-  const period = currentPeriod();
   const supabase = await createClient();
   const [{ data: targetRows }, items] = await Promise.all([
     supabase!.from("content_targets").select("*").eq("client_id", clientId).eq("period", period),
@@ -189,7 +188,9 @@ export async function getMonthlyDelivery(clientId: string): Promise<MonthlyDeliv
     overallPct,
     status,
     helperText:
-      totalTarget > 0 ? `${totalDelivered} dari ${totalTarget} konten sudah published bulan ini.` : "Belum ada target content untuk periode ini — hubungi tim Adsbangda.",
+      totalTarget > 0
+        ? `${totalDelivered} dari ${totalTarget} konten sudah published${period === currentPeriod() ? " bulan ini" : ` di periode ini`}.`
+        : "Belum ada target content untuk periode ini — hubungi tim Adsbangda.",
     meta: {
       periodRange: new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${period}-01`)),
       lastUpdated: "—",
@@ -326,10 +327,9 @@ export async function getChannelOverview(client: Client): Promise<ChannelOvervie
  * sekali (lihat catatan "service aktif vs data kosong" — dua kondisi
  * berbeda, jangan disamakan).
  */
-export async function getSocialMediaBreakdown(clientId: string): Promise<SocialPlatformSummary[]> {
+export async function getSocialMediaBreakdown(clientId: string, period: string = currentPeriod()): Promise<SocialPlatformSummary[]> {
   if (!isSupabaseConfigured) return mockSocialMediaBreakdown;
 
-  const period = currentPeriod();
   const supabase = await createClient();
   const [{ data: everTargetRows }, { data: currentTargetRows }, items] = await Promise.all([
     supabase!.from("content_targets").select("platform").eq("client_id", clientId),
