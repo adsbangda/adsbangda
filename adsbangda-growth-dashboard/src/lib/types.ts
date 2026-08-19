@@ -196,8 +196,8 @@ export interface PlatformPerformanceRow {
   reachDelta?: number | null;
   engagementRate?: number;
   engagementDelta?: number | null;
-  contentCount: number;
-  contentDelta?: number | null;
+  profileVisit?: number;
+  profileVisitDelta?: number | null;
 }
 
 export interface WebsiteActivityEntry {

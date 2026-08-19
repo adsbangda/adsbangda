@@ -30,10 +30,10 @@ function DeltaBadge({ delta }: { delta?: number | null }) {
 }
 
 function MetricCell({ value, delta, kind }: { value?: number | null; delta?: number | null; kind: "count" | "percent" }) {
-  if (value == null) return <span className="text-sm text-muted">—</span>;
+  if (value == null) return <span className="text-base text-muted">—</span>;
   return (
     <div>
-      <p className="font-data text-sm font-bold text-ink">{kind === "percent" ? formatPercent(value, 2) : formatCompact(value)}</p>
+      <p className="font-data text-base font-bold text-ink">{kind === "percent" ? formatPercent(value, 2) : formatCompact(value)}</p>
       <DeltaBadge delta={delta} />
     </div>
   );
@@ -58,12 +58,12 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
     <div className="overflow-x-auto">
       <table className="w-full min-w-[560px] text-left">
         <thead>
-          <tr className="text-xs text-muted">
+          <tr className="text-sm text-muted">
             <th className="pb-3 pr-4 font-medium">Platform</th>
             <th className="pb-3 pr-4 font-medium">Followers</th>
             <th className="pb-3 pr-4 font-medium">Reach</th>
             <th className="pb-3 pr-4 font-medium">Engagement</th>
-            <th className="pb-3 font-medium">Content</th>
+            <th className="pb-3 font-medium">Profile Visit</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -79,7 +79,7 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
                         <img src={logo.src} alt={logo.label} className={cn("h-full w-full object-cover", logo.scaleUp && "scale-[1.35]")} />
                       )}
                     </span>
-                    <span className="font-semibold text-ink">{logo?.label ?? row.platform}</span>
+                    <span className="text-base font-semibold text-ink">{logo?.label ?? row.platform}</span>
                   </div>
                 </td>
                 <td className="py-3.5 pr-4">
@@ -92,7 +92,7 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
                   <MetricCell value={row.engagementRate} delta={row.engagementDelta} kind="percent" />
                 </td>
                 <td className="py-3.5">
-                  <MetricCell value={row.contentCount} delta={row.contentDelta} kind="count" />
+                  <MetricCell value={row.profileVisit} delta={row.profileVisitDelta} kind="count" />
                 </td>
               </tr>
             );

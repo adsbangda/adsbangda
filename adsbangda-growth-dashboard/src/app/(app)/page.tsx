@@ -49,12 +49,11 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
   // ada hardcode per-client.
   //
   // `period` (dari dropdown tanggal di OverviewHeader) mempengaruhi Monthly
-  // Delivery, Content Delivery per platform, DAN kolom Content di Platform
-  // Performance (dihitung per-bulan) — Quick Stats, Meta Ads/Website
-  // performance, Followers/Reach/Engagement di Platform Performance,
-  // Activity, dan Content Calendar tetap nunjukin snapshot/data TERBARU
-  // apa pun periode yang dipilih, karena itu snapshot mingguan, bukan
-  // konsep target bulanan.
+  // Delivery & Content Delivery per platform (dua-duanya konsep "target
+  // bulan X") — Quick Stats, Meta Ads/Website performance, Platform
+  // Performance (Followers/Reach/Engagement/Profile Visit), Activity, dan
+  // Content Calendar tetap nunjukin snapshot/data TERBARU apa pun periode
+  // yang dipilih, karena itu snapshot mingguan, bukan konsep target bulanan.
   const [delivery, quickStats, attentionItems, activity, channelRows, upcomingEvents, weeklyCalendar, socialBreakdown, platformPerformance, performanceSummary] = await Promise.all([
     getMonthlyDelivery(client.id, period),
     getQuickStats(client.id),
@@ -64,7 +63,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
     getUpcomingEvents(client.id),
     getWeeklyCalendar(client.id),
     client.socialMediaActive ? getSocialMediaBreakdown(client.id, period) : Promise.resolve([]),
-    client.socialMediaActive ? getPlatformPerformanceTable(client.id, period) : Promise.resolve([]),
+    client.socialMediaActive ? getPlatformPerformanceTable(client.id) : Promise.resolve([]),
     client.metaAdsActive || client.websiteActive || client.socialMediaActive ? getPerformanceSummary(client.id) : Promise.resolve(null),
   ]);
 

@@ -341,14 +341,23 @@ export async function getChannelOverview(client: Client): Promise<ChannelOvervie
  * (content_targets) ATAU pernah ada snapshot performance — bukan daftar
  * hardcode, jadi fleksibel sama seperti bagian Overview lainnya.
  */
-export async function getPlatformPerformanceTable(clientId: string, period: string = currentPeriod()): Promise<PlatformPerformanceRow[]> {
+/**
+ * Satu tabel ringkas per platform — Followers, Reach, Engagement, dan
+ * Profile Visit, semua dari snapshot performance_metrics channel "social"
+ * dibanding snapshot sebelumnya (persis sumber & definisi yang sama dipakai
+ * sebelumnya di card lama).
+ *
+ * Platform yang muncul = gabungan platform yang PERNAH ada target content
+ * (content_targets) ATAU pernah ada snapshot performance — bukan daftar
+ * hardcode, jadi fleksibel sama seperti bagian Overview lainnya.
+ */
+export async function getPlatformPerformanceTable(clientId: string): Promise<PlatformPerformanceRow[]> {
   if (!isSupabaseConfigured) return mockPlatformPerformanceTable;
 
   const supabase = await createClient();
-  const [{ data: socialRows }, { data: everTargetRows }, items] = await Promise.all([
+  const [{ data: socialRows }, { data: everTargetRows }] = await Promise.all([
     supabase!.from("performance_metrics").select("*").eq("client_id", clientId).eq("channel", "social").order("date", { ascending: true }),
     supabase!.from("content_targets").select("platform").eq("client_id", clientId),
-    getContentCalendar(clientId),
   ]);
 
   const socialMetrics = (socialRows ?? []).map(mapPerformanceMetric);
@@ -356,19 +365,12 @@ export async function getPlatformPerformanceTable(clientId: string, period: stri
   const platformsWithMetrics = Array.from(new Set(socialMetrics.map((m) => m.platform).filter((p): p is NonNullable<typeof p> => !!p)));
   const platforms = Array.from(new Set([...everConfigured, ...platformsWithMetrics]));
 
-  const [py, pm] = period.split("-").map(Number);
-  const prevDate = new Date(py, pm - 2, 1);
-  const prevPeriod = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
-  const published = items.filter((i) => i.status === "published");
-  const contentCountFor = (platform: string, p: string) => published.filter((i) => i.platform === platform && i.plannedDate.startsWith(p)).length;
   const pct = (curr?: number | null, prev?: number | null) => (curr == null || prev == null || prev === 0 ? null : Math.round(((curr - prev) / prev) * 1000) / 10);
 
   return platforms.map((platform) => {
     const history = socialMetrics.filter((m) => m.platform === platform);
     const latest = history.at(-1);
     const previous = history.at(-2);
-    const currentContent = contentCountFor(platform, period);
-    const prevContent = contentCountFor(platform, prevPeriod);
 
     return {
       platform,
@@ -378,8 +380,8 @@ export async function getPlatformPerformanceTable(clientId: string, period: stri
       reachDelta: pct(latest?.reach, previous?.reach),
       engagementRate: latest?.engagementRate,
       engagementDelta: pct(latest?.engagementRate, previous?.engagementRate),
-      contentCount: currentContent,
-      contentDelta: pct(currentContent, prevContent),
+      profileVisit: latest?.visitors,
+      profileVisitDelta: pct(latest?.visitors, previous?.visitors),
     };
   });
 }
