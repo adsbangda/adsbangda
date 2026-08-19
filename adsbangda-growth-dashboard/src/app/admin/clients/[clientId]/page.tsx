@@ -175,31 +175,64 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
         </Card>
       </div>
 
-      {/* SOCIAL MEDIA GOALS — Feed 3/12, Reels 1/3, dst. Actual computed dari Content List. */}
-      {client.socialMediaActive && goalBreakdown.length > 0 && (
+      {/* SOCIAL MEDIA — Goals (target vs actual) & Performance (followers per
+          platform) DIGABUNG jadi SATU card (sebelumnya 2 card terpisah,
+          nyelip di antara Meta Ads/Website — sekarang urutan section-nya
+          juga mengikuti pola Client Overview: Social Media dulu, baru
+          Meta Ads & Website). Tetap "versi admin": ada tombol Kelola, dan
+          detail per platform+type (bukan cuma ringkasan) supaya admin bisa
+          lihat progress lebih rinci dibanding yang client lihat. */}
+      {client.socialMediaActive && (
         <Card padding="lg">
           <SectionHeading
-            title="Social Media Goals"
-            description="Actual dihitung otomatis dari Content List (status Published)."
+            title="Social Media"
+            description="Target vs actual (Content List) & followers terbaru per platform."
             action={
-              <Link href={`/admin/clients/${clientId}/social-media?tab=delivery`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              <Link href={`/admin/clients/${clientId}/social-media`} className={buttonVariants({ variant: "outline", size: "sm" })}>
                 Kelola <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             }
           />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {goalBreakdown.map((g) => (
-              <div key={g.id} className="rounded-[var(--radius-md)] border border-border p-3">
-                <p className="font-data text-[10px] uppercase tracking-wider text-muted">
-                  {g.platform} · {g.contentType}
-                </p>
-                <p className="mt-1 text-lg font-bold text-ink">
-                  {g.actual} <span className="text-sm font-medium text-muted">/ {g.target}</span>
-                </p>
-                <p className="font-data text-xs text-muted">{g.pct}%</p>
-              </div>
-            ))}
-          </div>
+
+          {goalBreakdown.length === 0 && socialByPlatform.length === 0 ? (
+            <p className="text-xs text-muted">Belum ada target/data Social Media untuk client ini — isi lewat tombol Kelola.</p>
+          ) : (
+            <>
+              {goalBreakdown.length > 0 && (
+                <div>
+                  <p className="mb-2.5 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Content Delivery — Target vs Actual</p>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    {goalBreakdown.map((g) => (
+                      <div key={g.id} className="rounded-[var(--radius-md)] border border-border p-3">
+                        <p className="font-data text-[10px] uppercase tracking-wider text-muted">
+                          {g.platform} · {g.contentType}
+                        </p>
+                        <p className="mt-1 text-lg font-bold text-ink">
+                          {g.actual} <span className="text-sm font-medium text-muted">/ {g.target}</span>
+                        </p>
+                        <p className="font-data text-xs text-muted">{g.pct}%</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {socialByPlatform.length > 0 && (
+                <div className={goalBreakdown.length > 0 ? "mt-6 border-t border-border pt-5" : ""}>
+                  <p className="mb-2.5 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Followers per Platform (snapshot terbaru)</p>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                    {socialByPlatform.map(({ platform, latest }) => (
+                      <div key={platform}>
+                        <p className="font-data text-[10px] uppercase tracking-wider text-muted">{platform}</p>
+                        <p className="mt-1 text-sm font-bold text-ink">{latest?.followers != null ? `${formatDecimal(latest.followers / 1000)}K` : "—"}</p>
+                        <p className="text-[11px] text-muted">followers</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </Card>
       )}
 
@@ -208,8 +241,7 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
           terpisah — supaya angka & layout yang admin lihat SELALU identik
           dengan yang client lihat (auto-fit grid, full width, tidak ada
           gap aneh), sambil tetap dibungkus "versi admin": Card dengan
-          SectionHeading + tombol "Kelola" (bukan seluruh card jadi link),
-          konsisten dengan pola Social Media Goals/Performance di bawah. */}
+          SectionHeading + tombol "Kelola" (bukan seluruh card jadi link). */}
       {(client.metaAdsActive || client.websiteActive) && (
         <div className={`grid grid-cols-1 items-start gap-4 ${client.metaAdsActive && client.websiteActive ? "lg:grid-cols-2" : ""}`}>
           {client.metaAdsActive && (
@@ -240,33 +272,6 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
             </Card>
           )}
         </div>
-      )}
-
-      {client.socialMediaActive && (
-        <Card padding="lg">
-          <SectionHeading
-            title="Social Media Performance"
-            description={socialByPlatform.length === 0 ? "Belum ada data performance." : "Snapshot terbaru per platform."}
-            action={
-              <Link href={`/admin/clients/${clientId}/social-media?tab=performance`} className={buttonVariants({ variant: "outline", size: "sm" })}>
-                Kelola <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            }
-          />
-          {socialByPlatform.length === 0 ? (
-            <p className="text-xs text-muted">Belum ada data Social Media untuk client ini.</p>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              {socialByPlatform.map(({ platform, latest }) => (
-                <div key={platform}>
-                  <p className="font-data text-[10px] uppercase tracking-wider text-muted">{platform}</p>
-                  <p className="mt-1 text-sm font-bold text-ink">{latest?.followers != null ? `${formatDecimal(latest.followers / 1000)}K` : "—"}</p>
-                  <p className="text-[11px] text-muted">followers</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
       )}
 
       {/* NEEDS ATTENTION — computed dari content pending approval, BUKAN input manual */}
