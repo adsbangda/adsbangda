@@ -1,4 +1,4 @@
-import { cn, formatNumber, formatDecimal, formatPercent } from "@/lib/utils";
+import { cn, formatNumber, formatDecimal } from "@/lib/utils";
 import { PLATFORM_META } from "./platform-meta";
 import { EmptyState } from "./empty-state";
 import { ArrowUp, ArrowDown, Users } from "lucide-react";
@@ -29,11 +29,11 @@ function DeltaBadge({ delta }: { delta?: number | null }) {
   );
 }
 
-function MetricCell({ value, delta, percent = false }: { value?: number | null; delta?: number | null; percent?: boolean }) {
+function MetricCell({ value, delta }: { value?: number | null; delta?: number | null }) {
   if (value == null) return <span className="text-base text-muted">—</span>;
   return (
     <div>
-      <p className="font-data text-base font-bold text-ink">{percent ? formatPercent(value, 2) : formatCompact(value)}</p>
+      <p className="font-data text-base font-bold text-ink">{formatCompact(value)}</p>
       <DeltaBadge delta={delta} />
     </div>
   );
@@ -41,16 +41,20 @@ function MetricCell({ value, delta, percent = false }: { value?: number | null; 
 
 /**
  * "Platform Performance" — satu tabel per platform (bukan grid card
- * terpisah-pisah) menampilkan Followers, Reach, Impressions, Profile
- * Visit, dan Engagement, masing-masing dengan indikator naik/turun vs
- * periode sebelumnya. Garis pemisah cuma horizontal antar baris
- * (divide-y) — sempat dicoba tambah garis vertikal antar kolom juga,
- * tapi hasilnya kurang enak dilihat (kesannya seperti "jeruji" turun ke
- * bawah), jadi dibalikin ke versi minimal spasi antar kolom seperti
- * biasa.
+ * terpisah-pisah) menampilkan Followers, Reach, Impressions, dan Profile
+ * Visit, masing-masing dengan indikator naik/turun vs periode sebelumnya.
+ * Garis pemisah cuma horizontal antar baris (divide-y) — sempat dicoba
+ * tambah garis vertikal antar kolom juga, tapi hasilnya kurang enak
+ * dilihat (kesannya seperti "jeruji" turun ke bawah), jadi dibalikin ke
+ * versi minimal spasi antar kolom seperti biasa.
  *
  * FLEKSIBEL — baris yang muncul cuma platform yang benar-benar ada
  * datanya (lihat getPlatformPerformanceTable), bukan daftar hardcode.
+ *
+ * CATATAN: kolom Engagement SENGAJA tidak ditambah di sini (Overview) —
+ * cuma ditampilkan di halaman Social Media (lihat MiniStat "Engagement"
+ * di src/app/(app)/social-media/page.tsx). Tabel ini tetap 4 kolom
+ * seperti semula.
  */
 export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRow[] }) {
   if (rows.length === 0) {
@@ -59,15 +63,14 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[680px] text-left">
+      <table className="w-full min-w-[560px] text-left">
         <thead>
           <tr className="border-b border-border text-sm text-muted">
             <th className="pb-3 pr-4 font-medium">Platform</th>
             <th className="pb-3 pr-4 font-medium">Followers</th>
             <th className="pb-3 pr-4 font-medium">Reach</th>
             <th className="pb-3 pr-4 font-medium">Impressions</th>
-            <th className="pb-3 pr-4 font-medium">Profile Visit</th>
-            <th className="pb-3 font-medium">Engagement</th>
+            <th className="pb-3 font-medium">Profile Visit</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -95,11 +98,8 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
                 <td className="py-3.5 pr-4">
                   <MetricCell value={row.impressions} delta={row.impressionsDelta} />
                 </td>
-                <td className="py-3.5 pr-4">
-                  <MetricCell value={row.profileVisit} delta={row.profileVisitDelta} />
-                </td>
                 <td className="py-3.5">
-                  <MetricCell value={row.engagementRate} delta={row.engagementRateDelta} percent />
+                  <MetricCell value={row.profileVisit} delta={row.profileVisitDelta} />
                 </td>
               </tr>
             );
