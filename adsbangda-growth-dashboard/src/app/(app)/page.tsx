@@ -27,7 +27,6 @@ import {
   getPlatformPerformanceTable,
   getPerformanceSummary,
   currentPeriod,
-  monthBounds,
   type DateRange,
 } from "@/lib/data";
 
@@ -45,19 +44,19 @@ function isValidDate(value: string | undefined): value is string {
 export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ period?: string; from?: string; to?: string }> }) {
   const { period: periodParam, from: fromParam, to: toParam } = await searchParams;
   const client = await getCurrentClient();
-  const period = isValidPeriod(periodParam) ? periodParam : currentPeriod();
 
-  // Rentang tanggal custom dari date-range picker di OverviewHeader — cuma
-  // dianggap valid kalau DUA-DUANYA ada, format tanggal benar, urut (from
-  // <= to), DAN masih di dalam bulan `period` yang sedang aktif (jaga-jaga
-  // kalau ada yang utak-atik URL manual dengan tanggal di luar bulan itu).
-  // Kalau tidak valid/tidak ada, `range` dibiarkan undefined — fungsi data
-  // di bawah otomatis fallback ke satu bulan penuh (lihat monthBounds()).
-  const bounds = monthBounds(period);
-  const range: DateRange | undefined =
-    isValidDate(fromParam) && isValidDate(toParam) && fromParam <= toParam && fromParam >= bounds.from && toParam <= bounds.to
-      ? { from: fromParam, to: toParam }
-      : undefined;
+  // Rentang tanggal custom dari kalender di OverviewHeader — valid kalau
+  // DUA-DUANYA ada, format benar, dan urut (from <= to). SEBELUMNYA juga
+  // di-cross-check harus berada di dalam bulan `period` yang lagi aktif —
+  // itu sumber bug "banyak error": kalau user sempat geser bulan di
+  // kalender sebelum klik tanggal kedua, atau rentangnya kebetulan nyebrang
+  // ke bulan lain, validasi lama nolak rentang yang sebenarnya valid dan
+  // diam-diam balik ke satu bulan penuh tanpa penjelasan. Sekarang `period`
+  // JUSTRU DITURUNKAN dari `range.from` kalau range ada — jadi keduanya
+  // selalu konsisten by construction, tidak ada lagi validasi silang yang
+  // bisa gagal.
+  const range: DateRange | undefined = isValidDate(fromParam) && isValidDate(toParam) && fromParam <= toParam ? { from: fromParam, to: toParam } : undefined;
+  const period = range ? range.from.slice(0, 7) : isValidPeriod(periodParam) ? periodParam : currentPeriod();
 
   // Setiap fetch di bawah HANYA dipanggil kalau service terkait aktif untuk
   // client ini (client.socialMediaActive/metaAdsActive/websiteActive —

@@ -7,7 +7,7 @@ import { TrendChart } from "@/components/dashboard/trend-chart";
 import { DateRangeTabs } from "@/components/dashboard/date-range-tabs";
 import { getCurrentClient, getPerformanceSummary } from "@/lib/data";
 import { formatIDR, formatNumber, formatPercent } from "@/lib/utils";
-import { Wallet, Target, Eye, Heart, TrendingUp, Users2 } from "lucide-react";
+import { Wallet, Target, Eye, Heart, Users2 } from "lucide-react";
 
 function shortDate(iso: string) {
   return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short" }).format(new Date(iso));
@@ -15,7 +15,7 @@ function shortDate(iso: string) {
 
 export default async function PerformancePage() {
   const client = await getCurrentClient();
-  const { metaAds, social, website, topContent, channelSummary } = await getPerformanceSummary(client.id);
+  const { metaAds, social, website, channelSummary } = await getPerformanceSummary(client.id);
 
   const latestMeta = metaAds.at(-1);
   const previousMeta = metaAds.at(-2);
@@ -80,23 +80,6 @@ export default async function PerformancePage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </Card>
-
-        <Card>
-          <SectionHeading title="Top Performing Content" />
-          <div className="divide-y divide-border">
-            {topContent.map((item, i) => (
-              <div key={i} className="flex items-center justify-between gap-4 py-3.5 first:pt-0">
-                <div>
-                  <p className="text-sm font-medium text-ink">{item.title}</p>
-                  <p className="font-data text-xs text-muted">{formatNumber(item.reach)} reach</p>
-                </div>
-                <span className="inline-flex shrink-0 items-center gap-1 font-data text-xs font-semibold text-success">
-                  <TrendingUp className="h-3 w-3" /> {formatPercent(item.engagementRate)}
-                </span>
-              </div>
-            ))}
           </div>
         </Card>
       </div>

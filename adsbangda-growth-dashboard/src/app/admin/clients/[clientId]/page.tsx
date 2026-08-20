@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { Briefcase, Users, FileText, ArrowRight, AlertCircle, Clock } from "lucide-react";
+import { Briefcase, Users, FileText, ArrowRight, AlertCircle, Clock, Trash2, Plus } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { MetaAdsSummary } from "@/components/dashboard/meta-ads-summary";
@@ -20,13 +20,17 @@ import {
   adminListPerformanceMetrics,
   adminListReports,
   adminListWebsiteActivity,
+  adminListHighlights,
+  adminCreateQuickStat,
+  adminDeleteQuickStat,
   uploadClientLogo,
 } from "@/lib/admin-data";
 import { formatDateID, formatDecimal } from "@/lib/utils";
-import type { Client, SocialPlatform } from "@/lib/types";
+import type { Client, SocialPlatform, QuickStatIcon } from "@/lib/types";
 
 const inputClass = "w-full rounded-[var(--radius-md)] border border-border px-3 py-2 text-sm text-ink outline-none focus:border-ink";
 const SOCIAL_PLATFORMS: SocialPlatform[] = ["instagram", "facebook", "tiktok", "x", "linkedin", "threads"];
+const QUICK_STAT_ICONS: QuickStatIcon[] = ["send", "story", "heart", "users"];
 
 function currentPeriod() {
   const now = new Date();
@@ -65,7 +69,25 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
     redirect("/admin/clients");
   }
 
-  const [team, content, contentTargets, socialMetrics, metaMetrics, websiteMetrics, reports, websiteActivity, overallProgress] = await Promise.all([
+  async function addQuickStatAction(formData: FormData) {
+    "use server";
+    await adminCreateQuickStat(clientId, {
+      icon: String(formData.get("icon") ?? "send") as QuickStatIcon,
+      label: String(formData.get("label") ?? "").trim(),
+      value: String(formData.get("value") ?? "").trim(),
+      deltaLabel: String(formData.get("deltaLabel") ?? "").trim(),
+      deltaPositive: formData.get("deltaPositive") === "on",
+    });
+    revalidatePath(path);
+  }
+
+  async function deleteQuickStatAction(formData: FormData) {
+    "use server";
+    await adminDeleteQuickStat(String(formData.get("id")));
+    revalidatePath(path);
+  }
+
+  const [team, content, contentTargets, socialMetrics, metaMetrics, websiteMetrics, reports, websiteActivity, overallProgress, highlights] = await Promise.all([
     adminListClientTeam(clientId),
     adminListContent(clientId),
     adminListContentTargets(clientId, period),
@@ -75,6 +97,7 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
     adminListReports(clientId),
     adminListWebsiteActivity(clientId),
     adminComputeOverallProgress(clientId),
+    adminListHighlights(clientId),
   ]);
 
   const contentTargetTotal = contentTargets.reduce((sum, t) => sum + t.target, 0);
@@ -135,6 +158,62 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
           />
           <button type="submit" className={buttonVariants({ variant: "primary", className: "justify-center" })}>
             Simpan
+          </button>
+        </form>
+      </Card>
+
+      {/* QUICK STATS — highlight bebas (icon+label+angka+delta) yang muncul
+          di card "Quick Stats" Overview client. BEDA dari section lain di
+          halaman ini: semua section lain read-only/computed, ini SATU-
+          SATUNYA yang genuinely butuh input manual admin (freeform, bukan
+          turunan dari data lain) — makanya taruh sebagai form biasa,
+          bukan cuma display. Maks 4 biar konsisten sama layout grid-nya
+          di Overview (auto-fit tapi didesain buat ~4 kolom). */}
+      <Card padding="lg">
+        <SectionHeading title="Quick Stats" description="Highlight bebas yang tampil di Overview client (maks 4 disarankan) — mis. '124 Post Terkirim', '+18% Followers'." />
+        {highlights.quickStats.length === 0 ? (
+          <p className="mb-4 text-xs text-muted">Belum ada Quick Stat — isi lewat form di bawah, atau biarkan kosong (section-nya otomatis hilang di Overview client).</p>
+        ) : (
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {highlights.quickStats.map((q) => (
+              <div key={q.id} className="rounded-[var(--radius-md)] border border-border p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-data text-[10px] uppercase tracking-wider text-muted">{q.icon}</p>
+                    <p className="mt-1 text-base font-bold text-ink">{q.value}</p>
+                    <p className="text-xs text-muted">{q.label}</p>
+                  </div>
+                  <form action={deleteQuickStatAction}>
+                    <input type="hidden" name="id" value={q.id} />
+                    <button type="submit" className="shrink-0 text-muted hover:text-danger" aria-label="Hapus">
+                      <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    </button>
+                  </form>
+                </div>
+                <p className={`mt-1.5 font-data text-[11px] font-semibold ${q.deltaPositive ? "text-success" : "text-danger"}`}>
+                  {q.deltaPositive ? "↑" : "↓"} {q.deltaLabel}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+        <form action={addQuickStatAction} className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <select name="icon" className={inputClass}>
+            {QUICK_STAT_ICONS.map((icon) => (
+              <option key={icon} value={icon}>
+                {icon}
+              </option>
+            ))}
+          </select>
+          <input name="label" placeholder="Label (mis. Post Terkirim)" required className={inputClass} />
+          <input name="value" placeholder="Nilai (mis. 124)" required className={inputClass} />
+          <input name="deltaLabel" placeholder="Delta (mis. +12 minggu ini)" className={inputClass} />
+          <label className="flex items-center gap-1.5 text-xs text-ink">
+            <input type="checkbox" name="deltaPositive" defaultChecked className="h-3.5 w-3.5 rounded border-border" />
+            Positif
+          </label>
+          <button type="submit" className={buttonVariants({ variant: "outline", size: "sm", className: "sm:col-span-5 justify-center" })}>
+            <Plus className="h-3.5 w-3.5" /> Tambah Quick Stat
           </button>
         </form>
       </Card>

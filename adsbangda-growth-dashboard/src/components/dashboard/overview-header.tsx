@@ -89,7 +89,11 @@ export function OverviewHeader({ clientName, periodLabel, currentPeriod, dateFro
     if (!selStart) return;
     const from = selStart;
     const to = selEnd ?? selStart;
-    const period = `${viewMonth.year}-${pad(viewMonth.month + 1)}`;
+    // Diturunkan dari `from` (bukan `viewMonth`) — SENGAJA, supaya tetap
+    // konsisten walau user sempat geser bulan pakai panah ‹ › di antara
+    // klik tanggal pertama & kedua (viewMonth bisa beda dari bulan asal
+    // `selStart` dalam skenario itu).
+    const period = from.slice(0, 7);
     router.push(`/?period=${period}&from=${from}&to=${to}`);
     setPeriodOpen(false);
   }

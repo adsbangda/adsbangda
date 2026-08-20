@@ -29,7 +29,6 @@ import {
   mockSocial,
   mockWebsite,
   mockChannelSummary,
-  mockTopContent,
   mockContentCalendar,
   mockReports,
   mockActivity,
@@ -41,14 +40,19 @@ import {
   mockUpcomingEvents,
   mockWeeklyCalendar,
   mockFiles,
-  marketingInsight,
 } from "./mock-data";
-import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar, ChannelOverviewRow, AttentionItem, UpcomingEvent, SocialPlatformSummary, PlatformPerformanceRow } from "./types";
+import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar, ChannelOverviewRow, AttentionItem, UpcomingEvent, SocialPlatformSummary, PlatformPerformanceRow, ChannelSummary } from "./types";
 import { CONTENT_TYPE_LABEL } from "./types";
 
 const MONTH_LABEL_ID = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
 
 export const DEMO_MODE = !isSupabaseConfigured;
+
+/** Persen perubahan vs periode sebelumnya — null kalau tidak ada baseline (baris pertama/data belum ada 2 snapshot). Satu sumber kebenaran dipakai di beberapa fungsi (getChannelOverview, getChannelSummary) supaya definisinya konsisten. */
+function pctChange(curr?: number | null, prev?: number | null): number | null {
+  if (curr == null || prev == null || prev === 0) return null;
+  return Math.round(((curr - prev) / prev) * 1000) / 10;
+}
 
 export function currentPeriod() {
   const now = new Date();
@@ -548,32 +552,101 @@ export async function getWeeklyCalendar(clientId: string): Promise<WeeklyCalenda
   return { weekDays, activeIndex, rows, totalLabel: `${total} konten` };
 }
 
+/**
+ * "Campaign Summary" (Meta Ads & Performance) — dibangun BENERAN dari
+ * snapshot terbaru performance_metrics per channel/platform (SEBELUMNYA:
+ * selalu hardcode mockChannelSummary walau di mode live — bug, bukan
+ * by-design; lihat TODO lama di getPerformanceSummary()).
+ *
+ * Status "healthy"/"watch"/"underperforming" DIHITUNG dari tren leads
+ * (Meta Ads/Website) atau engagement rate (social organik) dibanding
+ * snapshot sebelumnya — bukan input manual, karena tidak ada kolom
+ * "status" di skema manapun buat ini.
+ */
+function deriveChannelStatus(deltaPct: number | null): ChannelSummary["status"] {
+  if (deltaPct == null) return "watch";
+  if (deltaPct >= 5) return "healthy";
+  if (deltaPct >= -10) return "watch";
+  return "underperforming";
+}
+
+export async function getChannelSummary(clientId: string): Promise<ChannelSummary[]> {
+  if (!isSupabaseConfigured) return mockChannelSummary;
+
+  const supabase = await createClient();
+  const { data } = await supabase!.from("performance_metrics").select("*").eq("client_id", clientId).order("date", { ascending: true });
+  const metrics = (data ?? []).map(mapPerformanceMetric);
+  const rows: ChannelSummary[] = [];
+
+  const metaAds = metrics.filter((m) => m.channel === "meta_ads");
+  if (metaAds.length > 0) {
+    const latest = metaAds.at(-1)!;
+    const previous = metaAds.at(-2);
+    rows.push({
+      channel: "Meta Ads",
+      spend: latest.spend ?? 0,
+      leads: latest.leads ?? 0,
+      costPerLead: latest.costPerLead ?? 0,
+      engagementRate: 0,
+      status: deriveChannelStatus(pctChange(latest.leads, previous?.leads)),
+    });
+  }
+
+  const socialPlatforms = Array.from(new Set(metrics.filter((m) => m.channel === "social").map((m) => m.platform).filter((p): p is NonNullable<typeof p> => !!p)));
+  for (const platform of socialPlatforms) {
+    const history = metrics.filter((m) => m.channel === "social" && m.platform === platform);
+    const latest = history.at(-1)!;
+    const previous = history.at(-2);
+    rows.push({
+      channel: `${platform.charAt(0).toUpperCase()}${platform.slice(1)} Organic`,
+      spend: 0,
+      leads: 0,
+      costPerLead: 0,
+      engagementRate: latest.engagementRate ?? 0,
+      status: deriveChannelStatus(pctChange(latest.engagementRate, previous?.engagementRate)),
+    });
+  }
+
+  const website = metrics.filter((m) => m.channel === "website");
+  if (website.length > 0) {
+    const latest = website.at(-1)!;
+    const previous = website.at(-2);
+    rows.push({
+      channel: "Website Direct",
+      spend: 0,
+      leads: latest.conversions ?? 0,
+      costPerLead: 0,
+      engagementRate: 0,
+      status: deriveChannelStatus(pctChange(latest.conversions, previous?.conversions)),
+    });
+  }
+
+  return rows;
+}
+
 export async function getPerformanceSummary(clientId: string) {
   if (!isSupabaseConfigured) {
     return {
       metaAds: mockPerformance,
       social: mockSocial,
       website: mockWebsite,
-      topContent: mockTopContent,
       channelSummary: mockChannelSummary,
-      insight: marketingInsight,
     };
   }
 
   const supabase = await createClient();
-  const [metaAds, social, website] = await Promise.all([
+  const [metaAds, social, website, channelSummary] = await Promise.all([
     supabase!.from("performance_metrics").select("*").eq("client_id", clientId).eq("channel", "meta_ads").order("date"),
     supabase!.from("performance_metrics").select("*").eq("client_id", clientId).eq("channel", "social").order("date"),
     supabase!.from("performance_metrics").select("*").eq("client_id", clientId).eq("channel", "website").order("date"),
+    getChannelSummary(clientId),
   ]);
 
   return {
     metaAds: (metaAds.data ?? []).map(mapPerformanceMetric),
     social: (social.data ?? []).map(mapPerformanceMetric),
     website: (website.data ?? []).map(mapPerformanceMetric),
-    topContent: mockTopContent, // TODO (fase berikutnya): turunkan dari content_items + metrik per-post
-    channelSummary: mockChannelSummary, // TODO (fase berikutnya): agregat per channel dari performance_metrics
-    insight: marketingInsight, // TODO (fase berikutnya): hasil generate dari perbandingan periode
+    channelSummary,
   };
 }
 

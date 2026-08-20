@@ -22,6 +22,7 @@ import {
   mapContentTarget,
   mapWebsiteActivity,
   mapApprovalHistoryEntry,
+  mapQuickStat,
 } from "./mappers";
 import {
   mockClients,
@@ -33,8 +34,6 @@ import {
   mockFiles,
   mockReports,
   mockQuickStats,
-  mockChannelOverview,
-  mockUpcomingEvents,
   mockPerformance,
   mockSocial,
   mockWebsite,
@@ -55,7 +54,6 @@ import type {
   AttentionItem,
   ActivityEntry,
   QuickStatIcon,
-  ChannelIcon,
   UserRole,
   TeamMember,
   Channel,
@@ -672,24 +670,28 @@ export async function adminDeleteReport(reportId: string) {
 }
 
 // ---------------------------------------------------------------------------
-// HIGHLIGHTS — Quick Stats, Channel Overview, Upcoming Events
+// HIGHLIGHTS — Quick Stats
 // ---------------------------------------------------------------------------
+// SEBELUMNYA section ini juga baca/tulis tabel `channel_overview` dan
+// `upcoming_events` — dihapus total (bukan cuma di-skip) karena client
+// SUDAH LAMA TIDAK PERNAH membaca dua tabel itu lagi (lihat getChannelOverview
+// & getUpcomingEvents di lib/data.ts — keduanya dihitung live dari
+// performance_metrics/content_items). Admin yang isi data lewat dua tabel
+// itu tidak akan pernah kelihatan efeknya di Client Portal — bukan bug,
+// tapi fungsi mati yang menyesatkan kalau tetap ada di sini. `quick_stats`
+// DIPERTAHANKAN karena getQuickStats() di Client Portal MASIH benar-benar
+// membacanya — ini satu-satunya bagian "Highlights" yang masih hidup.
 
 export async function adminListHighlights(clientId: string) {
   await requireAdmin();
   if (!isSupabaseConfigured) {
-    if (!isDemoClient(clientId)) return { quickStats: [], channelOverview: [], upcomingEvents: [] };
-    return { quickStats: mockQuickStats, channelOverview: mockChannelOverview, upcomingEvents: mockUpcomingEvents };
+    if (!isDemoClient(clientId)) return { quickStats: [] };
+    return { quickStats: mockQuickStats };
   }
 
   const supabase = await createClient();
-  const [{ data: quickStats }, { data: channelOverview }, { data: upcomingEvents }] = await Promise.all([
-    supabase!.from("quick_stats").select("*").eq("client_id", clientId).order("sort_order"),
-    supabase!.from("channel_overview").select("*").eq("client_id", clientId).order("sort_order"),
-    supabase!.from("upcoming_events").select("*").eq("client_id", clientId).order("event_date"),
-  ]);
-
-  return { quickStats: quickStats ?? [], channelOverview: channelOverview ?? [], upcomingEvents: upcomingEvents ?? [] };
+  const { data: quickStats } = await supabase!.from("quick_stats").select("*").eq("client_id", clientId).order("sort_order");
+  return { quickStats: (quickStats ?? []).map(mapQuickStat) };
 }
 
 export async function adminCreateQuickStat(
@@ -724,79 +726,6 @@ export async function adminDeleteQuickStat(id: string) {
   }
   const supabase = await createClient();
   const { error } = await supabase!.from("quick_stats").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-}
-
-export async function adminCreateChannelRow(
-  clientId: string,
-  input: { icon: ChannelIcon; label: string; metricLabel: string; value: string; deltaLabel: string; sparkline: number[] }
-) {
-  await requireAdmin();
-  if (!isSupabaseConfigured) {
-    if (!isDemoClient(clientId)) return;
-    mockChannelOverview.push({ id: uid(), ...input });
-    return;
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase!.from("channel_overview").insert({
-    client_id: clientId,
-    icon: input.icon,
-    label: input.label,
-    metric_label: input.metricLabel,
-    value: input.value,
-    delta_label: input.deltaLabel,
-    sparkline: input.sparkline,
-  });
-  if (error) throw new Error(error.message);
-}
-
-export async function adminDeleteChannelRow(id: string) {
-  await requireAdmin();
-  if (!isSupabaseConfigured) {
-    const idx = mockChannelOverview.findIndex((c) => c.id === id);
-    if (idx >= 0) mockChannelOverview.splice(idx, 1);
-    return;
-  }
-  const supabase = await createClient();
-  const { error } = await supabase!.from("channel_overview").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-}
-
-export async function adminCreateUpcomingEvent(clientId: string, input: { eventDate: string; title: string; timeLabel: string }) {
-  await requireAdmin();
-  if (!isSupabaseConfigured) {
-    if (!isDemoClient(clientId)) return;
-    const d = new Date(input.eventDate);
-    mockUpcomingEvents.push({
-      id: uid(),
-      day: String(d.getUTCDate()),
-      month: d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase(),
-      title: input.title,
-      timeLabel: input.timeLabel,
-    });
-    return;
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase!.from("upcoming_events").insert({
-    client_id: clientId,
-    event_date: input.eventDate,
-    title: input.title,
-    time_label: input.timeLabel,
-  });
-  if (error) throw new Error(error.message);
-}
-
-export async function adminDeleteUpcomingEvent(id: string) {
-  await requireAdmin();
-  if (!isSupabaseConfigured) {
-    const idx = mockUpcomingEvents.findIndex((e) => e.id === id);
-    if (idx >= 0) mockUpcomingEvents.splice(idx, 1);
-    return;
-  }
-  const supabase = await createClient();
-  const { error } = await supabase!.from("upcoming_events").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
 
