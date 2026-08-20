@@ -198,6 +198,8 @@ export interface PlatformPerformanceRow {
   impressionsDelta?: number | null;
   profileVisit?: number;
   profileVisitDelta?: number | null;
+  engagementRate?: number;
+  engagementRateDelta?: number | null;
 }
 
 /**

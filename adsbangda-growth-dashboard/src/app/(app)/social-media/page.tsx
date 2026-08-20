@@ -8,7 +8,7 @@ import { PostRankingTable } from "@/components/dashboard/post-ranking-table";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { PLATFORM_META } from "@/components/dashboard/platform-meta";
 import { getCurrentClient, getPerformanceSummary, getPlatformPerformanceTable, getPostPerformance } from "@/lib/data";
-import { formatNumber, cn } from "@/lib/utils";
+import { formatNumber, formatPercent, cn } from "@/lib/utils";
 
 function shortDate(iso: string) {
   return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short" }).format(new Date(iso));
@@ -56,7 +56,7 @@ export default async function SocialMediaPage() {
               <Card key={row.platform} padding="lg">
                 <SectionHeading
                   title={logo?.label ?? row.platform}
-                  description="Followers, Reach, Impressions & Profile Visit — snapshot terbaru vs periode sebelumnya."
+                  description="Followers, Reach, Impressions, Profile Visit & Engagement — snapshot terbaru vs periode sebelumnya."
                   action={
                     logo && (
                       <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-border bg-surface">
@@ -72,6 +72,7 @@ export default async function SocialMediaPage() {
                   <MiniStat label="Reach" value={formatNumber(row.reach ?? 0)} deltaPct={row.reachDelta} color="green" />
                   <MiniStat label="Impressions" value={formatNumber(row.impressions ?? 0)} deltaPct={row.impressionsDelta} color="purple" />
                   <MiniStat label="Profile Visit" value={formatNumber(row.profileVisit ?? 0)} deltaPct={row.profileVisitDelta} color="orange" />
+                  <MiniStat label="Engagement" value={row.engagementRate != null ? formatPercent(row.engagementRate, 2) : "—"} deltaPct={row.engagementRateDelta} color="green" />
                 </div>
 
                 {chartData.length > 0 && (
