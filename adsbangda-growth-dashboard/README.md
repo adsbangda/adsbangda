@@ -137,6 +137,27 @@ otomatis narik data terbaru sendiri, tanpa siapa pun perlu menekan reload.
 - Mode Demo: no-op total (tidak ada Supabase = tidak ada apa pun untuk
   didengar), jadi aman dipasang tanpa syarat di kedua layout.
 
+### Social Media — dipisah per platform + Post Ranking
+
+Halaman **Social Media** (Client Portal) sekarang dipecah jadi satu card per
+platform (Instagram, TikTok, Facebook, dst — bukan digabung total lagi):
+
+- **Bagian atas tiap platform**: 4 KPI ringkas (Followers, Reach, Impressions,
+  Profile Visit) + SATU grafik gabungan yang menyatukan keempat metrik itu
+  (bukan chart followers-only + list engagement rate terpisah seperti
+  sebelumnya — supaya tidak ada info yang tampil dobel).
+- **Bagian bawah tiap platform**: tabel **Post Ranking** — daftar postingan
+  (feed/story/reels/video, mengikuti jenis konten platform terkait) diurutkan
+  dari total engagement (likes+comments+shares+saves) tertinggi, lengkap
+  likes/views/comments/shares/saves per postingan. Ini menggantikan section
+  "Engagement per Platform" (ChannelOverview) yang lama.
+
+Sumber datanya tabel baru `post_performance` (lihat
+`supabase/migrations/0015_post_performance.sql` — **jalankan migration ini
+juga**, sama seperti 0001–0014, jangan di-skip). Admin isi per postingan
+lewat **Admin → Social Media → Performance**, pilih platform, lalu form
+"Post Ranking" di bagian bawah card Performance History.
+
 ### Overview Client Portal — disambungkan ulang ke data asli
 
 Sebelumnya `getMonthlyDelivery`, `getAttentionItems`, `getChannelOverview`,

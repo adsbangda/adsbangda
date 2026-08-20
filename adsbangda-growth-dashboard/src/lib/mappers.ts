@@ -21,6 +21,7 @@ import type {
   ContentTarget,
   WebsiteActivityEntry,
   ApprovalHistoryEntry,
+  PostPerformance,
 } from "./types";
 
 export function mapClient(row: Record<string, unknown>): Client {
@@ -112,6 +113,23 @@ export function mapGoal(row: Record<string, unknown>): Goal {
     period: (row.period as string) ?? "",
     status: (row.status as Goal["status"]) ?? "on_track",
     notes: (row.notes as string | null) ?? null,
+  };
+}
+
+export function mapPostPerformance(row: Record<string, unknown>): PostPerformance {
+  return {
+    id: row.id as string,
+    clientId: row.client_id as string,
+    platform: row.platform as PostPerformance["platform"],
+    type: row.type as string,
+    title: row.title as string,
+    postedDate: row.posted_date as string,
+    likes: (row.likes as number | null) ?? undefined,
+    comments: (row.comments as number | null) ?? undefined,
+    shares: (row.shares as number | null) ?? undefined,
+    saves: (row.saves as number | null) ?? undefined,
+    views: (row.views as number | null) ?? undefined,
+    permalink: (row.permalink as string | null) ?? null,
   };
 }
 

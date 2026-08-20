@@ -200,6 +200,32 @@ export interface PlatformPerformanceRow {
   profileVisitDelta?: number | null;
 }
 
+/**
+ * Satu postingan yang sudah publish, dengan metrik lengkapnya sendiri
+ * (bukan snapshot agregat platform seperti PerformanceMetric) — dipakai
+ * untuk tabel "Post Ranking" di halaman Social Media (Client Portal),
+ * menggantikan section "Engagement per Platform" yang lama. Diisi manual
+ * oleh admin per postingan lewat Admin → Social Media → Performance.
+ *
+ * `type` mengikuti CONTENT_TYPES_BY_PLATFORM platform terkait (mis. untuk
+ * Instagram: feed/reels/story) — sengaja string bebas (bukan union ketat)
+ * karena pilihannya berbeda-beda per platform.
+ */
+export interface PostPerformance {
+  id: string;
+  clientId: string;
+  platform: SocialPlatform;
+  type: string;
+  title: string;
+  postedDate: string; // ISO date
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  saves?: number;
+  views?: number; // plays/views — reels, video, story
+  permalink?: string | null;
+}
+
 export interface WebsiteActivityEntry {
   id: string;
   clientId: string;

@@ -23,6 +23,7 @@ import {
   mapWebsiteActivity,
   mapApprovalHistoryEntry,
   mapQuickStat,
+  mapPostPerformance,
 } from "./mappers";
 import {
   mockClients,
@@ -41,6 +42,7 @@ import {
   mockContentTargets,
   mockWebsiteActivity,
   mockApprovalHistory,
+  mockPostPerformance,
 } from "./mock-data";
 import type {
   Client,
@@ -63,6 +65,8 @@ import type {
   ContentTarget,
   WebsiteActivityEntry,
   ApprovalHistoryEntry,
+  PostPerformance,
+  SocialPlatform,
 } from "./types";
 
 const uid = () => crypto.randomUUID();
@@ -1272,6 +1276,96 @@ export async function adminDeletePerformanceMetric(id: string, channel: Channel)
   }
   const supabase = await createClient();
   const { error } = await supabase!.from("performance_metrics").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// POST PERFORMANCE — satu baris per postingan (bukan snapshot agregat
+// platform seperti performance_metrics), dengan metriknya sendiri: likes,
+// comments, shares, saves, views. Sumber tabel "Post Ranking" per platform
+// di halaman Social Media (Client Portal), menggantikan section "Engagement
+// per Platform" yang lama.
+// ---------------------------------------------------------------------------
+
+export async function adminListPostPerformance(clientId: string, platform?: SocialPlatform): Promise<PostPerformance[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    return mockPostPerformance
+      .filter((p) => p.clientId === clientId && (!platform || p.platform === platform))
+      .sort((a, b) => b.postedDate.localeCompare(a.postedDate));
+  }
+
+  const supabase = await createClient();
+  let query = supabase!.from("post_performance").select("*").eq("client_id", clientId);
+  if (platform) query = query.eq("platform", platform);
+  const { data } = await query.order("posted_date", { ascending: false });
+  return (data ?? []).map(mapPostPerformance);
+}
+
+export async function adminCreatePostPerformance(clientId: string, input: Omit<PostPerformance, "id" | "clientId">) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const post: PostPerformance = { id: uid(), clientId, ...input };
+    mockPostPerformance.push(post);
+    return post;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase!
+    .from("post_performance")
+    .insert({
+      client_id: clientId,
+      platform: input.platform,
+      type: input.type,
+      title: input.title,
+      posted_date: input.postedDate,
+      likes: input.likes ?? null,
+      comments: input.comments ?? null,
+      shares: input.shares ?? null,
+      saves: input.saves ?? null,
+      views: input.views ?? null,
+      permalink: input.permalink ?? null,
+    })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return mapPostPerformance(data);
+}
+
+export async function adminUpdatePostPerformance(id: string, input: Partial<Omit<PostPerformance, "id" | "clientId">>) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const post = mockPostPerformance.find((p) => p.id === id);
+    if (post) Object.assign(post, input);
+    return;
+  }
+
+  const supabase = await createClient();
+  const payload: Record<string, unknown> = {};
+  if (input.platform !== undefined) payload.platform = input.platform;
+  if (input.type !== undefined) payload.type = input.type;
+  if (input.title !== undefined) payload.title = input.title;
+  if (input.postedDate !== undefined) payload.posted_date = input.postedDate;
+  if (input.likes !== undefined) payload.likes = input.likes;
+  if (input.comments !== undefined) payload.comments = input.comments;
+  if (input.shares !== undefined) payload.shares = input.shares;
+  if (input.saves !== undefined) payload.saves = input.saves;
+  if (input.views !== undefined) payload.views = input.views;
+  if (input.permalink !== undefined) payload.permalink = input.permalink;
+  if (Object.keys(payload).length === 0) return;
+  const { error } = await supabase!.from("post_performance").update(payload).eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function adminDeletePostPerformance(id: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const idx = mockPostPerformance.findIndex((p) => p.id === id);
+    if (idx >= 0) mockPostPerformance.splice(idx, 1);
+    return;
+  }
+  const supabase = await createClient();
+  const { error } = await supabase!.from("post_performance").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
 

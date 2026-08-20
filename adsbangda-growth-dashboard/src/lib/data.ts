@@ -19,6 +19,7 @@ import {
   mapActivityEntry,
   activityDayLabel,
   mapQuickStat,
+  mapPostPerformance,
 } from "./mappers";
 import {
   mockClient,
@@ -40,8 +41,9 @@ import {
   mockUpcomingEvents,
   mockWeeklyCalendar,
   mockFiles,
+  mockPostPerformance,
 } from "./mock-data";
-import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar, ChannelOverviewRow, AttentionItem, UpcomingEvent, SocialPlatformSummary, PlatformPerformanceRow, ChannelSummary } from "./types";
+import type { Client, Project, ProjectTask, ContentItem, ReportItem, FileEntry, MonthlyDeliveryHero, WeeklyCalendar, ChannelOverviewRow, AttentionItem, UpcomingEvent, SocialPlatformSummary, PlatformPerformanceRow, ChannelSummary, PostPerformance } from "./types";
 import { CONTENT_TYPE_LABEL } from "./types";
 
 const MONTH_LABEL_ID = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"];
@@ -427,6 +429,21 @@ export async function getPlatformPerformanceTable(clientId: string): Promise<Pla
       profileVisitDelta: pct(latest?.visitors, previous?.visitors),
     };
   });
+}
+
+/**
+ * Semua postingan (dengan metrik lengkapnya sendiri: likes, views, comments,
+ * shares, saves) untuk client ini — sumber tabel "Post Ranking" per platform
+ * di halaman Social Media (Client Portal). Diurutkan terbaru dulu di sini;
+ * ranking berdasarkan engagement dihitung di komponen (post-ranking-table.tsx)
+ * supaya definisi "engagement" tetap satu tempat kalau nanti berubah.
+ */
+export async function getPostPerformance(clientId: string): Promise<PostPerformance[]> {
+  if (!isSupabaseConfigured) return mockPostPerformance.filter((p) => p.clientId === clientId);
+
+  const supabase = await createClient();
+  const { data } = await supabase!.from("post_performance").select("*").eq("client_id", clientId).order("posted_date", { ascending: false });
+  return (data ?? []).map(mapPostPerformance);
 }
 
 export async function getSocialMediaBreakdown(clientId: string, period: string = currentPeriod()): Promise<SocialPlatformSummary[]> {

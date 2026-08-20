@@ -24,6 +24,7 @@ import type {
   PlatformPerformanceRow,
   WebsiteActivityEntry,
   ApprovalHistoryEntry,
+  PostPerformance,
 } from "./types";
 
 export const mockClient: Client = {
@@ -231,6 +232,38 @@ export const mockSocial: PerformanceMetric[] = [
   { id: "s4", clientId: mockClient.id, date: "2026-07-27", channel: "social", platform: "instagram", followers: 19050, engagementRate: 3.8, reach: 44200, impressions: 60100, visitors: 1680 },
   { id: "s5", clientId: mockClient.id, date: "2026-08-03", channel: "social", platform: "instagram", followers: 19400, engagementRate: 4.1, reach: 47600, impressions: 64800, visitors: 1810 },
   { id: "s6", clientId: mockClient.id, date: "2026-08-03", channel: "social", platform: "tiktok", followers: 8200, engagementRate: 5.2, reach: 30000, impressions: 41500, visitors: 920 },
+  // Riwayat TikTok & Facebook diperluas jadi 5 minggu (sebelumnya cuma 1
+  // snapshot) supaya chart gabungan per-platform di halaman Social Media
+  // (Client Portal) punya cukup titik data buat didemokan juga di platform
+  // selain Instagram.
+  { id: "s7", clientId: mockClient.id, date: "2026-07-06", channel: "social", platform: "tiktok", followers: 6900, engagementRate: 4.4, reach: 22400, impressions: 31200, visitors: 640 },
+  { id: "s8", clientId: mockClient.id, date: "2026-07-13", channel: "social", platform: "tiktok", followers: 7250, engagementRate: 4.6, reach: 24100, impressions: 33800, visitors: 700 },
+  { id: "s9", clientId: mockClient.id, date: "2026-07-20", channel: "social", platform: "tiktok", followers: 7580, engagementRate: 4.5, reach: 25600, impressions: 35900, visitors: 760 },
+  { id: "s10", clientId: mockClient.id, date: "2026-07-27", channel: "social", platform: "tiktok", followers: 7890, engagementRate: 4.9, reach: 27800, impressions: 38400, visitors: 840 },
+  { id: "s11", clientId: mockClient.id, date: "2026-07-06", channel: "social", platform: "facebook", followers: 17200, engagementRate: 1.1, reach: 15800, impressions: 21400, visitors: 480 },
+  { id: "s12", clientId: mockClient.id, date: "2026-07-13", channel: "social", platform: "facebook", followers: 17350, engagementRate: 1.3, reach: 16600, impressions: 22300, visitors: 510 },
+  { id: "s13", clientId: mockClient.id, date: "2026-07-20", channel: "social", platform: "facebook", followers: 17480, engagementRate: 1.2, reach: 16100, impressions: 21900, visitors: 495 },
+  { id: "s14", clientId: mockClient.id, date: "2026-07-27", channel: "social", platform: "facebook", followers: 17610, engagementRate: 1.4, reach: 17400, impressions: 23600, visitors: 560 },
+  { id: "s15", clientId: mockClient.id, date: "2026-08-03", channel: "social", platform: "facebook", followers: 17750, engagementRate: 1.5, reach: 18200, impressions: 24700, visitors: 590 },
+];
+
+// Postingan per platform lengkap dengan metriknya sendiri (likes, views,
+// comments, shares, saves) — sumber untuk tabel "Post Ranking" di halaman
+// Social Media (Client Portal), menggantikan section "Engagement per
+// Platform" yang lama. Diurutkan berdasarkan total engagement DI
+// KOMPONEN (post-ranking-table.tsx), bukan di sini.
+export const mockPostPerformance: PostPerformance[] = [
+  { id: "pp1", clientId: mockClient.id, platform: "instagram", type: "reels", title: "5 cara bikin cold brew di rumah", postedDate: "2026-08-06", likes: 4820, comments: 312, shares: 890, saves: 1240, views: 84200 },
+  { id: "pp2", clientId: mockClient.id, platform: "instagram", type: "feed", title: "Menu baru bulan Agustus", postedDate: "2026-08-02", likes: 2150, comments: 98, shares: 140, saves: 610, views: 51300 },
+  { id: "pp3", clientId: mockClient.id, platform: "instagram", type: "story", title: "Behind the scenes roasting", postedDate: "2026-08-09", likes: 980, comments: 24, shares: 65, saves: 90, views: 33800 },
+  { id: "pp4", clientId: mockClient.id, platform: "instagram", type: "reels", title: "Barista tips: espresso shot yang pas", postedDate: "2026-07-28", likes: 3640, comments: 205, shares: 520, saves: 880, views: 62100 },
+  { id: "pp5", clientId: mockClient.id, platform: "instagram", type: "feed", title: "Promo weekday 20%", postedDate: "2026-07-24", likes: 1680, comments: 56, shares: 90, saves: 340, views: 28900 },
+  { id: "pp6", clientId: mockClient.id, platform: "instagram", type: "story", title: "Q&A dengan barista", postedDate: "2026-07-30", likes: 720, comments: 18, shares: 30, saves: 45, views: 21200 },
+  { id: "pp7", clientId: mockClient.id, platform: "tiktok", type: "video", title: "Proses roasting biji kopi dari awal", postedDate: "2026-08-05", likes: 6120, comments: 410, shares: 980, saves: 1450, views: 132400 },
+  { id: "pp8", clientId: mockClient.id, platform: "tiktok", type: "video", title: "Latte art tutorial 3 motif dasar", postedDate: "2026-07-29", likes: 4890, comments: 268, shares: 640, saves: 1020, views: 98700 },
+  { id: "pp9", clientId: mockClient.id, platform: "tiktok", type: "photo", title: "Suasana coffee shop pagi hari", postedDate: "2026-08-01", likes: 1240, comments: 42, shares: 88, saves: 210, views: 24600 },
+  { id: "pp10", clientId: mockClient.id, platform: "facebook", type: "post", title: "Testimoni pelanggan setia", postedDate: "2026-08-04", likes: 890, comments: 64, shares: 120, saves: 40, views: 14200 },
+  { id: "pp11", clientId: mockClient.id, platform: "facebook", type: "video", title: "Cerita asal biji kopi lokal", postedDate: "2026-07-27", likes: 620, comments: 38, shares: 74, saves: 22, views: 11800 },
 ];
 
 export const mockWebsite: PerformanceMetric[] = [

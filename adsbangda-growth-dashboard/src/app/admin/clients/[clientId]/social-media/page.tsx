@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { Trash2, Plus, Users, Eye, Heart, TrendingUp, Pencil, Target, Check, X } from "lucide-react";
+import { Trash2, Plus, Users, Eye, Heart, TrendingUp, Pencil, Target, Check, X, Trophy } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -22,12 +22,16 @@ import {
   adminCreatePerformanceMetric,
   adminUpdatePerformanceMetric,
   adminDeletePerformanceMetric,
+  adminListPostPerformance,
+  adminCreatePostPerformance,
+  adminUpdatePostPerformance,
+  adminDeletePostPerformance,
   adminListGoals,
   adminCreateGoal,
   adminUpdateGoal,
   adminDeleteGoal,
 } from "@/lib/admin-data";
-import { CONTENT_TYPES_BY_PLATFORM, type SocialPlatform, type GoalStatus, type ContentStatus } from "@/lib/types";
+import { CONTENT_TYPES_BY_PLATFORM, CONTENT_TYPE_LABEL, type SocialPlatform, type GoalStatus, type ContentStatus } from "@/lib/types";
 import { QuickStatusSelect } from "@/components/admin/quick-status-select";
 import { PillTabs } from "@/components/admin/pill-tabs";
 import { formatDateID, formatPercent, cn } from "@/lib/utils";
@@ -81,10 +85,10 @@ export default async function AdminClientSocialMediaPage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string; platform?: string; edit?: string; editTarget?: string }>;
+  searchParams: Promise<{ tab?: string; platform?: string; edit?: string; editTarget?: string; editPost?: string }>;
 }) {
   const { clientId } = await params;
-  const { tab = "delivery", platform = "instagram", edit, editTarget } = await searchParams;
+  const { tab = "delivery", platform = "instagram", edit, editTarget, editPost } = await searchParams;
   const base = `/admin/clients/${clientId}/social-media`;
   const path = base;
   const period = currentPeriod();
@@ -205,6 +209,44 @@ export default async function AdminClientSocialMediaPage({
     });
     revalidatePath(path);
     redirect(`${base}?tab=performance&platform=${activePlatform}`);
+  }
+
+  async function addPostAction(formData: FormData) {
+    "use server";
+    await adminCreatePostPerformance(clientId, {
+      platform: String(formData.get("platform")) as SocialPlatform,
+      type: String(formData.get("type")),
+      title: String(formData.get("title")),
+      postedDate: String(formData.get("postedDate")),
+      likes: Number(formData.get("likes") ?? 0) || undefined,
+      views: Number(formData.get("views") ?? 0) || undefined,
+      comments: Number(formData.get("comments") ?? 0) || undefined,
+      shares: Number(formData.get("shares") ?? 0) || undefined,
+      saves: Number(formData.get("saves") ?? 0) || undefined,
+    });
+    revalidatePath(path);
+  }
+
+  async function updatePostAction(formData: FormData) {
+    "use server";
+    await adminUpdatePostPerformance(String(formData.get("id")), {
+      type: String(formData.get("type")),
+      title: String(formData.get("title")),
+      postedDate: String(formData.get("postedDate")),
+      likes: Number(formData.get("likes") ?? 0) || undefined,
+      views: Number(formData.get("views") ?? 0) || undefined,
+      comments: Number(formData.get("comments") ?? 0) || undefined,
+      shares: Number(formData.get("shares") ?? 0) || undefined,
+      saves: Number(formData.get("saves") ?? 0) || undefined,
+    });
+    revalidatePath(path);
+    redirect(`${base}?tab=performance&platform=${activePlatform}`);
+  }
+
+  async function deletePostAction(formData: FormData) {
+    "use server";
+    await adminDeletePostPerformance(String(formData.get("id")));
+    revalidatePath(path);
   }
 
   async function addGoal(formData: FormData) {
@@ -531,6 +573,10 @@ export default async function AdminClientSocialMediaPage({
           updateMetricAction={updateMetricAction}
           deleteMetricAction={deleteMetricAction}
           edit={edit}
+          addPostAction={addPostAction}
+          updatePostAction={updatePostAction}
+          deletePostAction={deletePostAction}
+          editPost={editPost}
         />
       )}
 
@@ -627,6 +673,10 @@ async function PerformancePanel({
   updateMetricAction,
   deleteMetricAction,
   edit,
+  addPostAction,
+  updatePostAction,
+  deletePostAction,
+  editPost,
 }: {
   clientId: string;
   base: string;
@@ -635,10 +685,18 @@ async function PerformancePanel({
   updateMetricAction: (formData: FormData) => Promise<void>;
   deleteMetricAction: (formData: FormData) => Promise<void>;
   edit?: string;
+  addPostAction: (formData: FormData) => Promise<void>;
+  updatePostAction: (formData: FormData) => Promise<void>;
+  deletePostAction: (formData: FormData) => Promise<void>;
+  editPost?: string;
 }) {
-  const metrics = await adminListPerformanceMetrics(clientId, "social", activePlatform);
+  const [metrics, posts] = await Promise.all([
+    adminListPerformanceMetrics(clientId, "social", activePlatform),
+    adminListPostPerformance(clientId, activePlatform),
+  ]);
   const latest = metrics[0];
   const performanceBase = `${base}?tab=performance&platform=${activePlatform}`;
+  const postTypes = CONTENT_TYPES_BY_PLATFORM[activePlatform] ?? [];
 
   return (
     <div className="animate-rise space-y-6">
@@ -740,6 +798,94 @@ async function PerformancePanel({
             )}
           </div>
         )}
+      </Card>
+
+      <Card padding="lg">
+        <SectionHeading title="Post Ranking" description={`Postingan ${activePlatform} beserta metriknya sendiri (likes, views, comments, shares, saves) — dasar ranking di Client Portal.`} />
+
+        {posts.length === 0 ? (
+          <EmptyState icon={Trophy} title={`Belum ada postingan ${activePlatform}`} description="Tambahkan postingan pertama lewat form di bawah." />
+        ) : (
+          <div className="divide-y divide-border border-t border-border">
+            {posts.map((p) =>
+              editPost === p.id ? (
+                <div key={p.id} className="bg-accent-soft/40 py-3">
+                  <form action={updatePostAction} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <input type="hidden" name="id" value={p.id} />
+                    <select name="type" defaultValue={p.type} className={inputClass}>
+                      {postTypes.map((t) => (
+                        <option key={t} value={t}>
+                          {CONTENT_TYPE_LABEL[t] ?? capitalize(t)}
+                        </option>
+                      ))}
+                    </select>
+                    <input name="title" defaultValue={p.title} placeholder="Judul/caption" required className={`${inputClass} sm:col-span-3`} />
+                    <input name="postedDate" type="date" defaultValue={p.postedDate} required className={inputClass} />
+                    <FormattedNumberInput name="likes" defaultValue={p.likes} placeholder="Likes" className={inputClass} />
+                    <FormattedNumberInput name="views" defaultValue={p.views} placeholder="Views" className={inputClass} />
+                    <FormattedNumberInput name="comments" defaultValue={p.comments} placeholder="Comments" className={inputClass} />
+                    <FormattedNumberInput name="shares" defaultValue={p.shares} placeholder="Shares" className={inputClass} />
+                    <FormattedNumberInput name="saves" defaultValue={p.saves} placeholder="Saves" className={inputClass} />
+                    <div className="flex gap-2 sm:col-span-4">
+                      <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                        Save
+                      </button>
+                      <Link href={performanceBase} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                        Cancel
+                      </Link>
+                    </div>
+                  </form>
+                </div>
+              ) : (
+                <div key={p.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-ink">{p.title}</p>
+                    <p className="font-data text-xs text-muted">
+                      {CONTENT_TYPE_LABEL[p.type] ?? capitalize(p.type)} · {formatDateID(p.postedDate)} ·{" "}
+                      {p.likes != null && `${p.likes.toLocaleString("id-ID")} likes · `}
+                      {p.views != null && `${p.views.toLocaleString("id-ID")} views · `}
+                      {p.comments != null && `${p.comments.toLocaleString("id-ID")} comments · `}
+                      {p.shares != null && `${p.shares.toLocaleString("id-ID")} shares · `}
+                      {p.saves != null && `${p.saves.toLocaleString("id-ID")} saves`}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Link href={`${performanceBase}&editPost=${p.id}`} className="text-muted hover:text-ink" aria-label="Edit">
+                      <Pencil className="h-4 w-4" strokeWidth={1.75} />
+                    </Link>
+                    <form action={deletePostAction}>
+                      <input type="hidden" name="id" value={p.id} />
+                      <button type="submit" className="text-muted hover:text-danger" aria-label="Hapus">
+                        <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        )}
+
+        <form action={addPostAction} className="mt-6 grid grid-cols-2 gap-2 border-t border-border pt-4 sm:grid-cols-4">
+          <input type="hidden" name="platform" value={activePlatform} />
+          <select name="type" defaultValue={postTypes[0]} className={inputClass}>
+            {postTypes.map((t) => (
+              <option key={t} value={t}>
+                {CONTENT_TYPE_LABEL[t] ?? capitalize(t)}
+              </option>
+            ))}
+          </select>
+          <input name="title" placeholder="Judul/caption" required className={`${inputClass} sm:col-span-3`} />
+          <input name="postedDate" type="date" required className={inputClass} />
+          <FormattedNumberInput name="likes" placeholder="Likes" className={inputClass} />
+          <FormattedNumberInput name="views" placeholder="Views" className={inputClass} />
+          <FormattedNumberInput name="comments" placeholder="Comments" className={inputClass} />
+          <FormattedNumberInput name="shares" placeholder="Shares" className={inputClass} />
+          <FormattedNumberInput name="saves" placeholder="Saves" className={inputClass} />
+          <button type="submit" className={buttonVariants({ variant: "primary", size: "sm", className: "sm:col-span-4 justify-center" })}>
+            <Plus className="h-3.5 w-3.5" /> Save Post
+          </button>
+        </form>
       </Card>
     </div>
   );
