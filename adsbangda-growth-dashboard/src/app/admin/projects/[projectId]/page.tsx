@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { ArrowLeft, Activity as ActivityIcon, ListChecks, Plus, Pencil, Trash2 } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/dashboard/empty-state";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { ProgressBar } from "@/components/dashboard/progress-bar";
 import { buttonVariants } from "@/components/dashboard/button";
+import { SavedToast } from "@/components/admin/saved-toast";
 import { DEMO_MODE } from "@/lib/data";
 import {
   adminGetProject,
@@ -60,6 +61,7 @@ export default async function AdminProjectDetailPage({
       progressPct: Number(formData.get("progressPct") ?? 0),
     });
     revalidatePath(path);
+    redirect(`${path}?saved=1`);
   }
 
   async function archiveAction() {
@@ -113,6 +115,7 @@ export default async function AdminProjectDetailPage({
       blocker: String(formData.get("blocker") ?? "").trim() || undefined,
     });
     revalidatePath(path);
+    redirect(`${path}?saved=1`);
   }
 
   async function updateTaskAction(formData: FormData) {
@@ -126,6 +129,11 @@ export default async function AdminProjectDetailPage({
       blocker: String(formData.get("blocker") ?? "").trim(),
     });
     revalidatePath(path);
+    // redirect ke path TANPA ?editTask= — sebelumnya cuma revalidatePath jadi
+    // form edit tetap kebuka setelah Save (kelihatan seperti tidak ngapa-ngapain
+    // padahal datanya sudah tersimpan). Sama polanya dengan updateContentAction
+    // di halaman Social Media.
+    redirect(`${path}?saved=1`);
   }
 
   async function deleteTaskAction(formData: FormData) {
@@ -136,6 +144,8 @@ export default async function AdminProjectDetailPage({
 
   return (
     <div className="min-h-screen p-5 lg:p-8">
+      <SavedToast />
+
       <Link href={`/admin/clients/${project.clientId}/projects`} className="mb-4 inline-flex items-center gap-1.5 font-data text-xs font-semibold text-muted hover:text-ink">
         <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.75} />
         {client?.name ?? "Client"} · Projects
@@ -149,6 +159,7 @@ export default async function AdminProjectDetailPage({
             {project.period && " · "}
             {formatDateID(project.startDate)} — {formatDateID(project.endDate)}
           </p>
+          {project.description && <p className="mt-1 max-w-xl text-sm text-muted">{project.description}</p>}
         </div>
         <div className="flex items-center gap-3">
           <div className="w-28">

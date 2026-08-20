@@ -50,6 +50,7 @@ export default async function ProjectsPage() {
                   {periodLabel(project.period) && " · "}
                   {formatDateID(project.startDate)} — {formatDateID(project.endDate)}
                 </p>
+                {project.description && <p className="mt-2 max-w-xl text-sm text-muted">{project.description}</p>}
               </div>
               <StatusBadge status={project.status} />
             </div>

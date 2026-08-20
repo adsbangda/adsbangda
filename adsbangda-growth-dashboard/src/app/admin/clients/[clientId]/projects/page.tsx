@@ -1,17 +1,28 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { Plus, Briefcase, X } from "lucide-react";
+import { redirect } from "next/navigation";
+import { Plus, Briefcase, X, Share2, Megaphone, Globe } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { ProgressBar } from "@/components/dashboard/progress-bar";
 import { buttonVariants } from "@/components/dashboard/button";
-import { adminListProjectsByClient, adminCreateProject, adminListServices, adminCreateService, adminDeleteService } from "@/lib/admin-data";
+import { SavedToast } from "@/components/admin/saved-toast";
+import { adminGetClient, adminUpdateClient, adminListProjectsByClient, adminCreateProject, adminListServices, adminCreateService, adminDeleteService } from "@/lib/admin-data";
 import { formatDateID } from "@/lib/utils";
 import type { Project } from "@/lib/types";
 
 const inputClass = "w-full rounded-[var(--radius-md)] border border-border px-3 py-2 text-sm text-ink outline-none focus:border-ink";
+
+// Toggle modul (BEDA dari "Katalog Layanan" di bawah) — menentukan tab mana
+// yang muncul di Client Portal & Overview (dulu halaman terpisah "Services",
+// sekarang digabung ke sini biar tidak ada tab nav ekstra).
+const MODULES = [
+  { key: "socialMediaActive" as const, label: "Social Media", description: "Content, target, dan performance Instagram/Facebook/TikTok/X/LinkedIn/Threads.", icon: Share2 },
+  { key: "metaAdsActive" as const, label: "Meta Ads", description: "Ad spend, leads, dan performance campaign Meta Ads.", icon: Megaphone },
+  { key: "websiteActive" as const, label: "Website", description: "Traffic, sessions, dan aktivitas maintenance website.", icon: Globe },
+];
 
 function currentPeriod() {
   const now = new Date();
@@ -20,8 +31,22 @@ function currentPeriod() {
 
 export default async function AdminClientProjectsPage({ params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = await params;
-  const [projects, services] = await Promise.all([adminListProjectsByClient(clientId), adminListServices()]);
+  const [client, projects, services] = await Promise.all([adminGetClient(clientId), adminListProjectsByClient(clientId), adminListServices()]);
+  if (!client) return null;
   const path = `/admin/clients/${clientId}/projects`;
+
+  async function updateModulesAction(formData: FormData) {
+    "use server";
+    await adminUpdateClient(clientId, {
+      socialMediaActive: formData.get("socialMediaActive") === "on",
+      metaAdsActive: formData.get("metaAdsActive") === "on",
+      websiteActive: formData.get("websiteActive") === "on",
+    });
+    revalidatePath(path);
+    revalidatePath(`/admin/clients/${clientId}`);
+    revalidatePath("/admin/clients");
+    redirect(`${path}?saved=1`);
+  }
 
   async function createProjectAction(formData: FormData) {
     "use server";
@@ -37,6 +62,7 @@ export default async function AdminClientProjectsPage({ params }: { params: Prom
       stage: (String(formData.get("stage") ?? "planning") as NonNullable<Project["stage"]>),
     });
     revalidatePath(path);
+    redirect(`${path}?saved=1`);
   }
 
   async function addServiceAction(formData: FormData) {
@@ -55,6 +81,37 @@ export default async function AdminClientProjectsPage({ params }: { params: Prom
 
   return (
     <div className="space-y-6 p-5 lg:p-8">
+      <SavedToast />
+
+      <Card padding="lg">
+        <SectionHeading
+          title="Modul Aktif"
+          description="Menentukan tab mana yang muncul di Client Portal & Overview untuk client ini — tidak perlu bikin project terpisah untuk tiap modul."
+        />
+        <form action={updateModulesAction} className="space-y-3">
+          {MODULES.map((m) => (
+            <label
+              key={m.key}
+              className="flex cursor-pointer items-start gap-4 rounded-[var(--radius-md)] border border-border p-4 transition-colors hover:bg-black/[0.015]"
+            >
+              <input type="checkbox" name={m.key} defaultChecked={client[m.key]} className="mt-1 h-4 w-4 accent-accent" />
+              <div className="flex flex-1 items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <m.icon className="h-4.5 w-4.5" strokeWidth={1.75} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-ink">{m.label}</p>
+                  <p className="text-xs text-muted">{m.description}</p>
+                </div>
+              </div>
+            </label>
+          ))}
+          <button type="submit" className={buttonVariants({ variant: "primary" })}>
+            Simpan
+          </button>
+        </form>
+      </Card>
+
       <Card padding="lg">
         <SectionHeading
           title="Katalog Layanan"
@@ -115,7 +172,7 @@ export default async function AdminClientProjectsPage({ params }: { params: Prom
             </div>
           )}
 
-          <textarea name="description" placeholder="Deskripsi (opsional)" rows={2} className={inputClass} />
+          <textarea name="description" placeholder="Deskripsi (opsional) — tampil di Client Portal & Admin" rows={2} className={inputClass} />
 
           <button type="submit" className={buttonVariants({ variant: "primary", className: "justify-center" })}>
             <Plus className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -146,6 +203,7 @@ export default async function AdminClientProjectsPage({ params }: { params: Prom
                     {p.services && p.services.length > 0 ? p.services.join(" & ") : "Belum ada layanan dipilih"}
                     {p.period && ` · ${p.period}`} · {formatDateID(p.startDate)} — {formatDateID(p.endDate)}
                   </p>
+                  {p.description && <p className="mt-1 truncate text-xs text-muted">{p.description}</p>}
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="w-28">
