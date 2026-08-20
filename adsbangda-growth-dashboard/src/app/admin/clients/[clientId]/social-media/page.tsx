@@ -250,29 +250,38 @@ export default async function AdminClientSocialMediaPage({
             </div>
 
             {targets.length > 0 && (
-              <div className="mt-6 grid grid-cols-2 gap-3 border-t border-border pt-4 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="mt-6 grid grid-cols-1 gap-3 border-t border-border pt-5 sm:grid-cols-2 lg:grid-cols-3">
                 {targets.map((t) => {
                   const actual = content.filter((c) => c.status === "published" && c.platform === t.platform && c.type === t.contentType).length;
                   const pct = t.target > 0 ? Math.min(100, Math.round((actual / t.target) * 100)) : 0;
                   return editTarget === t.id ? (
-                    <form key={t.id} action={updateTargetAction} className="col-span-2 space-y-2 rounded-[var(--radius-sm)] border border-accent bg-accent-soft/40 p-3 sm:col-span-1">
+                    <form key={t.id} action={updateTargetAction} className="space-y-2.5 rounded-[var(--radius-md)] border border-accent bg-accent-soft/40 p-4">
                       <input type="hidden" name="targetId" value={t.id} />
-                      <select name="platform" defaultValue={t.platform} className={`${inputClass} w-full`}>
-                        {SOCIAL_PLATFORMS.map((p) => (
-                          <option key={p} value={p}>
-                            {p}
-                          </option>
-                        ))}
-                      </select>
-                      <select name="contentType" defaultValue={t.contentType} className={`${inputClass} w-full`}>
-                        {ALL_CONTENT_TYPES.map((ct) => (
-                          <option key={ct} value={ct}>
-                            {ct}
-                          </option>
-                        ))}
-                      </select>
-                      <input name="target" type="number" defaultValue={t.target} required className={`${inputClass} w-full`} />
-                      <div className="flex gap-1.5">
+                      <div>
+                        <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Platform</label>
+                        <select name="platform" defaultValue={t.platform} className={`${inputClass} w-full`}>
+                          {SOCIAL_PLATFORMS.map((p) => (
+                            <option key={p} value={p}>
+                              {p}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Content Type</label>
+                        <select name="contentType" defaultValue={t.contentType} className={`${inputClass} w-full`}>
+                          {ALL_CONTENT_TYPES.map((ct) => (
+                            <option key={ct} value={ct}>
+                              {ct}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Target</label>
+                        <input name="target" type="number" defaultValue={t.target} required className={`${inputClass} w-full`} />
+                      </div>
+                      <div className="flex gap-1.5 pt-1">
                         <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
                           Save
                         </button>
@@ -282,15 +291,20 @@ export default async function AdminClientSocialMediaPage({
                       </div>
                     </form>
                   ) : (
-                    <div key={t.id} className="rounded-[var(--radius-sm)] bg-black/[0.02] p-3">
-                      <p className="font-data text-[10px] uppercase tracking-wider text-muted">
-                        {t.platform} · {t.contentType}
-                      </p>
-                      <p className="mt-1 text-lg font-bold text-ink">
+                    <div key={t.id} className="rounded-[var(--radius-md)] border border-border bg-surface p-4 shadow-[var(--shadow-xs)] transition-shadow hover:shadow-[var(--shadow-sm)]">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-data text-[10px] font-semibold uppercase tracking-wider text-muted capitalize">
+                          {t.platform} · {t.contentType}
+                        </p>
+                        <p className="font-data text-xs font-bold text-ink">{pct}%</p>
+                      </div>
+                      <p className="mt-2 text-2xl font-bold text-ink">
                         {actual} <span className="text-sm font-medium text-muted">/ {t.target}</span>
                       </p>
-                      <p className="font-data text-xs text-muted">{pct}%</p>
-                      <div className="mt-2 flex items-center gap-3">
+                      <div className="mt-3">
+                        <ProgressBar value={pct} />
+                      </div>
+                      <div className="mt-3.5 flex items-center gap-4 border-t border-border pt-3">
                         <Link href={`${base}?tab=delivery&editTarget=${t.id}`} className="font-data text-[11px] font-semibold text-accent hover:underline">
                           Edit
                         </Link>
@@ -307,26 +321,38 @@ export default async function AdminClientSocialMediaPage({
               </div>
             )}
 
-            <form action={saveTargetAction} className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4 sm:grid-cols-4">
-              <select name="platform" defaultValue="instagram" className={inputClass}>
-                {SOCIAL_PLATFORMS.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-              <select name="contentType" className={inputClass}>
-                {ALL_CONTENT_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-              <input name="target" type="number" placeholder="Target" required className={inputClass} />
-              <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
-                <Plus className="h-3.5 w-3.5" /> Add Goal
-              </button>
-            </form>
+            <div className="mt-6 border-t border-border pt-5">
+              <p className="mb-3 text-xs font-semibold text-ink">Tambah Target Baru</p>
+              <form action={saveTargetAction} className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end">
+                <div>
+                  <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Platform</label>
+                  <select name="platform" defaultValue="instagram" className={`${inputClass} w-full`}>
+                    {SOCIAL_PLATFORMS.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Content Type</label>
+                  <select name="contentType" className={`${inputClass} w-full`}>
+                    {ALL_CONTENT_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Target</label>
+                  <input name="target" type="number" placeholder="0" required className={`${inputClass} w-full`} />
+                </div>
+                <button type="submit" className={buttonVariants({ variant: "outline", size: "sm", className: "justify-center" })}>
+                  <Plus className="h-3.5 w-3.5" /> Add Target
+                </button>
+              </form>
+            </div>
           </Card>
 
           <Card padding="lg">
@@ -374,11 +400,12 @@ export default async function AdminClientSocialMediaPage({
                               </select>
                               <input name="plannedDate" type="date" defaultValue={item.plannedDate} required className={inputClass} />
                               <select name="status" defaultValue={item.status} className={inputClass}>
-                                {!["draft", "waiting_approval", "published"].includes(item.status) && (
+                                {!["draft", "waiting_approval", "scheduled", "published"].includes(item.status) && (
                                   <option value={item.status}>{item.status} (lama)</option>
                                 )}
                                 <option value="draft">Draft</option>
                                 <option value="waiting_approval">Minta Approval</option>
+                                <option value="scheduled">Scheduled</option>
                                 <option value="published">Published</option>
                               </select>
                               <input name="assetUrl" defaultValue={item.assetUrl ?? ""} placeholder="Asset URL" className={inputClass} />
@@ -469,6 +496,7 @@ export default async function AdminClientSocialMediaPage({
               <select name="status" className={inputClass}>
                 <option value="draft">Draft</option>
                 <option value="waiting_approval">Minta Approval</option>
+                <option value="scheduled">Scheduled</option>
                 <option value="published">Published</option>
               </select>
               <label className="flex items-center gap-1.5 text-xs text-ink">

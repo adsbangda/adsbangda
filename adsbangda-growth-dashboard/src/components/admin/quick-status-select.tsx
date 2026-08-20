@@ -6,13 +6,14 @@ import type { ContentStatus } from "@/lib/types";
 const STATUS_OPTIONS: { value: ContentStatus; label: string }[] = [
   { value: "draft", label: "Draft" },
   { value: "waiting_approval", label: "Minta Approval" },
+  { value: "scheduled", label: "Scheduled" },
   { value: "published", label: "Published" },
 ];
 
 /**
  * Dropdown status yang langsung submit begitu diubah — "terasa seperti
  * mengedit spreadsheet" (brief), tanpa perlu buka mode edit penuh dulu
- * cuma buat ganti status. Cuma 3 pilihan (Draft → Minta Approval →
+ * cuma buat ganti status. 4 pilihan (Draft → Minta Approval → Scheduled →
  * Published) sesuai alur kerja — kalau record lama masih pakai status di
  * luar itu (in_production/approved/scheduled), tetap ditampilkan sebagai
  * opsi tambahan biar nggak "hilang", tapi nggak ditawarkan buat konten baru.
