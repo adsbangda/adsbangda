@@ -137,6 +137,40 @@ otomatis narik data terbaru sendiri, tanpa siapa pun perlu menekan reload.
 - Mode Demo: no-op total (tidak ada Supabase = tidak ada apa pun untuk
   didengar), jadi aman dipasang tanpa syarat di kedua layout.
 
+### Projects — layanan (paket) bisa digabung + tahapan bisa diupdate admin
+
+Sebelumnya, satu project cuma bisa punya SATU "type" bebas (social_media/
+meta_ads/website/branding/other), tidak punya konsep "periode berjalan"
+sama sekali, dan yang paling penting: **admin tidak bisa update tahapan/
+step project sama sekali lewat UI** — cuma bisa set progress % keseluruhan.
+Sekarang:
+
+- **Katalog Layanan** — dikelola bebas oleh admin (tambah/hapus kapan saja)
+  di **Admin → Clients → pilih client → Projects**, card "Katalog Layanan"
+  paling atas. Layanan disimpan sebagai teks label langsung di tiap project
+  (bukan foreign key) — jadi hapus/ubah katalog TIDAK PERNAH merusak data
+  project yang sudah ada.
+- **Satu project bisa mencakup lebih dari satu layanan sekaligus** —
+  dicentang semua yang relevan saat bikin/edit project, ditampilkan
+  **digabung jadi satu paket** di Client Portal (mis. "Social Media
+  Management" + "Website & Landing Page" tampil sebagai dua pill di project
+  yang sama), BUKAN sebagai project terpisah-pisah.
+- **Periode** (format bulan, mis. "2026-08") — diupdate admin tiap bulan
+  begitu paket/project di-roll ke bulan berikutnya, tampil di Client Portal
+  sebagai label bulan (mis. "Agustus 2026").
+- **Tahapan/Steps** — sekarang admin bisa tambah/edit/hapus step timeline
+  (Strategy, Content Production, dst — yang dilihat client sebagai daftar
+  bernomor dengan progress bar) lewat card "Tahapan / Steps" di halaman
+  detail project (`Admin → Projects → klik salah satu project`). Ini yang
+  sebelumnya benar-benar tidak ada UI-nya sama sekali.
+
+Sumber datanya tabel baru `services` + kolom baru `projects.services` &
+`projects.period` (lihat `supabase/migrations/0016_project_services_period.sql`
+— **jalankan migration ini juga**, setelah 0001–0015, jangan di-skip).
+`project_tasks` sendiri TIDAK butuh migration baru — tabel & policy-nya
+sudah ada sejak migration 0001/0002, cuma sekarang baru ada UI admin buat
+mengelolanya.
+
 ### Social Media — dipisah per platform + Post Ranking
 
 Halaman **Social Media** (Client Portal) sekarang dipecah jadi satu card per

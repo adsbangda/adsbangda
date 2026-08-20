@@ -7,6 +7,16 @@ import { getCurrentClient, getActiveProject } from "@/lib/data";
 import { formatDateID } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
 
+/** "2026-08" -> "Agustus 2026" — sama teknik yang sudah dipakai buat Monthly Delivery (lihat mockMonthlyDelivery.periodLabel / getMonthlyDelivery di lib/data.ts). */
+function periodLabel(period?: string) {
+  if (!period) return null;
+  try {
+    return new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(new Date(`${period}-01`));
+  } catch {
+    return period;
+  }
+}
+
 export default async function ProjectsPage() {
   const client = await getCurrentClient();
   const { project, tasks } = await getActiveProject(client.id);
@@ -20,10 +30,24 @@ export default async function ProjectsPage() {
           <EmptyState title="Belum ada project aktif" description="Project baru akan muncul di sini begitu dimulai oleh tim Adsbangda." />
         ) : (
           <Card padding="lg">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-5">
-              <div>
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-3 border-b border-border pb-5">
+              <div className="min-w-0">
+                {/* Layanan yang dicakup project ini — BISA lebih dari satu, digabung
+                    jadi satu paket (mis. "Social Media Management & Website &
+                    Landing Page"), bukan ditampilkan sebagai project terpisah. */}
+                {project.services && project.services.length > 0 && (
+                  <div className="mb-1.5 flex flex-wrap gap-1.5">
+                    {project.services.map((s) => (
+                      <span key={s} className="rounded-full bg-accent-soft px-2.5 py-0.5 font-data text-[11px] font-semibold text-accent">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <h2 className="text-lg font-bold text-ink">{project.name}</h2>
                 <p className="mt-0.5 text-sm text-muted">
+                  {periodLabel(project.period) && <span className="font-medium text-ink">{periodLabel(project.period)}</span>}
+                  {periodLabel(project.period) && " · "}
                   {formatDateID(project.startDate)} — {formatDateID(project.endDate)}
                 </p>
               </div>

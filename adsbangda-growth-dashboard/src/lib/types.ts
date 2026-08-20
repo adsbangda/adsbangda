@@ -82,11 +82,36 @@ export interface Project {
    * bukan untuk tampilan health indicator di Client Portal.
    */
   stage?: "planning" | "active" | "on_hold" | "completed" | "archived";
-  /** Bebas diperluas — nilai umum: social_media, meta_ads, website, branding, other. */
+  /** @deprecated Digantikan `services` (multi-select) — dibiarkan ada di tipe supaya data lama tidak error, jangan ditulis lagi di kode baru. */
   type?: string;
+  /**
+   * Layanan (paket) yang dicakup project ini — BOLEH lebih dari satu (mis.
+   * client ambil "Social Media Management" + "Website & Landing Page"
+   * sekaligus, ditampilkan gabung di Client Portal). Disimpan sebagai teks
+   * label langsung (bukan foreign key ke tabel `services`) — supaya admin
+   * bebas edit/hapus katalog layanan kapan saja TANPA merusak data project
+   * yang sudah ada (project lama tetap menyimpan label persis seperti saat
+   * dipilih).
+   */
+  services?: string[];
+  /** Periode berjalan, format "YYYY-MM" — diupdate admin tiap bulan begitu paket/project di-roll ke bulan berikutnya. */
+  period?: string;
   description?: string | null;
   /** Progress manual yang di-set admin di Phase 2 — berbeda dari progress per-task di ProjectTask. */
   progressPct?: number;
+}
+
+/**
+ * Katalog layanan (paket) yang ditawarkan agency — dikelola BEBAS oleh admin
+ * (tambah/edit/hapus kapan saja lewat Admin → Clients → pilih client →
+ * Projects). Global per organization, dipakai sebagai daftar pilihan cepat
+ * saat bikin/edit project — TIDAK direferensikan sebagai foreign key oleh
+ * Project (lihat `Project.services`), jadi menghapus satu layanan dari
+ * katalog ini tidak pernah mengubah data project yang sudah ada.
+ */
+export interface Service {
+  id: string;
+  label: string;
 }
 
 export interface ProjectTask {

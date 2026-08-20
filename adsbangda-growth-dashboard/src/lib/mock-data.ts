@@ -25,6 +25,7 @@ import type {
   WebsiteActivityEntry,
   ApprovalHistoryEntry,
   PostPerformance,
+  Service,
 } from "./types";
 
 export const mockClient: Client = {
@@ -82,17 +83,36 @@ export const mockGoals: Goal[] = [
   },
 ];
 
+// Katalog layanan (paket) — dikelola BEBAS oleh admin (tambah/edit/hapus
+// kapan saja), lihat Service di lib/types.ts. Daftar di bawah cuma contoh
+// awal mode demo, bukan daftar hardcode permanen — admin bisa ubah lewat
+// Admin → pilih client → Projects.
+export const mockServices: Service[] = [
+  { id: "svc1", label: "Social Media Management" },
+  { id: "svc2", label: "Meta Ads Performance" },
+  { id: "svc3", label: "Content Strategy" },
+  { id: "svc4", label: "KOL & Influencer Management" },
+  { id: "svc5", label: "Branding & Visual Identity" },
+  { id: "svc6", label: "Website & Landing Page" },
+  { id: "svc7", label: "Creative Design" },
+  { id: "svc8", label: "Digital Growth Consulting" },
+];
+
 export const mockProjects: Project[] = [
   {
     id: "proj_aug_2026",
     clientId: mockClient.id,
-    name: "August Campaign",
+    name: "Paket Growth Agustus",
     startDate: "2026-08-01",
     endDate: "2026-08-31",
     status: "on_track",
     stage: "active",
-    type: "social_media",
-    description: "Kampanye konten Instagram & TikTok bulan Agustus.",
+    // Contoh "digabung" — client ini ambil 2 layanan sekaligus dalam SATU
+    // project/paket yang sama, bukan 2 project terpisah (lihat diskusi
+    // README bagian Projects untuk kenapa digabung, bukan dipisah).
+    services: ["Social Media Management", "Website & Landing Page"],
+    period: "2026-08",
+    description: "Kampanye konten Instagram & TikTok bulan Agustus, plus maintenance landing page promo.",
     progressPct: 56,
   },
 ];

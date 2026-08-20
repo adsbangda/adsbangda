@@ -22,6 +22,7 @@ import type {
   WebsiteActivityEntry,
   ApprovalHistoryEntry,
   PostPerformance,
+  Service,
 } from "./types";
 
 export function mapClient(row: Record<string, unknown>): Client {
@@ -51,8 +52,17 @@ export function mapProject(row: Record<string, unknown>): Project {
     status: row.status as Project["status"],
     stage: row.stage as Project["stage"],
     type: row.type as string | undefined,
+    services: (row.services as string[] | null) ?? [],
+    period: (row.period as string | null) ?? undefined,
     description: (row.description as string | null) ?? null,
     progressPct: row.progress_pct as number | undefined,
+  };
+}
+
+export function mapService(row: Record<string, unknown>): Service {
+  return {
+    id: row.id as string,
+    label: row.label as string,
   };
 }
 

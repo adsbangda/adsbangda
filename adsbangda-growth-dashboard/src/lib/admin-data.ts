@@ -11,6 +11,8 @@ import { requireAdmin, getSessionUserId, getSessionRole } from "./auth";
 import {
   mapClient,
   mapProject,
+  mapProjectTask,
+  mapService,
   mapContentItem,
   mapReportItem,
   mapFileEntry,
@@ -29,6 +31,8 @@ import {
   mockClients,
   mockClient,
   mockProjects,
+  mockProjectTasks,
+  mockServices,
   mockContentCalendar,
   mockAttentionItems,
   mockActivity,
@@ -47,6 +51,8 @@ import {
 import type {
   Client,
   Project,
+  ProjectTask,
+  Service,
   ContentItem,
   ContentStatus,
   ContentType,
@@ -734,20 +740,6 @@ export async function adminDeleteQuickStat(id: string) {
 }
 
 // ---------------------------------------------------------------------------
-// PROJECT / TASKS (dipakai halaman Projects client)
-// ---------------------------------------------------------------------------
-
-export async function adminUpdateTaskProgress(taskId: string, progressPct: number, status: string) {
-  await requireAdmin();
-  if (!isSupabaseConfigured) {
-    return; // Mode demo: mockProjectTasks statis, tidak diedit lewat Admin Portal fase ini.
-  }
-  const supabase = await createClient();
-  const { error } = await supabase!.from("project_tasks").update({ progress_pct: progressPct, status }).eq("id", taskId);
-  if (error) throw new Error(error.message);
-}
-
-// ---------------------------------------------------------------------------
 // TEAM — role & akses client per user (khusus mode live, lewat fungsi RPC aman)
 // ---------------------------------------------------------------------------
 
@@ -949,7 +941,7 @@ export async function adminGetProject(projectId: string): Promise<Project | null
 
 export async function adminCreateProject(
   clientId: string,
-  input: { name: string; type: string; description?: string; startDate: string; endDate: string; stage: NonNullable<Project["stage"]> }
+  input: { name: string; services: string[]; period: string; description?: string; startDate: string; endDate: string; stage: NonNullable<Project["stage"]> }
 ) {
   await requireAdmin();
   if (!isSupabaseConfigured) {
@@ -961,7 +953,8 @@ export async function adminCreateProject(
       endDate: input.endDate,
       status: "on_track",
       stage: input.stage,
-      type: input.type,
+      services: input.services,
+      period: input.period,
       description: input.description ?? null,
       progressPct: 0,
     };
@@ -975,7 +968,8 @@ export async function adminCreateProject(
     .insert({
       client_id: clientId,
       name: input.name,
-      type: input.type,
+      services: input.services,
+      period: input.period,
       description: input.description || null,
       start_date: input.startDate,
       end_date: input.endDate,
@@ -989,14 +983,15 @@ export async function adminCreateProject(
 
 export async function adminUpdateProject(
   projectId: string,
-  input: Partial<{ name: string; type: string; description: string; startDate: string; endDate: string; stage: NonNullable<Project["stage"]>; progressPct: number }>
+  input: Partial<{ name: string; services: string[]; period: string; description: string; startDate: string; endDate: string; stage: NonNullable<Project["stage"]>; progressPct: number }>
 ) {
   await requireAdmin();
   if (!isSupabaseConfigured) {
     const project = mockProjects.find((p) => p.id === projectId);
     if (project) {
       if (input.name !== undefined) project.name = input.name;
-      if (input.type !== undefined) project.type = input.type;
+      if (input.services !== undefined) project.services = input.services;
+      if (input.period !== undefined) project.period = input.period;
       if (input.description !== undefined) project.description = input.description;
       if (input.startDate !== undefined) project.startDate = input.startDate;
       if (input.endDate !== undefined) project.endDate = input.endDate;
@@ -1009,7 +1004,8 @@ export async function adminUpdateProject(
   const supabase = await createClient();
   const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (input.name !== undefined) payload.name = input.name;
-  if (input.type !== undefined) payload.type = input.type;
+  if (input.services !== undefined) payload.services = input.services;
+  if (input.period !== undefined) payload.period = input.period;
   if (input.description !== undefined) payload.description = input.description;
   if (input.startDate !== undefined) payload.start_date = input.startDate;
   if (input.endDate !== undefined) payload.end_date = input.endDate;
@@ -1021,6 +1017,161 @@ export async function adminUpdateProject(
 
 export async function adminArchiveProject(projectId: string) {
   return adminUpdateProject(projectId, { stage: "archived" });
+}
+
+// ---------------------------------------------------------------------------
+// SERVICE CATALOG — daftar layanan/paket agency, GLOBAL (bukan per-client),
+// dikelola bebas oleh admin (tambah/edit/hapus kapan saja) lewat Admin →
+// pilih client → Projects. Project.services menyimpan LABEL teks langsung
+// (bukan foreign key ke sini) — lihat komentar di lib/types.ts kenapa
+// sengaja didenormalisasi begitu.
+// ---------------------------------------------------------------------------
+
+export async function adminListServices(): Promise<Service[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) return mockServices;
+
+  const supabase = await createClient();
+  const { data } = await supabase!.from("services").select("*").order("label");
+  return (data ?? []).map(mapService);
+}
+
+export async function adminCreateService(label: string): Promise<Service> {
+  await requireAdmin();
+  const trimmed = label.trim();
+  if (!isSupabaseConfigured) {
+    // Hindari duplikat persis sama (case-insensitive) — kalau sudah ada, balikin yang sudah ada saja.
+    const existing = mockServices.find((s) => s.label.toLowerCase() === trimmed.toLowerCase());
+    if (existing) return existing;
+    const service: Service = { id: uid(), label: trimmed };
+    mockServices.push(service);
+    return service;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase!.from("services").insert({ label: trimmed }).select().single();
+  if (error) throw new Error(error.message);
+  return mapService(data);
+}
+
+export async function adminDeleteService(id: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const idx = mockServices.findIndex((s) => s.id === id);
+    if (idx >= 0) mockServices.splice(idx, 1);
+    return;
+  }
+  const supabase = await createClient();
+  const { error } = await supabase!.from("services").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// PROJECT TASKS — tahapan/step timeline yang dilihat client di halaman
+// Projects (Strategy -> Content Production -> ... dst). SEBELUMNYA cuma ada
+// adminUpdateTaskProgress() (update saja, hanya jalan di mode live) — admin
+// tidak pernah bisa TAMBAH/HAPUS step atau edit field lain (owner, due date,
+// blocker) lewat UI sama sekali. Fungsi di bawah melengkapi jadi CRUD penuh,
+// jalan di kedua mode (demo & live), supaya project yang sedang berjalan
+// benar-benar bisa di-update progressnya oleh admin.
+// ---------------------------------------------------------------------------
+
+export async function adminListProjectTasks(projectId: string): Promise<ProjectTask[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    return mockProjectTasks.filter((t) => t.projectId === projectId).sort((a, b) => a.orderIndex - b.orderIndex);
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase!.from("project_tasks").select("*").eq("project_id", projectId).order("order_index", { ascending: true });
+  return (data ?? []).map(mapProjectTask);
+}
+
+export async function adminCreateProjectTask(
+  projectId: string,
+  input: { name: string; status: ProjectTask["status"]; progressPct: number; owner: string; dueDate: string; blocker?: string }
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const existing = mockProjectTasks.filter((t) => t.projectId === projectId);
+    const task: ProjectTask = {
+      id: uid(),
+      projectId,
+      orderIndex: existing.length > 0 ? Math.max(...existing.map((t) => t.orderIndex)) + 1 : 0,
+      name: input.name,
+      status: input.status,
+      progressPct: input.progressPct,
+      owner: input.owner,
+      dueDate: input.dueDate,
+      blocker: input.blocker || undefined,
+    };
+    mockProjectTasks.push(task);
+    return task;
+  }
+
+  const supabase = await createClient();
+  const { count } = await supabase!.from("project_tasks").select("id", { count: "exact", head: true }).eq("project_id", projectId);
+  const { data, error } = await supabase!
+    .from("project_tasks")
+    .insert({
+      project_id: projectId,
+      order_index: count ?? 0,
+      name: input.name,
+      status: input.status,
+      progress_pct: input.progressPct,
+      owner: input.owner,
+      due_date: input.dueDate || null,
+      blocker: input.blocker || null,
+    })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return mapProjectTask(data);
+}
+
+export async function adminUpdateProjectTask(
+  taskId: string,
+  input: Partial<{ name: string; status: ProjectTask["status"]; progressPct: number; owner: string; dueDate: string; blocker: string; orderIndex: number }>
+) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const task = mockProjectTasks.find((t) => t.id === taskId);
+    if (task) {
+      if (input.name !== undefined) task.name = input.name;
+      if (input.status !== undefined) task.status = input.status;
+      if (input.progressPct !== undefined) task.progressPct = input.progressPct;
+      if (input.owner !== undefined) task.owner = input.owner;
+      if (input.dueDate !== undefined) task.dueDate = input.dueDate;
+      if (input.blocker !== undefined) task.blocker = input.blocker || undefined;
+      if (input.orderIndex !== undefined) task.orderIndex = input.orderIndex;
+    }
+    return;
+  }
+
+  const supabase = await createClient();
+  const payload: Record<string, unknown> = {};
+  if (input.name !== undefined) payload.name = input.name;
+  if (input.status !== undefined) payload.status = input.status;
+  if (input.progressPct !== undefined) payload.progress_pct = input.progressPct;
+  if (input.owner !== undefined) payload.owner = input.owner;
+  if (input.dueDate !== undefined) payload.due_date = input.dueDate || null;
+  if (input.blocker !== undefined) payload.blocker = input.blocker || null;
+  if (input.orderIndex !== undefined) payload.order_index = input.orderIndex;
+  if (Object.keys(payload).length === 0) return;
+  const { error } = await supabase!.from("project_tasks").update(payload).eq("id", taskId);
+  if (error) throw new Error(error.message);
+}
+
+export async function adminDeleteProjectTask(taskId: string) {
+  await requireAdmin();
+  if (!isSupabaseConfigured) {
+    const idx = mockProjectTasks.findIndex((t) => t.id === taskId);
+    if (idx >= 0) mockProjectTasks.splice(idx, 1);
+    return;
+  }
+  const supabase = await createClient();
+  const { error } = await supabase!.from("project_tasks").delete().eq("id", taskId);
+  if (error) throw new Error(error.message);
 }
 
 // ---------------------------------------------------------------------------
