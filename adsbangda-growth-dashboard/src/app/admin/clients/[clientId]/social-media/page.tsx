@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { Trash2, Plus, Users, Eye, Heart, TrendingUp, Pencil, Target } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
@@ -108,6 +109,11 @@ export default async function AdminClientSocialMediaPage({
       approvalRequired: formData.get("approvalRequired") === "on",
     });
     revalidatePath(path);
+    // Sebelumnya cuma revalidatePath, jadi setelah Save form tetap kebuka
+    // (URL masih ?edit=id) dan kelihatan seperti tidak ngapa-ngapain —
+    // padahal datanya sebenarnya sudah tersimpan. redirect() di sini yang
+    // menutup mode edit dan balik ke tampilan list, jadi Save-nya kerasa.
+    redirect(path);
   }
 
   async function deleteContentAction(formData: FormData) {
@@ -147,6 +153,7 @@ export default async function AdminClientSocialMediaPage({
       target: Number(formData.get("target") ?? 0),
     });
     revalidatePath(path);
+    redirect(`${base}?tab=delivery`);
   }
 
   async function addMetric(formData: FormData) {
@@ -180,6 +187,7 @@ export default async function AdminClientSocialMediaPage({
       visitors: Number(formData.get("visitors") ?? 0) || undefined,
     });
     revalidatePath(path);
+    redirect(`${base}?tab=performance&platform=${activePlatform}`);
   }
 
   async function addGoal(formData: FormData) {
@@ -331,15 +339,15 @@ export default async function AdminClientSocialMediaPage({
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-border text-[11px] uppercase tracking-wider text-muted">
-                      <th className="pb-2 font-medium">Date</th>
-                      <th className="pb-2 font-medium">Platform</th>
-                      <th className="pb-2 font-medium">Type</th>
-                      <th className="pb-2 font-medium">Title</th>
-                      <th className="pb-2 font-medium">Status</th>
-                      <th className="pb-2 font-medium">Approval</th>
-                      <th className="pb-2 font-medium">Desain</th>
-                      <th className="pb-2 font-medium">Publish</th>
-                      <th className="pb-2"></th>
+                      <th className="py-2 pr-4 font-medium">Date</th>
+                      <th className="py-2 pr-4 font-medium">Platform</th>
+                      <th className="py-2 pr-4 font-medium">Type</th>
+                      <th className="py-2 pr-4 font-medium">Title</th>
+                      <th className="py-2 pr-4 font-medium">Status</th>
+                      <th className="py-2 pr-4 font-medium">Approval</th>
+                      <th className="py-2 pr-4 font-medium">Desain</th>
+                      <th className="py-2 pr-4 font-medium">Publish</th>
+                      <th className="py-2"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -366,12 +374,12 @@ export default async function AdminClientSocialMediaPage({
                               </select>
                               <input name="plannedDate" type="date" defaultValue={item.plannedDate} required className={inputClass} />
                               <select name="status" defaultValue={item.status} className={inputClass}>
-                                <option value="draft">draft</option>
-                                <option value="in_production">in_production</option>
-                                <option value="waiting_approval">waiting_approval</option>
-                                <option value="approved">approved</option>
-                                <option value="scheduled">scheduled</option>
-                                <option value="published">published</option>
+                                {!["draft", "waiting_approval", "published"].includes(item.status) && (
+                                  <option value={item.status}>{item.status} (lama)</option>
+                                )}
+                                <option value="draft">Draft</option>
+                                <option value="waiting_approval">Minta Approval</option>
+                                <option value="published">Published</option>
                               </select>
                               <input name="assetUrl" defaultValue={item.assetUrl ?? ""} placeholder="Asset URL" className={inputClass} />
                               <input name="publishLink" defaultValue={item.publishLink ?? ""} placeholder="Publish link" className={inputClass} />
@@ -392,15 +400,15 @@ export default async function AdminClientSocialMediaPage({
                         </tr>
                       ) : (
                         <tr key={item.id}>
-                          <td className="py-3 pr-3 font-data text-xs text-muted">{item.plannedDate}</td>
-                          <td className="py-3 pr-3 font-data text-xs capitalize text-muted">{item.platform}</td>
-                          <td className="py-3 pr-3 font-data text-xs capitalize text-muted">{item.type}</td>
-                          <td className="py-3 pr-3 font-medium text-ink">{item.title}</td>
-                          <td className="py-3 pr-3">
+                          <td className="py-3 pr-4 font-data text-xs whitespace-nowrap text-muted">{item.plannedDate}</td>
+                          <td className="py-3 pr-4 font-data text-xs capitalize text-muted">{item.platform}</td>
+                          <td className="py-3 pr-4 font-data text-xs capitalize text-muted">{item.type}</td>
+                          <td className="py-3 pr-4 font-medium text-ink">{item.title}</td>
+                          <td className="py-3 pr-4">
                             <QuickStatusSelect contentId={item.id} defaultValue={item.status} action={quickStatusAction} />
                           </td>
-                          <td className="py-3 pr-3 font-data text-xs text-muted">{item.approvalRequired ? item.approvalStatus ?? "pending" : "—"}</td>
-                          <td className="py-3 pr-3">
+                          <td className="py-3 pr-4 font-data text-xs whitespace-nowrap text-muted">{item.approvalRequired ? item.approvalStatus ?? "pending" : "—"}</td>
+                          <td className="py-3 pr-4 whitespace-nowrap">
                             {item.assetUrl ? (
                               <a href={item.assetUrl} target="_blank" rel="noopener noreferrer" className="font-data text-xs font-semibold text-accent hover:underline">
                                 Desain
@@ -409,7 +417,7 @@ export default async function AdminClientSocialMediaPage({
                               <span className="text-xs text-muted">—</span>
                             )}
                           </td>
-                          <td className="py-3 pr-3">
+                          <td className="py-3 pr-4 whitespace-nowrap">
                             {item.publishLink ? (
                               <a href={item.publishLink} target="_blank" rel="noopener noreferrer" className="font-data text-xs font-semibold text-accent hover:underline">
                                 Open
@@ -418,7 +426,7 @@ export default async function AdminClientSocialMediaPage({
                               <span className="text-xs text-muted">—</span>
                             )}
                           </td>
-                          <td className="py-3 text-right">
+                          <td className="py-3 pl-2 text-right">
                             <div className="flex items-center justify-end gap-2">
                               <Link href={`${base}?tab=delivery&edit=${item.id}`} className="text-muted hover:text-ink" aria-label="Edit">
                                 <Pencil className="h-4 w-4" strokeWidth={1.75} />
@@ -459,10 +467,9 @@ export default async function AdminClientSocialMediaPage({
               <input name="assetUrl" placeholder="Asset URL (opsional)" className={inputClass} />
               <input name="publishLink" placeholder="Publish link (opsional)" className={inputClass} />
               <select name="status" className={inputClass}>
-                <option value="draft">draft</option>
-                <option value="in_production">in_production</option>
-                <option value="scheduled">scheduled</option>
-                <option value="published">published</option>
+                <option value="draft">Draft</option>
+                <option value="waiting_approval">Minta Approval</option>
+                <option value="published">Published</option>
               </select>
               <label className="flex items-center gap-1.5 text-xs text-ink">
                 <input type="checkbox" name="approvalRequired" /> Perlu Approval
