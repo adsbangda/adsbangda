@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { Trash2, Plus, Users, Eye, Heart, TrendingUp, Pencil, Target } from "lucide-react";
+import { Trash2, Plus, Users, Eye, Heart, TrendingUp, Pencil, Target, Check, X } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -36,6 +36,23 @@ import { FormattedNumberInput } from "@/components/dashboard/formatted-number-in
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 const SOCIAL_PLATFORMS: SocialPlatform[] = ["instagram", "facebook", "tiktok", "x", "linkedin", "threads"];
 const ALL_CONTENT_TYPES = Array.from(new Set(Object.values(CONTENT_TYPES_BY_PLATFORM).flat()));
+
+// Nama platform ada yang capitalize biasa nggak pas (tiktok -> TikTok,
+// linkedin -> LinkedIn, x -> X), jadi dipetakan manual di sini, dipakai di
+// semua <option> platform supaya konsisten rapi kapitalnya.
+const PLATFORM_LABELS: Record<string, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  x: "X",
+  linkedin: "LinkedIn",
+  threads: "Threads",
+};
+
+// Content type (feed/reels/story/dst) capitalize kata pertama saja sudah pas.
+function capitalize(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 
 function currentPeriod() {
   const now = new Date();
@@ -250,74 +267,69 @@ export default async function AdminClientSocialMediaPage({
             </div>
 
             {targets.length > 0 && (
-              <div className="mt-6 grid grid-cols-1 gap-3 border-t border-border pt-5 sm:grid-cols-2 lg:grid-cols-3">
-                {targets.map((t) => {
-                  const actual = content.filter((c) => c.status === "published" && c.platform === t.platform && c.type === t.contentType).length;
-                  const pct = t.target > 0 ? Math.min(100, Math.round((actual / t.target) * 100)) : 0;
-                  return editTarget === t.id ? (
-                    <form key={t.id} action={updateTargetAction} className="space-y-2.5 rounded-[var(--radius-md)] border border-accent bg-accent-soft/40 p-4">
-                      <input type="hidden" name="targetId" value={t.id} />
-                      <div>
-                        <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Platform</label>
-                        <select name="platform" defaultValue={t.platform} className={`${inputClass} w-full`}>
-                          {SOCIAL_PLATFORMS.map((p) => (
-                            <option key={p} value={p}>
-                              {p}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Content Type</label>
-                        <select name="contentType" defaultValue={t.contentType} className={`${inputClass} w-full`}>
-                          {ALL_CONTENT_TYPES.map((ct) => (
-                            <option key={ct} value={ct}>
-                              {ct}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Target</label>
-                        <input name="target" type="number" defaultValue={t.target} required className={`${inputClass} w-full`} />
-                      </div>
-                      <div className="flex gap-1.5 pt-1">
-                        <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
-                          Save
-                        </button>
-                        <Link href={`${base}?tab=delivery`} className={buttonVariants({ variant: "outline", size: "sm" })}>
-                          Cancel
-                        </Link>
-                      </div>
-                    </form>
-                  ) : (
-                    <div key={t.id} className="rounded-[var(--radius-md)] border border-border bg-surface p-4 shadow-[var(--shadow-xs)] transition-shadow hover:shadow-[var(--shadow-sm)]">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-data text-[10px] font-semibold uppercase tracking-wider text-muted capitalize">
-                          {t.platform} · {t.contentType}
-                        </p>
-                        <p className="font-data text-xs font-bold text-ink">{pct}%</p>
-                      </div>
-                      <p className="mt-2 text-2xl font-bold text-ink">
-                        {actual} <span className="text-sm font-medium text-muted">/ {t.target}</span>
-                      </p>
-                      <div className="mt-3">
-                        <ProgressBar value={pct} />
-                      </div>
-                      <div className="mt-3.5 flex items-center gap-4 border-t border-border pt-3">
-                        <Link href={`${base}?tab=delivery&editTarget=${t.id}`} className="font-data text-[11px] font-semibold text-accent hover:underline">
-                          Edit
-                        </Link>
-                        <form action={deleteTargetAction}>
-                          <input type="hidden" name="id" value={t.id} />
-                          <button type="submit" className="font-data text-[11px] font-semibold text-danger hover:underline">
-                            Delete
-                          </button>
-                        </form>
-                      </div>
+              <div className="mt-6 grid grid-cols-1 gap-4 border-t border-border pt-5 lg:grid-cols-2">
+                {Object.entries(
+                  targets.reduce<Record<string, typeof targets>>((groups, t) => {
+                    (groups[t.platform] ??= []).push(t);
+                    return groups;
+                  }, {})
+                ).map(([platform, rows]) => (
+                  <div key={platform} className="overflow-hidden rounded-[var(--radius-md)] border border-border bg-surface shadow-[var(--shadow-xs)]">
+                    <div className="border-b border-border bg-black/[0.02] px-4 py-2.5">
+                      <p className="text-sm font-semibold text-ink">{PLATFORM_LABELS[platform] ?? platform}</p>
                     </div>
-                  );
-                })}
+                    <div className="divide-y divide-border">
+                      {rows.map((t) => {
+                        const actual = content.filter((c) => c.status === "published" && c.platform === t.platform && c.type === t.contentType).length;
+                        const pct = t.target > 0 ? Math.min(100, Math.round((actual / t.target) * 100)) : 0;
+                        return editTarget === t.id ? (
+                          <form key={t.id} action={updateTargetAction} className="flex flex-wrap items-center gap-2 bg-accent-soft/40 px-4 py-3">
+                            <input type="hidden" name="targetId" value={t.id} />
+                            <input type="hidden" name="platform" value={t.platform} />
+                            <select name="contentType" defaultValue={t.contentType} className={`${inputClass} min-w-[110px] flex-1`}>
+                              {ALL_CONTENT_TYPES.map((ct) => (
+                                <option key={ct} value={ct}>
+                                  {capitalize(ct)}
+                                </option>
+                              ))}
+                            </select>
+                            <input name="target" type="number" defaultValue={t.target} required className={`${inputClass} w-20`} />
+                            <div className="flex items-center gap-1">
+                              <button type="submit" className="rounded-[var(--radius-sm)] p-1.5 text-success hover:bg-success-soft" aria-label="Simpan">
+                                <Check className="h-4 w-4" strokeWidth={2} />
+                              </button>
+                              <Link href={`${base}?tab=delivery`} className="rounded-[var(--radius-sm)] p-1.5 text-muted hover:bg-black/[0.04] hover:text-ink" aria-label="Batal">
+                                <X className="h-4 w-4" strokeWidth={2} />
+                              </Link>
+                            </div>
+                          </form>
+                        ) : (
+                          <div key={t.id} className="flex items-center gap-3 px-4 py-3">
+                            <p className="w-16 shrink-0 text-xs font-medium text-ink">{capitalize(t.contentType)}</p>
+                            <div className="min-w-[60px] flex-1">
+                              <ProgressBar value={pct} />
+                            </div>
+                            <p className="w-14 shrink-0 text-right font-data text-xs text-muted">
+                              {actual}/{t.target}
+                            </p>
+                            <p className="w-9 shrink-0 text-right font-data text-xs font-bold text-ink">{pct}%</p>
+                            <div className="flex shrink-0 items-center gap-1">
+                              <Link href={`${base}?tab=delivery&editTarget=${t.id}`} className="rounded-[var(--radius-sm)] p-1.5 text-muted hover:bg-black/[0.04] hover:text-ink" aria-label="Edit">
+                                <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} />
+                              </Link>
+                              <form action={deleteTargetAction}>
+                                <input type="hidden" name="id" value={t.id} />
+                                <button type="submit" className="rounded-[var(--radius-sm)] p-1.5 text-muted hover:bg-danger-soft hover:text-danger" aria-label="Hapus">
+                                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                                </button>
+                              </form>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -329,7 +341,7 @@ export default async function AdminClientSocialMediaPage({
                   <select name="platform" defaultValue="instagram" className={`${inputClass} w-full`}>
                     {SOCIAL_PLATFORMS.map((p) => (
                       <option key={p} value={p}>
-                        {p}
+                        {PLATFORM_LABELS[p]}
                       </option>
                     ))}
                   </select>
@@ -339,7 +351,7 @@ export default async function AdminClientSocialMediaPage({
                   <select name="contentType" className={`${inputClass} w-full`}>
                     {ALL_CONTENT_TYPES.map((t) => (
                       <option key={t} value={t}>
-                        {t}
+                        {capitalize(t)}
                       </option>
                     ))}
                   </select>
@@ -387,14 +399,14 @@ export default async function AdminClientSocialMediaPage({
                               <select name="platform" defaultValue={item.platform} className={inputClass}>
                                 {SOCIAL_PLATFORMS.map((p) => (
                                   <option key={p} value={p}>
-                                    {p}
+                                    {PLATFORM_LABELS[p]}
                                   </option>
                                 ))}
                               </select>
                               <select name="type" defaultValue={item.type} className={inputClass}>
                                 {ALL_CONTENT_TYPES.map((t) => (
                                   <option key={t} value={t}>
-                                    {t}
+                                    {capitalize(t)}
                                   </option>
                                 ))}
                               </select>
@@ -479,14 +491,14 @@ export default async function AdminClientSocialMediaPage({
               <select name="platform" defaultValue="instagram" className={inputClass}>
                 {SOCIAL_PLATFORMS.map((p) => (
                   <option key={p} value={p}>
-                    {p}
+                    {PLATFORM_LABELS[p]}
                   </option>
                 ))}
               </select>
               <select name="type" className={inputClass}>
                 {ALL_CONTENT_TYPES.map((t) => (
                   <option key={t} value={t}>
-                    {t}
+                    {capitalize(t)}
                   </option>
                 ))}
               </select>

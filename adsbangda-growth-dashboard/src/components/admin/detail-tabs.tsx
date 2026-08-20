@@ -24,7 +24,6 @@ export function DetailTabs({ items }: { items: DetailTabItem[] }) {
 
   return (
     <PillTabs
-      fullWidth={false}
       items={items.map((item) => ({
         href: item.href,
         label: item.label,
