@@ -337,7 +337,8 @@ export default async function AdminClientSocialMediaPage({
                       <th className="pb-2 font-medium">Title</th>
                       <th className="pb-2 font-medium">Status</th>
                       <th className="pb-2 font-medium">Approval</th>
-                      <th className="pb-2 font-medium">Link</th>
+                      <th className="pb-2 font-medium">Desain</th>
+                      <th className="pb-2 font-medium">Publish</th>
                       <th className="pb-2"></th>
                     </tr>
                   </thead>
@@ -345,7 +346,7 @@ export default async function AdminClientSocialMediaPage({
                     {content.map((item) =>
                       edit === item.id ? (
                         <tr key={item.id} className="bg-accent-soft/40">
-                          <td colSpan={8} className="py-3">
+                          <td colSpan={9} className="py-3">
                             <form action={updateContentAction} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                               <input type="hidden" name="id" value={item.id} />
                               <input name="title" defaultValue={item.title} required placeholder="Judul" className="col-span-2 sm:col-span-1 rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink" />
@@ -399,6 +400,15 @@ export default async function AdminClientSocialMediaPage({
                             <QuickStatusSelect contentId={item.id} defaultValue={item.status} action={quickStatusAction} />
                           </td>
                           <td className="py-3 pr-3 font-data text-xs text-muted">{item.approvalRequired ? item.approvalStatus ?? "pending" : "—"}</td>
+                          <td className="py-3 pr-3">
+                            {item.assetUrl ? (
+                              <a href={item.assetUrl} target="_blank" rel="noopener noreferrer" className="font-data text-xs font-semibold text-accent hover:underline">
+                                Desain
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted">—</span>
+                            )}
+                          </td>
                           <td className="py-3 pr-3">
                             {item.publishLink ? (
                               <a href={item.publishLink} target="_blank" rel="noopener noreferrer" className="font-data text-xs font-semibold text-accent hover:underline">

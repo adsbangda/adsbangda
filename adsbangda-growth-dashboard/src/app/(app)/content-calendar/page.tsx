@@ -120,6 +120,8 @@ export default async function ContentCalendarPage({ searchParams }: { searchPara
                     <th className="px-6 py-3 font-medium">Tanggal</th>
                     <th className="px-6 py-3 font-medium">Status</th>
                     <th className="px-6 py-3 font-medium">Approval</th>
+                    <th className="px-6 py-3 font-medium">Desain</th>
+                    <th className="px-6 py-3 font-medium">Upload</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -150,6 +152,24 @@ export default async function ContentCalendarPage({ searchParams }: { searchPara
                             "Revision requested"
                           ) : (
                             "Pending"
+                          )}
+                        </td>
+                        <td className="px-6 py-4 font-data text-xs">
+                          {item.assetUrl ? (
+                            <a href={item.assetUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">
+                              Desain
+                            </a>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 font-data text-xs">
+                          {item.publishLink ? (
+                            <a href={item.publishLink} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">
+                              Upload
+                            </a>
+                          ) : (
+                            <span className="text-muted">—</span>
                           )}
                         </td>
                       </tr>
