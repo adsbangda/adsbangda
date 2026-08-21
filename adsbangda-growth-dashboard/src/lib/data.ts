@@ -429,6 +429,10 @@ export async function getPlatformPerformanceTable(clientId: string): Promise<Pla
       profileVisitDelta: pct(latest?.visitors, previous?.visitors),
       engagementRate: latest?.engagementRate,
       engagementRateDelta: pct(latest?.engagementRate, previous?.engagementRate),
+      replies: latest?.replies,
+      repliesDelta: pct(latest?.replies, previous?.replies),
+      reposts: latest?.reposts,
+      repostsDelta: pct(latest?.reposts, previous?.reposts),
     };
   });
 }

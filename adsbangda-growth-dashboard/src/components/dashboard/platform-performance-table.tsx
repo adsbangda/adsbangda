@@ -51,15 +51,22 @@ function MetricCell({ value, delta }: { value?: number | null; delta?: number | 
  * FLEKSIBEL — baris yang muncul cuma platform yang benar-benar ada
  * datanya (lihat getPlatformPerformanceTable), bukan daftar hardcode.
  *
+ * Kolom "Replies"/"Reposts" ditambah khusus buat Threads (platform ini
+ * tidak punya Reach/Profile Visit terpisah, lihat komentar di
+ * PlatformPerformanceRow) — kolomnya SELALU ada di tabel (bukan
+ * kolom-per-platform yang beda-beda, itu bakal bikin header tidak
+ * konsisten), cuma isinya "—" buat platform selain Threads.
+ *
  * CATATAN: kolom Engagement SENGAJA tidak ditambah di sini (Overview) —
  * cuma ditampilkan di halaman Social Media (lihat MiniStat "Engagement"
- * di src/app/(app)/social-media/page.tsx). Tabel ini tetap 4 kolom
- * seperti semula.
+ * di src/app/(app)/social-media/page.tsx).
  */
 export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRow[] }) {
   if (rows.length === 0) {
     return <EmptyState icon={Users} title="Belum ada data performance" description="Data akan muncul begitu tim Adsbangda mengisi performance mingguan per platform." />;
   }
+
+  const hasThreads = rows.some((r) => r.platform === "threads");
 
   return (
     <div className="overflow-x-auto">
@@ -70,7 +77,13 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
             <th className="pb-3 pr-4 font-medium">Followers</th>
             <th className="pb-3 pr-4 font-medium">Reach</th>
             <th className="pb-3 pr-4 font-medium">Impressions</th>
-            <th className="pb-3 font-medium">Profile Visit</th>
+            <th className={cn("pb-3 font-medium", hasThreads ? "pr-4" : "")}>Profile Visit</th>
+            {hasThreads && (
+              <>
+                <th className="pb-3 pr-4 font-medium">Replies</th>
+                <th className="pb-3 font-medium">Reposts</th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -98,9 +111,19 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
                 <td className="py-3.5 pr-4">
                   <MetricCell value={row.impressions} delta={row.impressionsDelta} />
                 </td>
-                <td className="py-3.5">
+                <td className={cn("py-3.5", hasThreads ? "pr-4" : "")}>
                   <MetricCell value={row.profileVisit} delta={row.profileVisitDelta} />
                 </td>
+                {hasThreads && (
+                  <>
+                    <td className="py-3.5 pr-4">
+                      <MetricCell value={row.replies} delta={row.repliesDelta} />
+                    </td>
+                    <td className="py-3.5">
+                      <MetricCell value={row.reposts} delta={row.repostsDelta} />
+                    </td>
+                  </>
+                )}
               </tr>
             );
           })}

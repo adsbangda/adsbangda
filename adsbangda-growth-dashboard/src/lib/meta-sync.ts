@@ -346,52 +346,62 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
     let postsSynced = 0;
 
     let followers: number | null = null;
+    let totalLikes: number | null = null;
+    let totalReplies: number | null = null;
+    let totalReposts: number | null = null;
+    let totalQuotes: number | null = null;
     try {
-      const followersRes = await fetchJSON(
-        `https://graph.threads.net/v1.0/${threadsUserId}/threads_insights?metric=followers_count&access_token=${accessToken}`
+      // followers_count, likes, replies, reposts, quotes SEMUA balik dalam
+      // format "total_value" (satu angka keseluruhan/lifetime, BUKAN
+      // breakdown per-hari kayak "views") — beda tipe period dari Threads
+      // sendiri, bukan sesuatu yang bisa diminta breakdown harian.
+      const totalsRes = await fetchJSON(
+        `https://graph.threads.net/v1.0/${threadsUserId}/threads_insights?metric=followers_count,likes,replies,reposts,quotes&access_token=${accessToken}`
       );
-      const fSeries = (followersRes.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
-      followers = fSeries.find((s) => s.name === "followers_count")?.total_value?.value ?? null;
+      const totals = (totalsRes.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
+      followers = totals.find((s) => s.name === "followers_count")?.total_value?.value ?? null;
+      totalLikes = totals.find((s) => s.name === "likes")?.total_value?.value ?? null;
+      totalReplies = totals.find((s) => s.name === "replies")?.total_value?.value ?? null;
+      totalReposts = totals.find((s) => s.name === "reposts")?.total_value?.value ?? null;
+      totalQuotes = totals.find((s) => s.name === "quotes")?.total_value?.value ?? null;
     } catch {
       // Diamkan — endpoint/nama metric Threads paling sering berubah dari 3 platform ini.
     }
 
     let viewsByDate = new Map<string, number>();
-    // "Engagement" harian (likes+replies+reposts+quotes) — dipakai buat
-    // hitung Engagement Rate = engagement/views*100, formula standar yang
-    // dipakai industri buat Threads (Threads TIDAK expose "engagement
-    // rate" langsung sebagai satu metric siap pakai).
-    const engagementByDate = new Map<string, number>();
-    // Replies & Reposts per tanggal disimpan APA ADANYA juga (bukan cuma
-    // dijumlah ke Engagement) — dipakai buat card "Replies"/"Reposts" yang
-    // gantiin "Reach"/"Profile Visits" khusus platform Threads (lihat
-    // migration 0020 & halaman Social Media).
-    const repliesByDate = new Map<string, number>();
-    const repostsByDate = new Map<string, number>();
     try {
       // PENTING: Threads Insights API mau `since`/`until` dalam format UNIX
       // timestamp (mis. 1787119016), BUKAN string tanggal "YYYY-MM-DD" —
       // beda dari sebagian endpoint Graph API lain yang lebih toleran.
+      // "views" (BEDA dari metric di atas) memang breakdown per-hari,
+      // makanya dipanggil terpisah dengan since/until.
       const since = Math.floor((today.getTime() - days * 86400000) / 1000);
       const until = Math.floor(today.getTime() / 1000);
       const insights = await fetchJSON(
-        `https://graph.threads.net/v1.0/${threadsUserId}/threads_insights?metric=views,likes,replies,reposts,quotes&since=${since}&until=${until}&access_token=${accessToken}`
+        `https://graph.threads.net/v1.0/${threadsUserId}/threads_insights?metric=views&since=${since}&until=${until}&access_token=${accessToken}`
       );
       const series = (insights.data as { name: string; values?: { end_time: string; value: number }[] }[] | undefined) ?? [];
       viewsByDate = new Map((series.find((s) => s.name === "views")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-
-      const likesByDate = new Map((series.find((s) => s.name === "likes")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-      for (const v of series.find((s) => s.name === "replies")?.values ?? []) repliesByDate.set(v.end_time.slice(0, 10), v.value);
-      for (const v of series.find((s) => s.name === "reposts")?.values ?? []) repostsByDate.set(v.end_time.slice(0, 10), v.value);
-      const quotesByDate = new Map((series.find((s) => s.name === "quotes")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-      for (const date of viewsByDate.keys()) {
-        const engagement =
-          (likesByDate.get(date) ?? 0) + (repliesByDate.get(date) ?? 0) + (repostsByDate.get(date) ?? 0) + (quotesByDate.get(date) ?? 0);
-        engagementByDate.set(date, engagement);
-      }
     } catch {
       // Sama seperti di atas — sengaja tidak menggagalkan seluruh sync.
     }
+
+    // Engagement Rate = (likes+replies+reposts+quotes total) / (total views
+    // periode ini) × 100 — pendekatan terbaik yang bisa dilakukan, KARENA
+    // likes/replies/reposts/quotes cuma tersedia sebagai angka lifetime
+    // (bukan per-hari) sementara views tersedia per-hari — jadi dibagi
+    // pakai TOTAL views yang berhasil ditarik di periode `days` hari ini,
+    // bukan per-tanggal presisi. Replies & Reposts sendiri ditulis sebagai
+    // angka lifetime yang sama di setiap baris tanggal (sama pola kayak
+    // Followers), bukan breakdown per-hari — karena Threads memang tidak
+    // menyediakan breakdown itu.
+    const totalViewsInPeriod = Array.from(viewsByDate.values()).reduce((a, b) => a + b, 0);
+    const totalEngagement =
+      totalLikes != null || totalReplies != null || totalReposts != null || totalQuotes != null
+        ? (totalLikes ?? 0) + (totalReplies ?? 0) + (totalReposts ?? 0) + (totalQuotes ?? 0)
+        : null;
+    const engagementRate =
+      totalViewsInPeriod > 0 && totalEngagement != null ? Math.round((totalEngagement / totalViewsInPeriod) * 1000) / 10 : null;
 
     const allDates = new Set([...viewsByDate.keys()]);
     if (allDates.size === 0 && followers != null) {
@@ -399,20 +409,12 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
       allDates.add(isoDate(new Date(today.getTime() - 86400000)));
     }
     for (const date of allDates) {
-      const views = viewsByDate.get(date) ?? null;
-      const engagement = engagementByDate.get(date);
-      // Engagement Rate = (likes+replies+reposts+quotes) / views * 100 —
-      // formula standar buat Threads (bukan metric siap pakai dari API-nya).
-      // Reach & Profile Visits SENGAJA tidak diisi sama sekali untuk
-      // Threads — platform ini tidak punya metrik terpisah buat itu (semua
-      // digabung jadi satu angka "Views"), diganti card Replies/Reposts.
-      const engagementRate = views && views > 0 && engagement != null ? Math.round((engagement / views) * 1000) / 10 : null;
       await upsertSocialMetric(admin, clientId, "threads", date, {
         followers,
-        impressions: views, // "views" di Threads dipetakan ke Impressions, metrik paling dekat maknanya.
+        impressions: viewsByDate.get(date) ?? null, // "views" di Threads dipetakan ke Impressions, metrik paling dekat maknanya.
         engagementRate,
-        replies: repliesByDate.get(date) ?? null,
-        reposts: repostsByDate.get(date) ?? null,
+        replies: totalReplies,
+        reposts: totalReposts,
       });
       metricsSynced++;
     }

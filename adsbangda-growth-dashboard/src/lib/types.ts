@@ -262,6 +262,15 @@ export interface PlatformPerformanceRow {
   profileVisitDelta?: number | null;
   engagementRate?: number;
   engagementRateDelta?: number | null;
+  /**
+   * Cuma terisi buat platform='threads' (Threads tidak punya Reach/Profile
+   * Visit terpisah, diganti Replies/Reposts) — kosong (undefined) buat
+   * platform lain, tampil "—" di tabel.
+   */
+  replies?: number;
+  repliesDelta?: number | null;
+  reposts?: number;
+  repostsDelta?: number | null;
 }
 
 /**

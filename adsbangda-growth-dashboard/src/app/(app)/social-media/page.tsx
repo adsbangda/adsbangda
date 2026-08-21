@@ -56,7 +56,11 @@ export default async function SocialMediaPage() {
               <Card key={row.platform} padding="lg">
                 <SectionHeading
                   title={logo?.label ?? row.platform}
-                  description="Followers, Reach, Impressions, Profile Visit & Engagement — snapshot terbaru vs periode sebelumnya."
+                  description={
+                    row.platform === "threads"
+                      ? "Followers, Views, Engagement, Replies & Reposts — snapshot terbaru vs periode sebelumnya."
+                      : "Followers, Reach, Impressions, Profile Visit & Engagement — snapshot terbaru vs periode sebelumnya."
+                  }
                   action={
                     logo && (
                       <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-border bg-surface">
@@ -69,10 +73,22 @@ export default async function SocialMediaPage() {
 
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] items-stretch gap-3">
                   <MiniStat label="Followers" value={formatNumber(row.followers ?? 0)} deltaPct={row.followersDelta} color="blue" />
-                  <MiniStat label="Reach" value={formatNumber(row.reach ?? 0)} deltaPct={row.reachDelta} color="green" />
-                  <MiniStat label="Impressions" value={formatNumber(row.impressions ?? 0)} deltaPct={row.impressionsDelta} color="purple" />
-                  <MiniStat label="Profile Visit" value={formatNumber(row.profileVisit ?? 0)} deltaPct={row.profileVisitDelta} color="orange" />
-                  <MiniStat label="Engagement" value={row.engagementRate != null ? formatPercent(row.engagementRate, 2) : "—"} deltaPct={row.engagementRateDelta} color="green" />
+                  {row.platform === "threads" ? (
+                    <>
+                      {/* Threads tidak punya Reach/Profile Visit terpisah (semua digabung jadi "Views", ikut kolom impressions) — diganti Replies/Reposts yang beneran ada datanya di Threads. */}
+                      <MiniStat label="Views" value={formatNumber(row.impressions ?? 0)} deltaPct={row.impressionsDelta} color="purple" />
+                      <MiniStat label="Engagement" value={row.engagementRate != null ? formatPercent(row.engagementRate, 2) : "—"} deltaPct={row.engagementRateDelta} color="green" />
+                      <MiniStat label="Replies" value={formatNumber(row.replies ?? 0)} deltaPct={row.repliesDelta} color="orange" />
+                      <MiniStat label="Reposts" value={formatNumber(row.reposts ?? 0)} deltaPct={row.repostsDelta} color="blue" />
+                    </>
+                  ) : (
+                    <>
+                      <MiniStat label="Reach" value={formatNumber(row.reach ?? 0)} deltaPct={row.reachDelta} color="green" />
+                      <MiniStat label="Impressions" value={formatNumber(row.impressions ?? 0)} deltaPct={row.impressionsDelta} color="purple" />
+                      <MiniStat label="Profile Visit" value={formatNumber(row.profileVisit ?? 0)} deltaPct={row.profileVisitDelta} color="orange" />
+                      <MiniStat label="Engagement" value={row.engagementRate != null ? formatPercent(row.engagementRate, 2) : "—"} deltaPct={row.engagementRateDelta} color="green" />
+                    </>
+                  )}
                 </div>
 
                 {chartData.length > 0 && (
