@@ -1,0 +1,23 @@
+-- ============================================================================
+-- AdsBangda Growth Dashboard — GA4 Hostname Filter
+-- ============================================================================
+-- Jalankan SETELAH 0017_ga4_integration.sql.
+--
+-- Beberapa client (mis. Wellner Consulting) pasang GA4 property yang SAMA
+-- buat website utama DAN landing page iklan terpisah (via subdomain beda,
+-- mis. promo.domain.com vs domain.com) — keduanya tercatat sebagai "Data
+-- Stream" berbeda TAPI di dalam satu Property ID yang sama. Tanpa filter,
+-- sync GA4 (lihat src/lib/ga4-sync.ts) menjumlahkan SEMUA stream jadi satu
+-- angka, jadi traffic landing page iklan ikut kecampur ke "Website
+-- Performance" — padahal itu harusnya dianggap bagian iklan, bukan
+-- traffic website organik.
+--
+-- clients.ga4_hostname — opsional. Kalau diisi (mis. "domain.com"), sync
+--   GA4 cuma menghitung baris yang hostname-nya PERSIS SAMA dengan ini
+--   (landing page di subdomain lain otomatis ke-exclude). Kalau kosong/NULL,
+--   perilaku LAMA tetap jalan (semua stream digabung, seperti sebelum
+--   migration ini) — jadi client yang tidak punya landing page terpisah
+--   TIDAK PERLU mengisi apa pun, tidak ada yang berubah buat mereka.
+-- ============================================================================
+
+alter table clients add column if not exists ga4_hostname text;

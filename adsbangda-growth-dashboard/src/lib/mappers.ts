@@ -39,6 +39,7 @@ export function mapClient(row: Record<string, unknown>): Client {
     websiteActive: (row.website_active as boolean | null) ?? false,
     metaAdsBudgetTarget: (row.meta_ads_budget_target as number | null) ?? undefined,
     ga4PropertyId: (row.ga4_property_id as string | null) ?? null,
+    ga4Hostname: (row.ga4_hostname as string | null) ?? null,
     organizationId: row.organization_id as string | undefined,
   };
 }

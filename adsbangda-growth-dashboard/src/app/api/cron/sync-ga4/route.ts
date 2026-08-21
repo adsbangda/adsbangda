@@ -28,7 +28,7 @@ export async function GET(request: Request) {
   }
 
   const supabase = createAdminClient();
-  const { data: clients, error } = await supabase.from("clients").select("id, ga4_property_id").not("ga4_property_id", "is", null);
+  const { data: clients, error } = await supabase.from("clients").select("id, ga4_property_id, ga4_hostname").not("ga4_property_id", "is", null);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -37,7 +37,8 @@ export async function GET(request: Request) {
   for (const client of clients ?? []) {
     const propertyId = client.ga4_property_id as string | null;
     if (!propertyId) continue;
-    results.push(await syncGA4ForClient(client.id as string, propertyId, 2));
+    const hostname = client.ga4_hostname as string | null;
+    results.push(await syncGA4ForClient(client.id as string, propertyId, 2, hostname));
   }
 
   return NextResponse.json({ synced: results.length, results });

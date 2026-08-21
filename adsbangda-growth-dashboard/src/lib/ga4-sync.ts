@@ -105,7 +105,7 @@ function formatDuration(totalSeconds: number): string {
   return `${m}m ${s}s`;
 }
 
-async function fetchGA4DailyRows(propertyId: string, days: number): Promise<GA4DailyRow[]> {
+async function fetchGA4DailyRows(propertyId: string, days: number, hostname?: string | null): Promise<GA4DailyRow[]> {
   const accessToken = await getGoogleAccessToken();
   const property = propertyId.trim().startsWith("properties/") ? propertyId.trim() : `properties/${propertyId.trim()}`;
 
@@ -128,6 +128,19 @@ async function fetchGA4DailyRows(propertyId: string, days: number): Promise<GA4D
         { name: "averageSessionDuration" },
         { name: "conversions" },
       ],
+      // Kalau `hostname` diisi (client punya landing page iklan di
+      // subdomain terpisah dalam property GA4 yang sama) — cuma hitung
+      // baris yang hostName-nya PERSIS SAMA, supaya traffic landing page
+      // tidak ikut kecampur ke angka Website Performance. `hostName` tidak
+      // perlu ada di `dimensions` di atas supaya bisa difilter — GA4 Data
+      // API mengizinkan filter di dimensi yang tidak ikut ditampilkan.
+      ...(hostname
+        ? {
+            dimensionFilter: {
+              filter: { fieldName: "hostName", stringFilter: { matchType: "EXACT", value: hostname.trim() } },
+            },
+          }
+        : {}),
       orderBys: [{ dimension: { dimensionName: "date" } }],
     }),
   });
@@ -170,8 +183,13 @@ export interface GA4SyncResult {
  * (harian via cron, atau klik "Sync Sekarang" manual) meng-UPDATE baris GA4
  * yang sama, bukan bikin duplikat — dan TIDAK PERNAH menyentuh baris
  * source='manual' sama sekali walau tanggalnya kebetulan sama.
+ *
+ * `hostname` (opsional) — kalau diisi, cuma menghitung traffic dari
+ * hostname itu persis (lihat migration 0018 & `fetchGA4DailyRows`) —
+ * dipakai buat exclude landing page iklan yang nyatu satu property GA4
+ * sama dengan website utama tapi beda subdomain.
  */
-export async function syncGA4ForClient(clientId: string, propertyId: string, days = 30): Promise<GA4SyncResult> {
+export async function syncGA4ForClient(clientId: string, propertyId: string, days = 30, hostname?: string | null): Promise<GA4SyncResult> {
   if (!isGA4Configured()) {
     return { clientId, rowsSynced: 0, error: "GA4 belum dikonfigurasi di server (env GOOGLE_SERVICE_ACCOUNT_* / SUPABASE_SERVICE_ROLE_KEY belum diisi)." };
   }
@@ -180,7 +198,7 @@ export async function syncGA4ForClient(clientId: string, propertyId: string, day
   }
 
   try {
-    const rows = await fetchGA4DailyRows(propertyId, days);
+    const rows = await fetchGA4DailyRows(propertyId, days, hostname);
     const supabase = createAdminClient();
     let rowsSynced = 0;
 

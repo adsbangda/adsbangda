@@ -73,6 +73,14 @@ export interface Client {
    */
   ga4PropertyId?: string | null;
   /**
+   * Opsional — hostname website utama (mis. "wellnerconsulting.com"),
+   * dipakai buat FILTER data GA4 kalau property yang sama juga dipasang
+   * di landing page iklan terpisah (subdomain lain). Kosong = semua data
+   * di property itu digabung apa adanya (perilaku default). Lihat migration
+   * 0018 & `src/lib/ga4-sync.ts` untuk detail.
+   */
+  ga4Hostname?: string | null;
+  /**
    * Tenant tertinggi (agency-level). Optional di tipe supaya mock-data mode
    * demo tidak wajib mengisinya — di mode live selalu terisi (kolom NOT NULL
    * di DB, default ke organization "Adsbangda" lewat migration 0004).

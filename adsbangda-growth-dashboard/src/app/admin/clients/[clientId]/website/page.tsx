@@ -76,7 +76,8 @@ export default async function AdminClientWebsitePage({
   async function saveGA4PropertyIdAction(formData: FormData) {
     "use server";
     const raw = String(formData.get("ga4PropertyId") ?? "").trim();
-    await adminUpdateClient(clientId, { ga4PropertyId: raw || null });
+    const hostnameRaw = String(formData.get("ga4Hostname") ?? "").trim();
+    await adminUpdateClient(clientId, { ga4PropertyId: raw || null, ga4Hostname: hostnameRaw || null });
     revalidatePath(path);
   }
 
@@ -86,7 +87,7 @@ export default async function AdminClientWebsitePage({
     if (!current?.ga4PropertyId) {
       redirect(`${path}?tab=performance&sync=error&message=${encodeURIComponent("GA4 Property ID belum diisi.")}`);
     }
-    const result = await syncGA4ForClient(clientId, current!.ga4PropertyId!);
+    const result = await syncGA4ForClient(clientId, current!.ga4PropertyId!, 30, current!.ga4Hostname);
     revalidatePath(path);
     if (result.error) {
       redirect(`${path}?tab=performance&sync=error&message=${encodeURIComponent(result.error)}`);
@@ -176,6 +177,18 @@ export default async function AdminClientWebsitePage({
                     className={`mt-1 block ${inputClass}`}
                   />
                 </div>
+                <div>
+                  <label htmlFor="ga4Hostname" className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
+                    Hostname Filter (opsional)
+                  </label>
+                  <input
+                    id="ga4Hostname"
+                    name="ga4Hostname"
+                    defaultValue={client?.ga4Hostname ?? ""}
+                    placeholder="mis. wellnerconsulting.com"
+                    className={`mt-1 block ${inputClass}`}
+                  />
+                </div>
                 <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
                   Simpan
                 </button>
@@ -193,6 +206,13 @@ export default async function AdminClientWebsitePage({
                 {client?.ga4PropertyId ? "● Terhubung" : "○ Belum terhubung"}
               </div>
             </div>
+            {client?.ga4PropertyId && (
+              <p className="mt-3 text-xs text-muted">
+                <strong className="text-ink">Hostname Filter</strong> cuma perlu diisi kalau property GA4 ini JUGA dipasang di landing
+                page iklan (subdomain berbeda) — isi hostname website utama supaya traffic landing page tidak ikut kehitung di sini.
+                Kosongkan kalau tidak ada landing page terpisah.
+              </p>
+            )}
             {getServiceAccountEmail() && (
               <p className="mt-3 border-t border-border pt-3 text-xs text-muted">
                 Belum kasih akses? Minta client invite email berikut sebagai role <strong>Viewer</strong> di GA4 mereka (GA4 Admin →
