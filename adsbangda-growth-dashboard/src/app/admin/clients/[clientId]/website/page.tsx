@@ -6,6 +6,7 @@ import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { buttonVariants } from "@/components/dashboard/button";
+import { SubmitButton } from "@/components/dashboard/submit-button";
 import {
   adminGetClient,
   adminUpdateClient,
@@ -189,13 +190,13 @@ export default async function AdminClientWebsitePage({
                     className={`mt-1 block ${inputClass}`}
                   />
                 </div>
-                <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                <SubmitButton variant="outline" size="sm" loadingLabel="Menyimpan...">
                   Simpan
-                </button>
+                </SubmitButton>
                 {client?.ga4PropertyId && (
-                  <button type="submit" formAction={syncGA4Action} className={buttonVariants({ variant: "primary", size: "sm" })}>
+                  <SubmitButton formAction={syncGA4Action} variant="primary" size="sm" loadingLabel="Nge-sync...">
                     <RefreshCw className="h-3.5 w-3.5" /> Sync Sekarang
-                  </button>
+                  </SubmitButton>
                 )}
               </form>
               <div

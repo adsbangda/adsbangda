@@ -40,6 +40,7 @@ import { PillTabs } from "@/components/admin/pill-tabs";
 import { formatDateID, formatPercent, cn } from "@/lib/utils";
 import { FormattedNumberInput } from "@/components/dashboard/formatted-number-input";
 import { RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import { SubmitButton } from "@/components/dashboard/submit-button";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 const SOCIAL_PLATFORMS: SocialPlatform[] = ["instagram", "facebook", "tiktok", "x", "linkedin", "threads"];
@@ -799,13 +800,13 @@ async function PerformancePanel({
                 className={`mt-1 block w-56 ${inputClass}`}
               />
             </div>
-            <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <SubmitButton variant="outline" size="sm" loadingLabel="Menyimpan...">
               Simpan
-            </button>
+            </SubmitButton>
             {connection && (
-              <button type="submit" formAction={syncSocialAction} className={buttonVariants({ variant: "primary", size: "sm" })}>
+              <SubmitButton formAction={syncSocialAction} variant="primary" size="sm" loadingLabel="Nge-sync...">
                 <RefreshCw className="h-3.5 w-3.5" /> Sync Sekarang
-              </button>
+              </SubmitButton>
             )}
             <span
               className={`ml-auto shrink-0 rounded-[var(--radius-md)] px-3 py-1.5 font-data text-[11px] font-semibold ${
