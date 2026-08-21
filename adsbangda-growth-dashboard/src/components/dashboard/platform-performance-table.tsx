@@ -46,7 +46,12 @@ function PlatformCell({ platform }: { platform: string }) {
       <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-border bg-surface">
         {logo && (
           // eslint-disable-next-line @next/next/no-img-element -- next/image menolak SVG lokal tanpa config khusus; icon kecil ini tidak butuh optimisasi next/image.
-          <img src={logo.src} alt={logo.label} className={cn("h-full w-full object-cover", logo.scaleUp && "scale-[1.35]")} />
+          <img
+            src={logo.src}
+            alt={logo.label}
+            className="h-full w-full object-cover"
+            style={logo.scale ? { transform: `scale(${logo.scale})` } : undefined}
+          />
         )}
       </span>
       <span className="truncate text-base font-semibold text-ink">{logo?.label ?? platform}</span>

@@ -2,14 +2,14 @@ import { Users, Globe, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChannelIcon, ChannelOverviewRow } from "@/lib/types";
 
-/** Logo resmi (file di /public/logos) — Facebook di-scale up dikit karena sumbernya bulat, Meta cuma simbol infinity polos jadi pakai contain+padding. */
-const LOGO_MAP: Partial<Record<ChannelIcon, { src: string; scaleUp?: boolean; contain?: boolean }>> = {
+/** Logo resmi (file di /public/logos) — beberapa di-scale up karena sumbernya bulat dengan padding banyak (angka disesuaikan per file, beda-beda paddingnya), Meta cuma simbol infinity polos jadi pakai contain+padding. */
+const LOGO_MAP: Partial<Record<ChannelIcon, { src: string; scale?: number; contain?: boolean }>> = {
   instagram: { src: "/logos/instagram.svg" },
-  facebook: { src: "/logos/facebook.webp", scaleUp: true },
-  tiktok: { src: "/logos/tiktok.webp" },
-  x: { src: "/logos/x.webp" },
+  facebook: { src: "/logos/facebook.webp", scale: 1.1 },
+  tiktok: { src: "/logos/tiktok.webp", scale: 1.75 },
+  x: { src: "/logos/x.webp", scale: 1.65 },
   linkedin: { src: "/logos/linkedin.png" },
-  threads: { src: "/logos/threads.avif" },
+  threads: { src: "/logos/threads.avif", scale: 1.85 },
   meta_ads: { src: "/logos/meta.webp", contain: true },
 };
 
@@ -30,7 +30,12 @@ export function ChannelOverview({ rows }: { rows: ChannelOverviewRow[] }) {
             >
               {logo ? (
                 // eslint-disable-next-line @next/next/no-img-element -- next/image menolak SVG lokal tanpa config khusus; icon kecil ini tidak butuh optimisasi next/image.
-                <img src={logo.src} alt={row.label} className={cn("h-full w-full", logo.contain ? "object-contain" : "object-cover", logo.scaleUp && "scale-[1.35]")} />
+                <img
+                  src={logo.src}
+                  alt={row.label}
+                  className={cn("h-full w-full", logo.contain ? "object-contain" : "object-cover")}
+                  style={logo.scale ? { transform: `scale(${logo.scale})` } : undefined}
+                />
               ) : row.icon === "website" ? (
                 <Globe className="h-4 w-4 text-emerald-600" strokeWidth={1.75} />
               ) : (

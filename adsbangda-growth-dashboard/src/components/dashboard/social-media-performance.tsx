@@ -35,7 +35,12 @@ export function SocialMediaPerformance({ platforms }: { platforms: SocialPlatfor
               <span className="relative flex h-[26px] w-[26px] shrink-0 items-center justify-center overflow-hidden rounded-[8px] border border-border bg-surface">
                 {logo && (
                   // eslint-disable-next-line @next/next/no-img-element -- next/image menolak SVG lokal tanpa config khusus; icon kecil ini tidak butuh optimisasi next/image.
-                  <img src={logo.src} alt={logo.label} className={cn("h-full w-full object-cover", logo.scaleUp && "scale-[1.35]")} />
+                  <img
+                    src={logo.src}
+                    alt={logo.label}
+                    className="h-full w-full object-cover"
+                    style={logo.scale ? { transform: `scale(${logo.scale})` } : undefined}
+                  />
                 )}
               </span>
               <span className="text-sm font-semibold text-ink">{logo?.label ?? p.platform}</span>

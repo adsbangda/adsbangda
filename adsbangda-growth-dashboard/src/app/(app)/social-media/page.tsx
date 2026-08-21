@@ -8,7 +8,7 @@ import { PostRankingTable } from "@/components/dashboard/post-ranking-table";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { PLATFORM_META } from "@/components/dashboard/platform-meta";
 import { getCurrentClient, getPerformanceSummary, getPlatformPerformanceTable, getPostPerformance } from "@/lib/data";
-import { formatNumber, formatPercent, cn } from "@/lib/utils";
+import { formatNumber, formatPercent } from "@/lib/utils";
 
 function shortDate(iso: string) {
   return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short" }).format(new Date(iso));
@@ -65,7 +65,12 @@ export default async function SocialMediaPage() {
                     logo && (
                       <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-border bg-surface">
                         {/* eslint-disable-next-line @next/next/no-img-element -- next/image menolak SVG lokal tanpa config khusus; icon kecil ini tidak butuh optimisasi next/image. */}
-                        <img src={logo.src} alt={logo.label} className={cn("h-full w-full object-cover", logo.scaleUp && "scale-[1.35]")} />
+                        <img
+                          src={logo.src}
+                          alt={logo.label}
+                          className="h-full w-full object-cover"
+                          style={logo.scale ? { transform: `scale(${logo.scale})` } : undefined}
+                        />
                       </span>
                     )
                   }
