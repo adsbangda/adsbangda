@@ -166,6 +166,14 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
     const reachByDate = new Map((series.find((s) => s.name === "reach")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
     const visitsByDate = new Map((series.find((s) => s.name === "profile_views")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
     const allDates = new Set([...reachByDate.keys(), ...visitsByDate.keys()]);
+    if (allDates.size === 0 && followers != null) {
+      // Insights (reach/profile_views) gagal total tapi followers berhasil —
+      // tetap simpan 1 baris (kemarin, BUKAN hari ini — data harian provider
+      // biasanya baru final di hari sebelumnya) supaya followers kelihatan
+      // di "Latest Snapshot", daripada baris "hari ini" kosong menutupi
+      // baris lama yang justru lengkap datanya.
+      allDates.add(isoDate(new Date(today.getTime() - 86400000)));
+    }
 
     for (const date of allDates) {
       await upsertSocialMetric(admin, clientId, "instagram", date, {
@@ -259,7 +267,12 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       // Nama metric Page Insights cukup sering berubah antar versi Graph API — kalau gagal, followers tetap kesimpan, impressions/reach cuma kosong.
     }
 
-    const allDates = new Set([...impressionsByDate.keys(), ...reachByDate.keys(), isoDate(today)]);
+    const allDates = new Set([...impressionsByDate.keys(), ...reachByDate.keys()]);
+    if (allDates.size === 0 && followers != null) {
+      // Sama alasannya kayak Instagram di atas — jangan paksa "hari ini"
+      // kalau memang gak ada data Insights sama sekali buat tanggal itu.
+      allDates.add(isoDate(new Date(today.getTime() - 86400000)));
+    }
     for (const date of allDates) {
       await upsertSocialMetric(admin, clientId, "facebook", date, {
         followers,
@@ -349,7 +362,11 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
       // Sama seperti di atas — sengaja tidak menggagalkan seluruh sync.
     }
 
-    const allDates = new Set([...viewsByDate.keys(), isoDate(today)]);
+    const allDates = new Set([...viewsByDate.keys()]);
+    if (allDates.size === 0 && followers != null) {
+      // Sama alasannya kayak Instagram/Facebook di atas.
+      allDates.add(isoDate(new Date(today.getTime() - 86400000)));
+    }
     for (const date of allDates) {
       await upsertSocialMetric(admin, clientId, "threads", date, {
         followers,
