@@ -226,6 +226,8 @@ export interface ContentItem {
   publishLink?: string | null;
   approvalRequired?: boolean;
   approvalStatus?: "pending" | "approved" | "revision" | null;
+  /** 'meta' = otomatis kebuat dari sync Threads/Instagram/Facebook (lihat meta-sync.ts), 'manual' = diinput admin sendiri. */
+  source?: "manual" | "meta";
 }
 
 export interface ContentTarget {

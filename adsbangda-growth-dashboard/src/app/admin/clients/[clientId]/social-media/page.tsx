@@ -35,6 +35,7 @@ import {
 } from "@/lib/admin-data";
 import { syncInstagramForClient, syncFacebookForClient, syncThreadsForClient } from "@/lib/meta-sync";
 import { CONTENT_TYPES_BY_PLATFORM, CONTENT_TYPE_LABEL, type SocialPlatform, type SocialConnection, type GoalStatus, type ContentStatus } from "@/lib/types";
+import { PlatformContentTypeFields } from "@/components/dashboard/platform-content-type-fields";
 import { QuickStatusSelect } from "@/components/admin/quick-status-select";
 import { PillTabs } from "@/components/admin/pill-tabs";
 import { formatDateID, formatPercent, cn } from "@/lib/utils";
@@ -373,9 +374,9 @@ export default async function AdminClientSocialMediaPage({
                             <input type="hidden" name="targetId" value={t.id} />
                             <input type="hidden" name="platform" value={t.platform} />
                             <select name="contentType" defaultValue={t.contentType} className={`${inputClass} min-w-[110px] flex-1`}>
-                              {ALL_CONTENT_TYPES.map((ct) => (
+                              {(CONTENT_TYPES_BY_PLATFORM[t.platform as SocialPlatform] ?? ALL_CONTENT_TYPES).map((ct) => (
                                 <option key={ct} value={ct}>
-                                  {capitalize(ct)}
+                                  {CONTENT_TYPE_LABEL[ct] ?? ct}
                                 </option>
                               ))}
                             </select>
@@ -422,26 +423,13 @@ export default async function AdminClientSocialMediaPage({
             <div className="mt-6 border-t border-border pt-5">
               <p className="mb-3 text-xs font-semibold text-ink">Tambah Target Baru</p>
               <form action={saveTargetAction} className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end">
-                <div>
-                  <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Platform</label>
-                  <select name="platform" defaultValue="instagram" className={`${inputClass} w-full`}>
-                    {SOCIAL_PLATFORMS.map((p) => (
-                      <option key={p} value={p}>
-                        {PLATFORM_LABELS[p]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Content Type</label>
-                  <select name="contentType" className={`${inputClass} w-full`}>
-                    {ALL_CONTENT_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {capitalize(t)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <PlatformContentTypeFields
+                  platforms={SOCIAL_PLATFORMS}
+                  platformLabels={PLATFORM_LABELS}
+                  defaultPlatform="instagram"
+                  className={`${inputClass} w-full`}
+                  withLabels
+                />
                 <div>
                   <label className="mb-1 block font-data text-[10px] font-semibold uppercase tracking-wider text-muted">Target</label>
                   <input name="target" type="number" placeholder="0" required className={`${inputClass} w-full`} />
@@ -482,20 +470,14 @@ export default async function AdminClientSocialMediaPage({
                             <form action={updateContentAction} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                               <input type="hidden" name="id" value={item.id} />
                               <input name="title" defaultValue={item.title} required placeholder="Judul" className="col-span-2 sm:col-span-1 rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink" />
-                              <select name="platform" defaultValue={item.platform} className={inputClass}>
-                                {SOCIAL_PLATFORMS.map((p) => (
-                                  <option key={p} value={p}>
-                                    {PLATFORM_LABELS[p]}
-                                  </option>
-                                ))}
-                              </select>
-                              <select name="type" defaultValue={item.type} className={inputClass}>
-                                {ALL_CONTENT_TYPES.map((t) => (
-                                  <option key={t} value={t}>
-                                    {capitalize(t)}
-                                  </option>
-                                ))}
-                              </select>
+                              <PlatformContentTypeFields
+                                platforms={SOCIAL_PLATFORMS}
+                                platformLabels={PLATFORM_LABELS}
+                                defaultPlatform={item.platform}
+                                defaultContentType={item.type}
+                                contentTypeFieldName="type"
+                                className={inputClass}
+                              />
                               <input name="plannedDate" type="date" defaultValue={item.plannedDate} required className={inputClass} />
                               <select name="status" defaultValue={item.status} className={inputClass}>
                                 {!["draft", "waiting_approval", "scheduled", "published"].includes(item.status) && (
@@ -528,7 +510,17 @@ export default async function AdminClientSocialMediaPage({
                           <td className="py-3 pr-4 font-data text-xs whitespace-nowrap text-muted">{item.plannedDate}</td>
                           <td className="py-3 pr-4 font-data text-xs capitalize text-muted">{item.platform}</td>
                           <td className="py-3 pr-4 font-data text-xs capitalize text-muted">{item.type}</td>
-                          <td className="py-3 pr-4 font-medium text-ink">{item.title}</td>
+                          <td className="py-3 pr-4 font-medium text-ink">
+                            {item.title}
+                            {item.source === "meta" && (
+                              <span
+                                className="ml-1.5 rounded-[var(--radius-sm)] bg-accent-soft px-1.5 py-0.5 font-data text-[9px] font-semibold uppercase tracking-wider text-accent"
+                                title="Otomatis dari sync Threads/Instagram/Facebook"
+                              >
+                                Auto
+                              </span>
+                            )}
+                          </td>
                           <td className="py-3 pr-4">
                             <QuickStatusSelect contentId={item.id} defaultValue={item.status} action={quickStatusAction} />
                           </td>
@@ -574,20 +566,13 @@ export default async function AdminClientSocialMediaPage({
 
             <form action={addContent} className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4 sm:grid-cols-4">
               <input name="title" placeholder="Judul konten" required className="col-span-2 sm:col-span-1 rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink" />
-              <select name="platform" defaultValue="instagram" className={inputClass}>
-                {SOCIAL_PLATFORMS.map((p) => (
-                  <option key={p} value={p}>
-                    {PLATFORM_LABELS[p]}
-                  </option>
-                ))}
-              </select>
-              <select name="type" className={inputClass}>
-                {ALL_CONTENT_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {capitalize(t)}
-                  </option>
-                ))}
-              </select>
+              <PlatformContentTypeFields
+                platforms={SOCIAL_PLATFORMS}
+                platformLabels={PLATFORM_LABELS}
+                defaultPlatform="instagram"
+                contentTypeFieldName="type"
+                className={inputClass}
+              />
               <input name="plannedDate" type="date" required className={inputClass} />
               <input name="assetUrl" placeholder="Asset URL (opsional)" className={inputClass} />
               <input name="publishLink" placeholder="Publish link (opsional)" className={inputClass} />

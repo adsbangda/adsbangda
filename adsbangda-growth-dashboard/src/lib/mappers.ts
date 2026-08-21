@@ -177,6 +177,7 @@ export function mapContentItem(row: Record<string, unknown>): ContentItem {
     publishLink: (row.publish_link as string | null) ?? null,
     approvalRequired: (row.approval_required as boolean | null) ?? false,
     approvalStatus: (row.approval_status as ContentItem["approvalStatus"]) ?? null,
+    source: (row.source as ContentItem["source"]) ?? "manual",
   };
 }
 

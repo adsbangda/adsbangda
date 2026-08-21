@@ -144,6 +144,43 @@ async function upsertPost(
     ? await admin.from("post_performance").update(payload).eq("id", existing.id)
     : await admin.from("post_performance").insert(payload);
   if (error) throw new Error(error.message);
+
+  // Ikut catat sebagai content_items status='published' juga — supaya
+  // progress Goals (Content Delivery) di halaman Social Media otomatis
+  // kehitung tanpa admin perlu input manual lagi buat post yang udah
+  // ke-tarik dari sync ini. Dibungkus try/catch sendiri: kalau ini gagal
+  // (mis. constraint belum di-migrate), post_performance yang di atas
+  // TETAP berhasil tersimpan — Post Ranking tidak ikut kena imbas.
+  try {
+    const { data: existingContent } = await admin
+      .from("content_items")
+      .select("id")
+      .eq("client_id", clientId)
+      .eq("platform", platform)
+      .eq("external_post_id", externalPostId)
+      .eq("source", "meta")
+      .maybeSingle();
+
+    const contentPayload = {
+      client_id: clientId,
+      platform,
+      type: values.type,
+      title: values.title,
+      planned_date: values.postedDate,
+      status: "published",
+      source: "meta",
+      external_post_id: externalPostId,
+      publish_link: values.permalink ?? null,
+    };
+
+    if (existingContent) {
+      await admin.from("content_items").update(contentPayload).eq("id", existingContent.id);
+    } else {
+      await admin.from("content_items").insert(contentPayload);
+    }
+  } catch {
+    // Diamkan — lihat komentar di atas.
+  }
 }
 
 // ---------------------------------------------------------------------------
