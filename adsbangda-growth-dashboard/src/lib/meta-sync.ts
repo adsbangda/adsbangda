@@ -345,7 +345,7 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
         const shares = (item.shares as Record<string, unknown> | undefined)?.count as number | undefined;
 
         await upsertPost(admin, clientId, "facebook", postId, {
-          type: "feed",
+          type: "post", // CONTENT_TYPES_BY_PLATFORM.facebook = ["post","video"] — "feed" bukan tipe valid buat Facebook, harus cocok biar ke-hitung di Content Delivery.
           title: String(item.message ?? "").slice(0, 120) || "(tanpa teks)",
           postedDate: String(item.created_time ?? "").slice(0, 10) || isoDate(today),
           likes: likes ?? null,
@@ -480,7 +480,7 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
         }
 
         await upsertPost(admin, clientId, "threads", mediaId, {
-          type: "feed",
+          type: "post", // CONTENT_TYPES_BY_PLATFORM.threads = ["post"] — "feed" bukan tipe valid buat Threads, harus cocok biar ke-hitung di Content Delivery.
           title: String(item.text ?? "").slice(0, 120) || "(tanpa teks)",
           postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
           likes,

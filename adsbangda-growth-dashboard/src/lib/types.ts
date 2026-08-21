@@ -13,7 +13,7 @@ export type SocialPlatform = "instagram" | "facebook" | "tiktok" | "x" | "linked
 
 /** Jenis content per platform — platform berbeda punya pilihan berbeda, mengikuti fitur upload asli tiap platform. */
 export const CONTENT_TYPES_BY_PLATFORM: Record<SocialPlatform, string[]> = {
-  instagram: ["feed", "reels", "story"],
+  instagram: ["feed", "reels", "story", "carousel"],
   facebook: ["post", "video"],
   tiktok: ["video", "photo"],
   x: ["post", "video"],
