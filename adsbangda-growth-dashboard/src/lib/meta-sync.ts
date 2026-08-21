@@ -175,44 +175,49 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
       });
       metricsSynced++;
     }
+    // Post Ranking — dibungkus try/catch (konsisten dengan Threads di
+    // bawah): kalau list media gagal, metrics followers/reach/visitors yang
+    // SUDAH disync di atas tetap tersimpan, tidak ikut ke-reset jadi gagal.
+    try {
+      const media = await fetchJSON(
+        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/media?fields=id,caption,media_type,permalink,timestamp,like_count,comments_count&limit=25&access_token=${accessToken}`
+      );
+      const items = (media.data as Record<string, unknown>[] | undefined) ?? [];
 
-    // Post Ranking — media terbaru + engagement langsung dari field media (bukan Insights terpisah, lebih stabil antar versi API).
-    const media = await fetchJSON(
-      `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/media?fields=id,caption,media_type,permalink,timestamp,like_count,comments_count&limit=25&access_token=${accessToken}`
-    );
-    const items = (media.data as Record<string, unknown>[] | undefined) ?? [];
+      for (const item of items) {
+        const mediaId = item.id as string;
+        // Saves/Shares/Views butuh panggilan Insights terpisah PER media, dan
+        // metric yang valid beda-beda tergantung media_type (IMAGE/VIDEO/
+        // CAROUSEL_ALBUM/REELS) — di-coba, gagal salah satu metric tidak
+        // menggagalkan seluruh sync (postingan tetap tersimpan tanpa metrik itu).
+        let saves: number | null = null;
+        let views: number | null = null;
+        try {
+          const mediaInsights = await fetchJSON(
+            `https://graph.facebook.com/${GRAPH_VERSION}/${mediaId}/insights?metric=saved,plays&access_token=${accessToken}`
+          );
+          const mSeries = (mediaInsights.data as { name: string; values: { value: number }[] }[] | undefined) ?? [];
+          saves = mSeries.find((s) => s.name === "saved")?.values?.[0]?.value ?? null;
+          views = mSeries.find((s) => s.name === "plays")?.values?.[0]?.value ?? null;
+        } catch {
+          // Diamkan — media_type ini mungkin tidak support metric tersebut.
+        }
 
-    for (const item of items) {
-      const mediaId = item.id as string;
-      // Saves/Shares/Views butuh panggilan Insights terpisah PER media, dan
-      // metric yang valid beda-beda tergantung media_type (IMAGE/VIDEO/
-      // CAROUSEL_ALBUM/REELS) — di-coba, gagal salah satu metric tidak
-      // menggagalkan seluruh sync (postingan tetap tersimpan tanpa metrik itu).
-      let saves: number | null = null;
-      let views: number | null = null;
-      try {
-        const mediaInsights = await fetchJSON(
-          `https://graph.facebook.com/${GRAPH_VERSION}/${mediaId}/insights?metric=saved,plays&access_token=${accessToken}`
-        );
-        const mSeries = (mediaInsights.data as { name: string; values: { value: number }[] }[] | undefined) ?? [];
-        saves = mSeries.find((s) => s.name === "saved")?.values?.[0]?.value ?? null;
-        views = mSeries.find((s) => s.name === "plays")?.values?.[0]?.value ?? null;
-      } catch {
-        // Diamkan — media_type ini mungkin tidak support metric tersebut.
+        const mediaType = String(item.media_type ?? "").toLowerCase();
+        await upsertPost(admin, clientId, "instagram", mediaId, {
+          type: mediaType === "video" || mediaType === "reels" ? "reels" : mediaType === "carousel_album" ? "carousel" : "feed",
+          title: String(item.caption ?? "").slice(0, 120) || "(tanpa caption)",
+          postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
+          likes: (item.like_count as number | undefined) ?? null,
+          comments: (item.comments_count as number | undefined) ?? null,
+          saves,
+          views,
+          permalink: (item.permalink as string | undefined) ?? null,
+        });
+        postsSynced++;
       }
-
-      const mediaType = String(item.media_type ?? "").toLowerCase();
-      await upsertPost(admin, clientId, "instagram", mediaId, {
-        type: mediaType === "video" || mediaType === "reels" ? "reels" : mediaType === "carousel_album" ? "carousel" : "feed",
-        title: String(item.caption ?? "").slice(0, 120) || "(tanpa caption)",
-        postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
-        likes: (item.like_count as number | undefined) ?? null,
-        comments: (item.comments_count as number | undefined) ?? null,
-        saves,
-        views,
-        permalink: (item.permalink as string | undefined) ?? null,
-      });
-      postsSynced++;
+    } catch {
+      // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
     }
 
     return { clientId, platform: "instagram", metricsSynced, postsSynced };
@@ -264,30 +269,34 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       metricsSynced++;
     }
 
-    const posts = await fetchJSON(
-      `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/posts?fields=id,message,created_time,permalink_url,likes.summary(true),comments.summary(true),shares&limit=25&access_token=${accessToken}`
-    );
-    const items = (posts.data as Record<string, unknown>[] | undefined) ?? [];
-    for (const item of items) {
-      const postId = item.id as string;
-      const likes = ((item.likes as Record<string, unknown> | undefined)?.summary as Record<string, unknown> | undefined)?.total_count as
-        | number
-        | undefined;
-      const comments = ((item.comments as Record<string, unknown> | undefined)?.summary as Record<string, unknown> | undefined)?.total_count as
-        | number
-        | undefined;
-      const shares = (item.shares as Record<string, unknown> | undefined)?.count as number | undefined;
+    try {
+      const posts = await fetchJSON(
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/posts?fields=id,message,created_time,permalink_url,likes.summary(true),comments.summary(true),shares&limit=25&access_token=${accessToken}`
+      );
+      const items = (posts.data as Record<string, unknown>[] | undefined) ?? [];
+      for (const item of items) {
+        const postId = item.id as string;
+        const likes = ((item.likes as Record<string, unknown> | undefined)?.summary as Record<string, unknown> | undefined)?.total_count as
+          | number
+          | undefined;
+        const comments = ((item.comments as Record<string, unknown> | undefined)?.summary as Record<string, unknown> | undefined)?.total_count as
+          | number
+          | undefined;
+        const shares = (item.shares as Record<string, unknown> | undefined)?.count as number | undefined;
 
-      await upsertPost(admin, clientId, "facebook", postId, {
-        type: "feed",
-        title: String(item.message ?? "").slice(0, 120) || "(tanpa teks)",
-        postedDate: String(item.created_time ?? "").slice(0, 10) || isoDate(today),
-        likes: likes ?? null,
-        comments: comments ?? null,
-        shares: shares ?? null,
-        permalink: (item.permalink_url as string | undefined) ?? null,
-      });
-      postsSynced++;
+        await upsertPost(admin, clientId, "facebook", postId, {
+          type: "feed",
+          title: String(item.message ?? "").slice(0, 120) || "(tanpa teks)",
+          postedDate: String(item.created_time ?? "").slice(0, 10) || isoDate(today),
+          likes: likes ?? null,
+          comments: comments ?? null,
+          shares: shares ?? null,
+          permalink: (item.permalink_url as string | undefined) ?? null,
+        });
+        postsSynced++;
+      }
+    } catch {
+      // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
     }
 
     return { clientId, platform: "facebook", metricsSynced, postsSynced };
@@ -326,8 +335,11 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
 
     let viewsByDate = new Map<string, number>();
     try {
-      const since = isoDate(new Date(today.getTime() - days * 86400000));
-      const until = isoDate(today);
+      // PENTING: Threads Insights API mau `since`/`until` dalam format UNIX
+      // timestamp (mis. 1787119016), BUKAN string tanggal "YYYY-MM-DD" —
+      // beda dari sebagian endpoint Graph API lain yang lebih toleran.
+      const since = Math.floor((today.getTime() - days * 86400000) / 1000);
+      const until = Math.floor(today.getTime() / 1000);
       const insights = await fetchJSON(
         `https://graph.threads.net/v1.0/${threadsUserId}/threads_insights?metric=views&since=${since}&until=${until}&access_token=${accessToken}`
       );
@@ -346,30 +358,41 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
       metricsSynced++;
     }
 
-    const media = await fetchJSON(`https://graph.threads.net/v1.0/${threadsUserId}/threads?fields=id,text,permalink,timestamp&limit=25&access_token=${accessToken}`);
-    const items = (media.data as Record<string, unknown>[] | undefined) ?? [];
-    for (const item of items) {
-      const mediaId = item.id as string;
-      let likes: number | null = null;
-      let views: number | null = null;
-      try {
-        const mediaInsights = await fetchJSON(`https://graph.threads.net/v1.0/${mediaId}/insights?metric=views,likes&access_token=${accessToken}`);
-        const mSeries = (mediaInsights.data as { name: string; values?: { value: number }[] }[] | undefined) ?? [];
-        views = mSeries.find((s) => s.name === "views")?.values?.[0]?.value ?? null;
-        likes = mSeries.find((s) => s.name === "likes")?.values?.[0]?.value ?? null;
-      } catch {
-        // Diamkan.
-      }
+    // Post Ranking — dibungkus try/catch juga (konsisten dengan bagian
+    // followers/views di atas): kalau akun ini belum pernah post di
+    // Threads sama sekali, atau endpoint-nya error, followers+views yang
+    // SUDAH berhasil disync di atas tetap tersimpan — tidak ikut ke-reset
+    // jadi gagal cuma gara-gara bagian Post Ranking-nya bermasalah.
+    try {
+      const media = await fetchJSON(
+        `https://graph.threads.net/v1.0/${threadsUserId}/threads?fields=id,text,permalink,timestamp&limit=25&access_token=${accessToken}`
+      );
+      const items = (media.data as Record<string, unknown>[] | undefined) ?? [];
+      for (const item of items) {
+        const mediaId = item.id as string;
+        let likes: number | null = null;
+        let views: number | null = null;
+        try {
+          const mediaInsights = await fetchJSON(`https://graph.threads.net/v1.0/${mediaId}/insights?metric=views,likes&access_token=${accessToken}`);
+          const mSeries = (mediaInsights.data as { name: string; values?: { value: number }[] }[] | undefined) ?? [];
+          views = mSeries.find((s) => s.name === "views")?.values?.[0]?.value ?? null;
+          likes = mSeries.find((s) => s.name === "likes")?.values?.[0]?.value ?? null;
+        } catch {
+          // Diamkan.
+        }
 
-      await upsertPost(admin, clientId, "threads", mediaId, {
-        type: "feed",
-        title: String(item.text ?? "").slice(0, 120) || "(tanpa teks)",
-        postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
-        likes,
-        views,
-        permalink: (item.permalink as string | undefined) ?? null,
-      });
-      postsSynced++;
+        await upsertPost(admin, clientId, "threads", mediaId, {
+          type: "feed",
+          title: String(item.text ?? "").slice(0, 120) || "(tanpa teks)",
+          postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
+          likes,
+          views,
+          permalink: (item.permalink as string | undefined) ?? null,
+        });
+        postsSynced++;
+      }
+    } catch {
+      // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
     }
 
     return { clientId, platform: "threads", metricsSynced, postsSynced };
