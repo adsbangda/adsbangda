@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Avatar client — render `logoUrl` kalau diisi (lewat field "Logo URL" di
  * form Client Information / Tambah Client), fallback ke 2 huruf pertama
