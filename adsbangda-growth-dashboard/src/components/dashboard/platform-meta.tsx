@@ -11,9 +11,9 @@ export { CONTENT_TYPE_LABEL } from "@/lib/types";
  */
 export const PLATFORM_META: Record<string, { src: string; label: string; scaleUp?: boolean }> = {
   instagram: { src: "/logos/instagram.svg", label: "Instagram" },
-  tiktok: { src: "/logos/tiktok.webp", label: "TikTok" },
+  tiktok: { src: "/logos/tiktok.webp", label: "TikTok", scaleUp: true },
   facebook: { src: "/logos/facebook.webp", label: "Facebook", scaleUp: true },
-  x: { src: "/logos/x.webp", label: "X" },
+  x: { src: "/logos/x.webp", label: "X", scaleUp: true },
   linkedin: { src: "/logos/linkedin.png", label: "LinkedIn" },
-  threads: { src: "/logos/threads.avif", label: "Threads" },
+  threads: { src: "/logos/threads.avif", label: "Threads", scaleUp: true },
 };
