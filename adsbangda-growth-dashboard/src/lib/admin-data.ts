@@ -215,6 +215,7 @@ export async function adminUpdateClient(
     metaAdsActive: boolean;
     websiteActive: boolean;
     metaAdsBudgetTarget: number | null;
+    ga4PropertyId: string | null;
   }>
 ) {
   await requireAdmin();
@@ -231,6 +232,7 @@ export async function adminUpdateClient(
       if (input.metaAdsActive !== undefined) client.metaAdsActive = input.metaAdsActive;
       if (input.websiteActive !== undefined) client.websiteActive = input.websiteActive;
       if (input.metaAdsBudgetTarget !== undefined) client.metaAdsBudgetTarget = input.metaAdsBudgetTarget ?? undefined;
+      if (input.ga4PropertyId !== undefined) client.ga4PropertyId = input.ga4PropertyId;
     }
     return;
   }
@@ -247,6 +249,7 @@ export async function adminUpdateClient(
   if (input.metaAdsActive !== undefined) payload.meta_ads_active = input.metaAdsActive;
   if (input.websiteActive !== undefined) payload.website_active = input.websiteActive;
   if (input.metaAdsBudgetTarget !== undefined) payload.meta_ads_budget_target = input.metaAdsBudgetTarget;
+  if (input.ga4PropertyId !== undefined) payload.ga4_property_id = input.ga4PropertyId;
   if (Object.keys(payload).length === 0) return;
   const { error } = await supabase!.from("clients").update(payload).eq("id", clientId);
   if (error) throw new Error(error.message);

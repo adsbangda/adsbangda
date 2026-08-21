@@ -38,6 +38,7 @@ export function mapClient(row: Record<string, unknown>): Client {
     metaAdsActive: (row.meta_ads_active as boolean | null) ?? false,
     websiteActive: (row.website_active as boolean | null) ?? false,
     metaAdsBudgetTarget: (row.meta_ads_budget_target as number | null) ?? undefined,
+    ga4PropertyId: (row.ga4_property_id as string | null) ?? null,
     organizationId: row.organization_id as string | undefined,
   };
 }
@@ -108,6 +109,7 @@ export function mapPerformanceMetric(row: Record<string, unknown>): PerformanceM
     budgetTarget: (row.budget_target as number | null) ?? undefined,
     closing: (row.closing as number | null) ?? undefined,
     conversionRate: (row.conversion_rate as number | null) ?? undefined,
+    source: (row.source as PerformanceMetric["source"]) ?? "manual",
   };
 }
 

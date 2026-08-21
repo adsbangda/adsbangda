@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { Trash2, Globe, Eye, Users, Clock, Pencil, Activity, TrendingDown, Percent, Plus } from "lucide-react";
+import { redirect } from "next/navigation";
+import { Trash2, Globe, Eye, Users, Clock, Pencil, Activity, TrendingDown, Percent, Plus, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { buttonVariants } from "@/components/dashboard/button";
 import {
+  adminGetClient,
+  adminUpdateClient,
   adminListPerformanceMetrics,
   adminCreatePerformanceMetric,
   adminUpdatePerformanceMetric,
@@ -15,6 +18,7 @@ import {
   adminUpdateWebsiteActivity,
   adminDeleteWebsiteActivity,
 } from "@/lib/admin-data";
+import { syncGA4ForClient, getServiceAccountEmail } from "@/lib/ga4-sync";
 import { formatDateID } from "@/lib/utils";
 import { PillTabs } from "@/components/admin/pill-tabs";
 import { WebsitePerformanceForm } from "@/components/admin/website-performance-form";
@@ -58,16 +62,37 @@ export default async function AdminClientWebsitePage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string; edit?: string }>;
+  searchParams: Promise<{ tab?: string; edit?: string; sync?: string; rows?: string; message?: string }>;
 }) {
   const { clientId } = await params;
-  const { tab = "performance", edit } = await searchParams;
+  const { tab = "performance", edit, sync, rows, message } = await searchParams;
   const base = `/admin/clients/${clientId}/website`;
   const path = base;
   const activeTab = tab === "activity" ? "activity" : "performance";
 
-  const metrics = await adminListPerformanceMetrics(clientId, "website");
+  const [client, metrics] = await Promise.all([adminGetClient(clientId), adminListPerformanceMetrics(clientId, "website")]);
   const latest = metrics[0];
+
+  async function saveGA4PropertyIdAction(formData: FormData) {
+    "use server";
+    const raw = String(formData.get("ga4PropertyId") ?? "").trim();
+    await adminUpdateClient(clientId, { ga4PropertyId: raw || null });
+    revalidatePath(path);
+  }
+
+  async function syncGA4Action() {
+    "use server";
+    const current = await adminGetClient(clientId);
+    if (!current?.ga4PropertyId) {
+      redirect(`${path}?tab=performance&sync=error&message=${encodeURIComponent("GA4 Property ID belum diisi.")}`);
+    }
+    const result = await syncGA4ForClient(clientId, current!.ga4PropertyId!);
+    revalidatePath(path);
+    if (result.error) {
+      redirect(`${path}?tab=performance&sync=error&message=${encodeURIComponent(result.error)}`);
+    }
+    redirect(`${path}?tab=performance&sync=ok&rows=${result.rowsSynced}`);
+  }
 
   async function addMetric(formData: FormData) {
     "use server";
@@ -117,6 +142,65 @@ export default async function AdminClientWebsitePage({
 
       {activeTab === "performance" ? (
         <div className="animate-rise space-y-6">
+          {sync && (
+            <div
+              className={`flex items-center gap-2 rounded-[var(--radius-md)] border px-4 py-3 text-sm ${
+                sync === "ok" ? "border-success/30 bg-success-soft text-success" : "border-danger/30 bg-danger-soft text-danger"
+              }`}
+            >
+              {sync === "ok" ? <CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={1.75} /> : <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.75} />}
+              {sync === "ok" ? `Sync GA4 berhasil — ${rows ?? 0} hari data ter-update.` : `Sync GA4 gagal: ${message ?? "Terjadi error."}`}
+            </div>
+          )}
+
+          <Card padding="lg">
+            <SectionHeading
+              title="Google Analytics 4"
+              description={
+                client?.ga4PropertyId
+                  ? "Terhubung — data disinkron otomatis tiap hari. Form manual di bawah tetap bisa dipakai kapan saja untuk override."
+                  : "Opsional — hubungkan biar data ke-isi otomatis. Belum dikasih akses client? Form manual di bawah tetap 100% berfungsi seperti biasa."
+              }
+            />
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <form action={saveGA4PropertyIdAction} className="flex flex-wrap items-end gap-2">
+                <div>
+                  <label htmlFor="ga4PropertyId" className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
+                    GA4 Property ID
+                  </label>
+                  <input
+                    id="ga4PropertyId"
+                    name="ga4PropertyId"
+                    defaultValue={client?.ga4PropertyId ?? ""}
+                    placeholder="mis. 123456789"
+                    className={`mt-1 block ${inputClass}`}
+                  />
+                </div>
+                <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  Simpan
+                </button>
+                {client?.ga4PropertyId && (
+                  <button type="submit" formAction={syncGA4Action} className={buttonVariants({ variant: "primary", size: "sm" })}>
+                    <RefreshCw className="h-3.5 w-3.5" /> Sync Sekarang
+                  </button>
+                )}
+              </form>
+              <div
+                className={`shrink-0 rounded-[var(--radius-md)] px-3 py-1.5 font-data text-[11px] font-semibold ${
+                  client?.ga4PropertyId ? "bg-success-soft text-success" : "bg-black/[0.04] text-muted"
+                }`}
+              >
+                {client?.ga4PropertyId ? "● Terhubung" : "○ Belum terhubung"}
+              </div>
+            </div>
+            {getServiceAccountEmail() && (
+              <p className="mt-3 border-t border-border pt-3 text-xs text-muted">
+                Belum kasih akses? Minta client invite email berikut sebagai role <strong>Viewer</strong> di GA4 mereka (GA4 Admin →
+                Property Access Management): <span className="font-data text-ink">{getServiceAccountEmail()}</span>
+              </p>
+            )}
+          </Card>
+
           <div>
             <p className="mb-3 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Latest Snapshot</p>
             {!latest ? (

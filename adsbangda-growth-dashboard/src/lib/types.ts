@@ -61,6 +61,18 @@ export interface Client {
    */
   metaAdsBudgetTarget?: number;
   /**
+   * GA4 Property ID (mis. "properties/123456789" atau cukup angkanya
+   * saja) — diisi admin lewat Admin → Website → "Google Analytics 4"
+   * SEKALI per client, opsional. Kalau kosong/null, client ini tetap
+   * manual sepenuhnya (job sync otomatis tidak pernah menyentuhnya).
+   * Prasyarat: client sudah kasih akses Viewer di GA4 property mereka ke
+   * service account Adsbangda (lihat `getServiceAccountEmail()` di
+   * `src/lib/ga4-sync.ts`) — kalau belum, sync akan gagal dengan pesan
+   * error yang jelas, TAPI form input manual di halaman yang sama tetap
+   * berfungsi normal seperti biasa.
+   */
+  ga4PropertyId?: string | null;
+  /**
    * Tenant tertinggi (agency-level). Optional di tipe supaya mock-data mode
    * demo tidak wajib mengisinya — di mode live selalu terisi (kolom NOT NULL
    * di DB, default ke organization "Adsbangda" lewat migration 0004).
@@ -165,6 +177,15 @@ export interface PerformanceMetric {
   /** Deal yang benar-benar closing dari leads Meta Ads. */
   closing?: number;
   conversionRate?: number;
+  /**
+   * Sumber baris ini — 'manual' (input admin lewat form, DEFAULT) atau
+   * 'ga4' (diisi otomatis oleh sync job GA4 Data API). Cuma relevan untuk
+   * channel='website'. Dipakai buat nampilin badge kecil "GA4"/"Manual" di
+   * Performance History Admin Portal, dan supaya sync job tahu baris mana
+   * yang boleh dia timpa (source='ga4') vs yang harus dia diamkan sama
+   * sekali (source='manual').
+   */
+  source?: "manual" | "ga4";
 }
 
 export interface ChannelSummary {
