@@ -112,6 +112,8 @@ export function mapPerformanceMetric(row: Record<string, unknown>): PerformanceM
     closing: (row.closing as number | null) ?? undefined,
     conversionRate: (row.conversion_rate as number | null) ?? undefined,
     source: (row.source as PerformanceMetric["source"]) ?? "manual",
+    replies: (row.replies as number | null) ?? undefined,
+    reposts: (row.reposts as number | null) ?? undefined,
   };
 }
 

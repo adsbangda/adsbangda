@@ -163,6 +163,14 @@ export interface PerformanceMetric {
   engagementRate?: number;
   visitors?: number;
   conversions?: number;
+  /**
+   * Cuma relevan buat channel='social' platform='threads' — Threads tidak
+   * punya Reach/Profile Visits terpisah (semua digabung jadi "views", ikut
+   * kolom `impressions`), tapi punya breakdown Replies & Reposts yang
+   * platform lain tidak punya. Lihat migration 0020.
+   */
+  replies?: number;
+  reposts?: number;
   // Website-specific
   pageViews?: number;
   sessions?: number;

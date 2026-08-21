@@ -1371,6 +1371,8 @@ export async function adminCreatePerformanceMetric(
       target_leads: input.targetLeads ?? null,
       closing: input.closing ?? null,
       conversion_rate: input.leads && input.closing ? Math.round((input.closing / input.leads) * 1000) / 10 : null,
+      replies: input.replies ?? null,
+      reposts: input.reposts ?? null,
     })
     .select()
     .single();
@@ -1419,6 +1421,8 @@ export async function adminUpdatePerformanceMetric(
   if (input.roas !== undefined) payload.roas = input.roas;
   if (input.targetLeads !== undefined) payload.target_leads = input.targetLeads;
   if (input.closing !== undefined) payload.closing = input.closing;
+  if (input.replies !== undefined) payload.replies = input.replies;
+  if (input.reposts !== undefined) payload.reposts = input.reposts;
   if (conversionRate !== undefined) payload.conversion_rate = conversionRate;
   if (Object.keys(payload).length === 0) return;
   const { error } = await supabase!.from("performance_metrics").update(payload).eq("id", id);

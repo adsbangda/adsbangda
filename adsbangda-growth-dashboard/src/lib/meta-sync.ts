@@ -57,7 +57,15 @@ async function upsertSocialMetric(
   clientId: string,
   platform: string,
   date: string,
-  values: { followers?: number | null; reach?: number | null; impressions?: number | null; visitors?: number | null; engagementRate?: number | null }
+  values: {
+    followers?: number | null;
+    reach?: number | null;
+    impressions?: number | null;
+    visitors?: number | null;
+    engagementRate?: number | null;
+    replies?: number | null;
+    reposts?: number | null;
+  }
 ) {
   const { data: existing } = await admin
     .from("performance_metrics")
@@ -80,6 +88,8 @@ async function upsertSocialMetric(
     ...(values.impressions != null ? { impressions: values.impressions } : {}),
     ...(values.visitors != null ? { visitors: values.visitors } : {}),
     ...(values.engagementRate != null ? { engagement_rate: values.engagementRate } : {}),
+    ...(values.replies != null ? { replies: values.replies } : {}),
+    ...(values.reposts != null ? { reposts: values.reposts } : {}),
   };
 
   const { error } = existing
@@ -352,6 +362,12 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
     // dipakai industri buat Threads (Threads TIDAK expose "engagement
     // rate" langsung sebagai satu metric siap pakai).
     const engagementByDate = new Map<string, number>();
+    // Replies & Reposts per tanggal disimpan APA ADANYA juga (bukan cuma
+    // dijumlah ke Engagement) — dipakai buat card "Replies"/"Reposts" yang
+    // gantiin "Reach"/"Profile Visits" khusus platform Threads (lihat
+    // migration 0020 & halaman Social Media).
+    const repliesByDate = new Map<string, number>();
+    const repostsByDate = new Map<string, number>();
     try {
       // PENTING: Threads Insights API mau `since`/`until` dalam format UNIX
       // timestamp (mis. 1787119016), BUKAN string tanggal "YYYY-MM-DD" —
@@ -365,11 +381,12 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
       viewsByDate = new Map((series.find((s) => s.name === "views")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
 
       const likesByDate = new Map((series.find((s) => s.name === "likes")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-      const repliesByDate = new Map((series.find((s) => s.name === "replies")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-      const repostsByDate = new Map((series.find((s) => s.name === "reposts")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
+      for (const v of series.find((s) => s.name === "replies")?.values ?? []) repliesByDate.set(v.end_time.slice(0, 10), v.value);
+      for (const v of series.find((s) => s.name === "reposts")?.values ?? []) repostsByDate.set(v.end_time.slice(0, 10), v.value);
       const quotesByDate = new Map((series.find((s) => s.name === "quotes")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
       for (const date of viewsByDate.keys()) {
-        const engagement = (likesByDate.get(date) ?? 0) + (repliesByDate.get(date) ?? 0) + (repostsByDate.get(date) ?? 0) + (quotesByDate.get(date) ?? 0);
+        const engagement =
+          (likesByDate.get(date) ?? 0) + (repliesByDate.get(date) ?? 0) + (repostsByDate.get(date) ?? 0) + (quotesByDate.get(date) ?? 0);
         engagementByDate.set(date, engagement);
       }
     } catch {
@@ -388,13 +405,14 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
       // formula standar buat Threads (bukan metric siap pakai dari API-nya).
       // Reach & Profile Visits SENGAJA tidak diisi sama sekali untuk
       // Threads — platform ini tidak punya metrik terpisah buat itu (semua
-      // digabung jadi satu angka "Views"), jadi kartunya tetap nampilin
-      // "—" di dashboard, BUKAN bug, itu keterbatasan Threads sendiri.
+      // digabung jadi satu angka "Views"), diganti card Replies/Reposts.
       const engagementRate = views && views > 0 && engagement != null ? Math.round((engagement / views) * 1000) / 10 : null;
       await upsertSocialMetric(admin, clientId, "threads", date, {
         followers,
         impressions: views, // "views" di Threads dipetakan ke Impressions, metrik paling dekat maknanya.
         engagementRate,
+        replies: repliesByDate.get(date) ?? null,
+        reposts: repostsByDate.get(date) ?? null,
       });
       metricsSynced++;
     }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { Trash2, Plus, Users, Eye, Heart, TrendingUp, Pencil, Target, Check, X, Trophy } from "lucide-react";
+import { Trash2, Plus, Users, Eye, Heart, TrendingUp, Pencil, Target, Check, X, Trophy, MessageCircle, Repeat2 } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -194,6 +194,8 @@ export default async function AdminClientSocialMediaPage({
       impressions: Number(formData.get("impressions") ?? 0) || undefined,
       engagementRate: Number(formData.get("engagementRate") ?? 0) || undefined,
       visitors: Number(formData.get("visitors") ?? 0) || undefined,
+      replies: Number(formData.get("replies") ?? 0) || undefined,
+      reposts: Number(formData.get("reposts") ?? 0) || undefined,
     });
     revalidatePath(path);
   }
@@ -213,6 +215,8 @@ export default async function AdminClientSocialMediaPage({
       impressions: Number(formData.get("impressions") ?? 0) || undefined,
       engagementRate: Number(formData.get("engagementRate") ?? 0) || undefined,
       visitors: Number(formData.get("visitors") ?? 0) || undefined,
+      replies: Number(formData.get("replies") ?? 0) || undefined,
+      reposts: Number(formData.get("reposts") ?? 0) || undefined,
     });
     revalidatePath(path);
     redirect(`${base}?tab=performance&platform=${activePlatform}`);
@@ -842,10 +846,22 @@ async function PerformancePanel({
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             <MiniMetric icon={Users} label="Followers" value={latest.followers} />
-            <MiniMetric icon={Eye} label="Reach" value={latest.reach} />
-            <MiniMetric icon={Eye} label="Impressions" value={latest.impressions} />
-            <MiniMetric icon={Heart} label="Engagement Rate" value={latest.engagementRate} suffix="%" />
-            <MiniMetric icon={TrendingUp} label="Profile Visits" value={latest.visitors} />
+            {activePlatform === "threads" ? (
+              <>
+                {/* Threads tidak punya Reach/Profile Visits terpisah (semua digabung jadi "Views", ikut Impressions) — diganti Replies/Reposts yang beneran ada datanya di Threads. */}
+                <MiniMetric icon={Eye} label="Views" value={latest.impressions} />
+                <MiniMetric icon={Heart} label="Engagement Rate" value={latest.engagementRate} suffix="%" />
+                <MiniMetric icon={MessageCircle} label="Replies" value={latest.replies} />
+                <MiniMetric icon={Repeat2} label="Reposts" value={latest.reposts} />
+              </>
+            ) : (
+              <>
+                <MiniMetric icon={Eye} label="Reach" value={latest.reach} />
+                <MiniMetric icon={Eye} label="Impressions" value={latest.impressions} />
+                <MiniMetric icon={Heart} label="Engagement Rate" value={latest.engagementRate} suffix="%" />
+                <MiniMetric icon={TrendingUp} label="Profile Visits" value={latest.visitors} />
+              </>
+            )}
           </div>
         )}
 
@@ -853,10 +869,21 @@ async function PerformancePanel({
           <input type="hidden" name="platform" value={activePlatform} />
           <input name="date" type="date" required className={inputClass} />
           <FormattedNumberInput name="followers" placeholder="Followers" className={inputClass} />
-          <FormattedNumberInput name="reach" placeholder="Reach" className={inputClass} />
-          <FormattedNumberInput name="impressions" placeholder="Impressions" className={inputClass} />
-          <FormattedNumberInput name="engagementRate" allowDecimal placeholder="Engagement %" className={inputClass} />
-          <FormattedNumberInput name="visitors" placeholder="Profile Visits" className={inputClass} />
+          {activePlatform === "threads" ? (
+            <>
+              <FormattedNumberInput name="impressions" placeholder="Views" className={inputClass} />
+              <FormattedNumberInput name="engagementRate" allowDecimal placeholder="Engagement %" className={inputClass} />
+              <FormattedNumberInput name="replies" placeholder="Replies" className={inputClass} />
+              <FormattedNumberInput name="reposts" placeholder="Reposts" className={inputClass} />
+            </>
+          ) : (
+            <>
+              <FormattedNumberInput name="reach" placeholder="Reach" className={inputClass} />
+              <FormattedNumberInput name="impressions" placeholder="Impressions" className={inputClass} />
+              <FormattedNumberInput name="engagementRate" allowDecimal placeholder="Engagement %" className={inputClass} />
+              <FormattedNumberInput name="visitors" placeholder="Profile Visits" className={inputClass} />
+            </>
+          )}
           <button type="submit" className={buttonVariants({ variant: "primary", size: "sm", className: "sm:col-span-6 justify-center" })}>
             <Plus className="h-3.5 w-3.5" /> Save Data
           </button>
@@ -876,10 +903,33 @@ async function PerformancePanel({
                     <input type="hidden" name="id" value={m.id} />
                     <input name="date" type="date" defaultValue={m.date} required className={inputClass} />
                     <FormattedNumberInput name="followers" defaultValue={m.followers} placeholder="Followers" className={inputClass} />
-                    <FormattedNumberInput name="reach" defaultValue={m.reach} placeholder="Reach" className={inputClass} />
-                    <FormattedNumberInput name="impressions" defaultValue={m.impressions} placeholder="Impressions" className={inputClass} />
-                    <FormattedNumberInput name="engagementRate" allowDecimal defaultValue={m.engagementRate} placeholder="Engagement %" className={inputClass} />
-                    <FormattedNumberInput name="visitors" defaultValue={m.visitors} placeholder="Profile Visits" className={inputClass} />
+                    {activePlatform === "threads" ? (
+                      <>
+                        <FormattedNumberInput name="impressions" defaultValue={m.impressions} placeholder="Views" className={inputClass} />
+                        <FormattedNumberInput
+                          name="engagementRate"
+                          allowDecimal
+                          defaultValue={m.engagementRate}
+                          placeholder="Engagement %"
+                          className={inputClass}
+                        />
+                        <FormattedNumberInput name="replies" defaultValue={m.replies} placeholder="Replies" className={inputClass} />
+                        <FormattedNumberInput name="reposts" defaultValue={m.reposts} placeholder="Reposts" className={inputClass} />
+                      </>
+                    ) : (
+                      <>
+                        <FormattedNumberInput name="reach" defaultValue={m.reach} placeholder="Reach" className={inputClass} />
+                        <FormattedNumberInput name="impressions" defaultValue={m.impressions} placeholder="Impressions" className={inputClass} />
+                        <FormattedNumberInput
+                          name="engagementRate"
+                          allowDecimal
+                          defaultValue={m.engagementRate}
+                          placeholder="Engagement %"
+                          className={inputClass}
+                        />
+                        <FormattedNumberInput name="visitors" defaultValue={m.visitors} placeholder="Profile Visits" className={inputClass} />
+                      </>
+                    )}
                     <div className="flex gap-2 sm:col-span-6">
                       <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
                         Save
@@ -896,8 +946,18 @@ async function PerformancePanel({
                     <p className="text-sm font-medium text-ink">{formatDateID(m.date)}</p>
                     <p className="font-data text-xs text-muted">
                       {m.followers != null && `${m.followers.toLocaleString("id-ID")} followers · `}
-                      {m.reach != null && `${m.reach.toLocaleString("id-ID")} reach · `}
-                      {m.impressions != null && `${m.impressions.toLocaleString("id-ID")} impressions · `}
+                      {activePlatform === "threads" ? (
+                        <>
+                          {m.impressions != null && `${m.impressions.toLocaleString("id-ID")} views · `}
+                          {m.replies != null && `${m.replies.toLocaleString("id-ID")} replies · `}
+                          {m.reposts != null && `${m.reposts.toLocaleString("id-ID")} reposts · `}
+                        </>
+                      ) : (
+                        <>
+                          {m.reach != null && `${m.reach.toLocaleString("id-ID")} reach · `}
+                          {m.impressions != null && `${m.impressions.toLocaleString("id-ID")} impressions · `}
+                        </>
+                      )}
                       {m.engagementRate != null && `${formatPercent(m.engagementRate, 2)} ER`}
                     </p>
                   </div>
