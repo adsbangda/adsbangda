@@ -126,7 +126,6 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
 
       {threadsRow && (
         <div className="overflow-x-auto">
-          {mainRows.length > 0 && <p className="mb-2 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Threads</p>}
           <table className="w-full min-w-[560px] text-left">
             <thead>
               <tr className="border-b border-border text-sm text-muted">
