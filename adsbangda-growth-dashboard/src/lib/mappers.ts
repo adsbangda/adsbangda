@@ -22,6 +22,7 @@ import type {
   WebsiteActivityEntry,
   ApprovalHistoryEntry,
   PostPerformance,
+  SocialConnection,
   Service,
 } from "./types";
 
@@ -143,6 +144,20 @@ export function mapPostPerformance(row: Record<string, unknown>): PostPerformanc
     saves: (row.saves as number | null) ?? undefined,
     views: (row.views as number | null) ?? undefined,
     permalink: (row.permalink as string | null) ?? null,
+    source: (row.source as PostPerformance["source"]) ?? "manual",
+    externalPostId: (row.external_post_id as string | null) ?? null,
+  };
+}
+
+export function mapSocialConnection(row: Record<string, unknown>): SocialConnection {
+  return {
+    id: row.id as string,
+    clientId: row.client_id as string,
+    platform: row.platform as SocialConnection["platform"],
+    externalAccountId: row.external_account_id as string,
+    accessToken: row.access_token as string,
+    tokenExpiresAt: (row.token_expires_at as string | null) ?? null,
+    connectedAt: row.connected_at as string,
   };
 }
 

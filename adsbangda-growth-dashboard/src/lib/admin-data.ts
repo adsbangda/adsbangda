@@ -26,6 +26,7 @@ import {
   mapApprovalHistoryEntry,
   mapQuickStat,
   mapPostPerformance,
+  mapSocialConnection,
 } from "./mappers";
 import {
   mockClients,
@@ -72,6 +73,7 @@ import type {
   WebsiteActivityEntry,
   ApprovalHistoryEntry,
   PostPerformance,
+  SocialConnection,
   SocialPlatform,
 } from "./types";
 
@@ -1523,6 +1525,81 @@ export async function adminDeletePostPerformance(id: string) {
   }
   const supabase = await createClient();
   const { error } = await supabase!.from("post_performance").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// SOCIAL AUTO-SYNC (Instagram/Facebook/Threads) — migration 0019. Admin
+// generate access token per client+platform di luar aplikasi ini (Graph API
+// Explorer / Business Login for Instagram), paste di sini SEKALI, sync job
+// (cron harian + tombol "Sync Sekarang") yang urus sisanya.
+//
+// `social_connections` RLS SENGAJA deny-all tanpa policy (lihat migration
+// 0019) — SEMUA fungsi di bawah ini WAJIB pakai createAdminClient() (service
+// role, bypass RLS), bukan createClient() biasa, walau sudah lolos
+// requireAdmin() — beda dari kebanyakan tabel lain di file ini yang cukup
+// pakai createClient() + RLS policy admin biasa.
+// ---------------------------------------------------------------------------
+
+export async function adminListSocialConnections(clientId: string): Promise<SocialConnection[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured || !isServiceRoleConfigured()) return [];
+
+  const admin = createAdminClient();
+  const { data, error } = await admin.from("social_connections").select("*").eq("client_id", clientId);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapSocialConnection);
+}
+
+/**
+ * Simpan/timpa koneksi satu platform untuk satu client (upsert berdasarkan
+ * unique(client_id, platform) di migration 0019) — dipakai form "Connect"
+ * di Admin Portal. `accessToken` kosong/undefined berarti JANGAN ubah token
+ * yang sudah tersimpan (dipakai kalau admin cuma mau update
+ * externalAccountId tanpa harus paste ulang token yang masih valid).
+ */
+export async function adminSaveSocialConnection(
+  clientId: string,
+  platform: SocialConnection["platform"],
+  input: { externalAccountId: string; accessToken?: string; tokenExpiresAt?: string | null }
+) {
+  await requireAdmin();
+  if (!isServiceRoleConfigured()) {
+    throw new Error("Butuh SUPABASE_SERVICE_ROLE_KEY untuk menyimpan koneksi Instagram/Facebook/Threads (lihat .env.example).");
+  }
+
+  const admin = createAdminClient();
+  const payload: Record<string, unknown> = {
+    client_id: clientId,
+    platform,
+    external_account_id: input.externalAccountId,
+  };
+  if (input.accessToken) payload.access_token = input.accessToken;
+  if (input.tokenExpiresAt !== undefined) payload.token_expires_at = input.tokenExpiresAt;
+
+  // Kalau accessToken tidak dikirim (update externalAccountId doang), pastikan
+  // baris sudah ada duluan — upsert dengan payload tanpa access_token akan
+  // GAGAL kalau baris belum pernah ada sama sekali (kolom NOT NULL).
+  if (!input.accessToken) {
+    const { data: existing } = await admin
+      .from("social_connections")
+      .select("id")
+      .eq("client_id", clientId)
+      .eq("platform", platform)
+      .maybeSingle();
+    if (!existing) throw new Error("Token belum pernah diisi — isi Access Token dulu sebelum simpan.");
+  }
+
+  const { error } = await admin.from("social_connections").upsert(payload, { onConflict: "client_id,platform" });
+  if (error) throw new Error(error.message);
+}
+
+export async function adminDeleteSocialConnection(clientId: string, platform: SocialConnection["platform"]) {
+  await requireAdmin();
+  if (!isServiceRoleConfigured()) return;
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("social_connections").delete().eq("client_id", clientId).eq("platform", platform);
   if (error) throw new Error(error.message);
 }
 

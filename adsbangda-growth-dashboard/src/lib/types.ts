@@ -280,6 +280,25 @@ export interface PostPerformance {
   saves?: number;
   views?: number; // plays/views — reels, video, story
   permalink?: string | null;
+  /** 'manual' (input admin, DEFAULT) vs 'meta' (diisi otomatis dari sync Instagram/Facebook/Threads). */
+  source?: "manual" | "meta";
+  /** ID media asli dari Meta — dipakai sync buat tahu postingan ini sudah pernah disync (update, bukan duplikat). Null untuk postingan manual. */
+  externalPostId?: string | null;
+}
+
+/**
+ * Kredensial auto-sync Instagram/Facebook/Threads — SATU baris per
+ * (client, platform). `accessToken` SENSITIF, cuma pernah dibaca/ditulis
+ * lewat service-role client di server (lihat migration 0019 & src/lib/meta-sync.ts).
+ */
+export interface SocialConnection {
+  id: string;
+  clientId: string;
+  platform: "instagram" | "facebook" | "threads";
+  externalAccountId: string;
+  accessToken: string;
+  tokenExpiresAt?: string | null;
+  connectedAt: string;
 }
 
 export interface WebsiteActivityEntry {

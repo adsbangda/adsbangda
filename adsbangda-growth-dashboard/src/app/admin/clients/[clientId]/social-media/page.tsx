@@ -30,15 +30,21 @@ import {
   adminCreateGoal,
   adminUpdateGoal,
   adminDeleteGoal,
+  adminListSocialConnections,
+  adminSaveSocialConnection,
 } from "@/lib/admin-data";
-import { CONTENT_TYPES_BY_PLATFORM, CONTENT_TYPE_LABEL, type SocialPlatform, type GoalStatus, type ContentStatus } from "@/lib/types";
+import { syncInstagramForClient, syncFacebookForClient, syncThreadsForClient } from "@/lib/meta-sync";
+import { CONTENT_TYPES_BY_PLATFORM, CONTENT_TYPE_LABEL, type SocialPlatform, type SocialConnection, type GoalStatus, type ContentStatus } from "@/lib/types";
 import { QuickStatusSelect } from "@/components/admin/quick-status-select";
 import { PillTabs } from "@/components/admin/pill-tabs";
 import { formatDateID, formatPercent, cn } from "@/lib/utils";
 import { FormattedNumberInput } from "@/components/dashboard/formatted-number-input";
+import { RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 const SOCIAL_PLATFORMS: SocialPlatform[] = ["instagram", "facebook", "tiktok", "x", "linkedin", "threads"];
+/** Cuma 3 platform ini yang punya auto-sync (lihat src/lib/meta-sync.ts) — TikTok/X/LinkedIn tetap manual sepenuhnya untuk sekarang. */
+const AUTO_SYNC_PLATFORMS: SocialPlatform[] = ["instagram", "facebook", "threads"];
 const ALL_CONTENT_TYPES = Array.from(new Set(Object.values(CONTENT_TYPES_BY_PLATFORM).flat()));
 
 // Nama platform ada yang capitalize biasa nggak pas (tiktok -> TikTok,
@@ -85,10 +91,10 @@ export default async function AdminClientSocialMediaPage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string; platform?: string; edit?: string; editTarget?: string; editPost?: string }>;
+  searchParams: Promise<{ tab?: string; platform?: string; edit?: string; editTarget?: string; editPost?: string; sync?: string; rows?: string; message?: string }>;
 }) {
   const { clientId } = await params;
-  const { tab = "delivery", platform = "instagram", edit, editTarget, editPost } = await searchParams;
+  const { tab = "delivery", platform = "instagram", edit, editTarget, editPost, sync, rows, message } = await searchParams;
   const base = `/admin/clients/${clientId}/social-media`;
   const path = base;
   const period = currentPeriod();
@@ -211,9 +217,42 @@ export default async function AdminClientSocialMediaPage({
     redirect(`${base}?tab=performance&platform=${activePlatform}`);
   }
 
-  async function addPostAction(formData: FormData) {
+  async function saveSocialConnectionAction(formData: FormData) {
     "use server";
-    await adminCreatePostPerformance(clientId, {
+    const platformValue = String(formData.get("platform") ?? activePlatform) as SocialConnection["platform"];
+    const externalAccountId = String(formData.get("externalAccountId") ?? "").trim();
+    const accessToken = String(formData.get("accessToken") ?? "").trim();
+    if (!externalAccountId) {
+      redirect(`${base}?tab=performance&platform=${activePlatform}&sync=error&message=${encodeURIComponent("Account ID kosong.")}`);
+    }
+    await adminSaveSocialConnection(clientId, platformValue, { externalAccountId, accessToken: accessToken || undefined });
+    revalidatePath(path);
+  }
+
+  async function syncSocialAction() {
+    "use server";
+    const connections = await adminListSocialConnections(clientId);
+    const conn = connections.find((c) => c.platform === activePlatform);
+    if (!conn) {
+      redirect(`${base}?tab=performance&platform=${activePlatform}&sync=error&message=${encodeURIComponent("Belum ada koneksi tersimpan.")}`);
+    }
+    const result =
+      activePlatform === "instagram"
+        ? await syncInstagramForClient(clientId, conn!.externalAccountId, conn!.accessToken)
+        : activePlatform === "facebook"
+          ? await syncFacebookForClient(clientId, conn!.externalAccountId, conn!.accessToken)
+          : activePlatform === "threads"
+            ? await syncThreadsForClient(clientId, conn!.externalAccountId, conn!.accessToken)
+            : null;
+    revalidatePath(path);
+    if (!result || result.error) {
+      redirect(`${base}?tab=performance&platform=${activePlatform}&sync=error&message=${encodeURIComponent(result?.error ?? "Platform tidak didukung.")}`);
+    }
+    redirect(`${base}?tab=performance&platform=${activePlatform}&sync=ok&rows=${result.metricsSynced + result.postsSynced}`);
+  }
+
+  async function addPostAction(formData: FormData) {
+    "use server";    await adminCreatePostPerformance(clientId, {
       platform: String(formData.get("platform")) as SocialPlatform,
       type: String(formData.get("type")),
       title: String(formData.get("title")),
@@ -577,6 +616,11 @@ export default async function AdminClientSocialMediaPage({
           updatePostAction={updatePostAction}
           deletePostAction={deletePostAction}
           editPost={editPost}
+          saveSocialConnectionAction={saveSocialConnectionAction}
+          syncSocialAction={syncSocialAction}
+          syncStatus={sync}
+          syncRows={rows}
+          syncMessage={message}
         />
       )}
 
@@ -677,6 +721,11 @@ async function PerformancePanel({
   updatePostAction,
   deletePostAction,
   editPost,
+  saveSocialConnectionAction,
+  syncSocialAction,
+  syncStatus,
+  syncRows,
+  syncMessage,
 }: {
   clientId: string;
   base: string;
@@ -689,17 +738,86 @@ async function PerformancePanel({
   updatePostAction: (formData: FormData) => Promise<void>;
   deletePostAction: (formData: FormData) => Promise<void>;
   editPost?: string;
+  saveSocialConnectionAction: (formData: FormData) => Promise<void>;
+  syncSocialAction: () => Promise<void>;
+  syncStatus?: string;
+  syncRows?: string;
+  syncMessage?: string;
 }) {
-  const [metrics, posts] = await Promise.all([
+  const [metrics, posts, connections] = await Promise.all([
     adminListPerformanceMetrics(clientId, "social", activePlatform),
     adminListPostPerformance(clientId, activePlatform),
+    adminListSocialConnections(clientId),
   ]);
+  const connection = connections.find((c) => c.platform === activePlatform);
   const latest = metrics[0];
   const performanceBase = `${base}?tab=performance&platform=${activePlatform}`;
   const postTypes = CONTENT_TYPES_BY_PLATFORM[activePlatform] ?? [];
 
   return (
     <div className="animate-rise space-y-6">
+      {syncStatus && (
+        <div
+          className={`flex items-center gap-2 rounded-[var(--radius-md)] border px-4 py-3 text-sm ${
+            syncStatus === "ok" ? "border-success/30 bg-success-soft text-success" : "border-danger/30 bg-danger-soft text-danger"
+          }`}
+        >
+          {syncStatus === "ok" ? <CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={1.75} /> : <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.75} />}
+          {syncStatus === "ok" ? `Sync berhasil — ${syncRows ?? 0} baris ter-update.` : `Sync gagal: ${syncMessage ?? "Terjadi error."}`}
+        </div>
+      )}
+
+      {AUTO_SYNC_PLATFORMS.includes(activePlatform) && (
+        <Card padding="lg">
+          <SectionHeading
+            title={`Koneksi Otomatis — ${PLATFORM_LABELS[activePlatform]}`}
+            description={
+              connection
+                ? "Terhubung — sync otomatis tiap hari. Form manual di bawah tetap bisa dipakai kapan saja."
+                : "Opsional — hubungkan biar Followers/Reach/Post Ranking ke-isi otomatis. Belum sempat setup? Form manual di bawah tetap 100% berfungsi."
+            }
+          />
+          <form action={saveSocialConnectionAction} className="flex flex-wrap items-end gap-2">
+            <input type="hidden" name="platform" value={activePlatform} />
+            <div>
+              <label className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
+                {activePlatform === "facebook" ? "Facebook Page ID" : activePlatform === "threads" ? "Threads User ID" : "IG Business Account ID"}
+              </label>
+              <input
+                name="externalAccountId"
+                defaultValue={connection?.externalAccountId ?? ""}
+                placeholder="mis. 17841400000000000"
+                className={`mt-1 block w-56 ${inputClass}`}
+              />
+            </div>
+            <div>
+              <label className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Access Token</label>
+              <input
+                name="accessToken"
+                type="password"
+                placeholder={connection ? "•••••• (kosongkan kalau tidak ganti)" : "Paste token di sini"}
+                className={`mt-1 block w-56 ${inputClass}`}
+              />
+            </div>
+            <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+              Simpan
+            </button>
+            {connection && (
+              <button type="submit" formAction={syncSocialAction} className={buttonVariants({ variant: "primary", size: "sm" })}>
+                <RefreshCw className="h-3.5 w-3.5" /> Sync Sekarang
+              </button>
+            )}
+            <span
+              className={`ml-auto shrink-0 rounded-[var(--radius-md)] px-3 py-1.5 font-data text-[11px] font-semibold ${
+                connection ? "bg-success-soft text-success" : "bg-black/[0.04] text-muted"
+              }`}
+            >
+              {connection ? "● Terhubung" : "○ Belum terhubung"}
+            </span>
+          </form>
+        </Card>
+      )}
+
       <Card padding="lg">
         <SectionHeading title="Performance" description="Pilih platform, lalu masukkan data snapshot per tanggal." />
 
