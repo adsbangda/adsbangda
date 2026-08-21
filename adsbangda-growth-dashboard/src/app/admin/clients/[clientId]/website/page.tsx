@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
-import { Trash2, Plus, Globe, Eye, Users, Clock, Pencil } from "lucide-react";
+import { Trash2, Globe, Eye, Users, Clock, Pencil, Activity, TrendingDown, Percent, Plus } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -16,10 +16,26 @@ import {
   adminDeleteWebsiteActivity,
 } from "@/lib/admin-data";
 import { formatDateID } from "@/lib/utils";
-import { FormattedNumberInput } from "@/components/dashboard/formatted-number-input";
 import { PillTabs } from "@/components/admin/pill-tabs";
+import { WebsitePerformanceForm } from "@/components/admin/website-performance-form";
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
+
+// Validasi dasar (spec Q) — raw data website tidak boleh negatif, Bounce
+// Rate dikunci ke 0–100. Sengaja tidak strict (tidak menolak submit), cuma
+// clamp ke rentang valid, supaya admin tetap bisa nyimpen data tanpa
+// ke-block gara-gara salah ketik kecil. Ditaruh di module scope (bukan di
+// dalam Server Action closure) supaya aman dipanggil dari Server Action.
+function clampNonNegative(raw: FormDataEntryValue | null): number | undefined {
+  const n = Number(raw ?? 0);
+  if (!Number.isFinite(n) || n === 0) return undefined;
+  return Math.max(0, n);
+}
+function clampPercent(raw: FormDataEntryValue | null): number | undefined {
+  const n = Number(raw ?? 0);
+  if (!Number.isFinite(n) || n === 0) return undefined;
+  return Math.min(100, Math.max(0, n));
+}
 
 function SegmentedNav({ base, active }: { base: string; active: "performance" | "activity" }) {
   const items: { key: "performance" | "activity"; label: string }[] = [
@@ -57,12 +73,12 @@ export default async function AdminClientWebsitePage({
     "use server";
     await adminCreatePerformanceMetric(clientId, "website", {
       date: String(formData.get("date")),
-      visitors: Number(formData.get("visitors") ?? 0) || undefined,
-      pageViews: Number(formData.get("pageViews") ?? 0) || undefined,
-      sessions: Number(formData.get("sessions") ?? 0) || undefined,
-      bounceRate: Number(formData.get("bounceRate") ?? 0) || undefined,
+      visitors: clampNonNegative(formData.get("visitors")),
+      sessions: clampNonNegative(formData.get("sessions")),
+      pageViews: clampNonNegative(formData.get("pageViews")),
+      bounceRate: clampPercent(formData.get("bounceRate")),
       avgSessionDuration: String(formData.get("avgSessionDuration") ?? "").trim() || undefined,
-      conversions: Number(formData.get("conversions") ?? 0) || undefined,
+      conversions: clampNonNegative(formData.get("conversions")),
     });
     revalidatePath(path);
   }
@@ -71,12 +87,12 @@ export default async function AdminClientWebsitePage({
     "use server";
     await adminUpdatePerformanceMetric(String(formData.get("id")), "website", {
       date: String(formData.get("date")),
-      visitors: Number(formData.get("visitors") ?? 0) || undefined,
-      pageViews: Number(formData.get("pageViews") ?? 0) || undefined,
-      sessions: Number(formData.get("sessions") ?? 0) || undefined,
-      bounceRate: Number(formData.get("bounceRate") ?? 0) || undefined,
+      visitors: clampNonNegative(formData.get("visitors")),
+      sessions: clampNonNegative(formData.get("sessions")),
+      pageViews: clampNonNegative(formData.get("pageViews")),
+      bounceRate: clampPercent(formData.get("bounceRate")),
       avgSessionDuration: String(formData.get("avgSessionDuration") ?? "").trim() || undefined,
-      conversions: Number(formData.get("conversions") ?? 0) || undefined,
+      conversions: clampNonNegative(formData.get("conversions")),
     });
     revalidatePath(path);
   }
@@ -108,61 +124,81 @@ export default async function AdminClientWebsitePage({
                 <EmptyState icon={Globe} title="Belum ada data performance" description="Tambahkan snapshot pertama lewat form di bawah." />
               </Card>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Card className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-                    <Users className="h-5 w-5" strokeWidth={1.75} />
+              <div className="space-y-3">
+                {/* Metrik utama — sama set dengan 4 KPI di Client Portal, supaya admin lihat persis apa yang client lihat. */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <Card className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                      <Users className="h-5 w-5" strokeWidth={1.75} />
+                    </div>
+                    <div>
+                      <p className="font-data text-2xl font-bold text-ink">{latest.visitors?.toLocaleString("id-ID") ?? "—"}</p>
+                      <p className="text-xs text-muted">Visitors</p>
+                    </div>
+                  </Card>
+                  <Card className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                      <Activity className="h-5 w-5" strokeWidth={1.75} />
+                    </div>
+                    <div>
+                      <p className="font-data text-2xl font-bold text-ink">{latest.sessions?.toLocaleString("id-ID") ?? "—"}</p>
+                      <p className="text-xs text-muted">Sessions</p>
+                    </div>
+                  </Card>
+                  <Card className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                      <Eye className="h-5 w-5" strokeWidth={1.75} />
+                    </div>
+                    <div>
+                      <p className="font-data text-2xl font-bold text-ink">{latest.pageViews?.toLocaleString("id-ID") ?? "—"}</p>
+                      <p className="text-xs text-muted">Page Views</p>
+                    </div>
+                  </Card>
+                  <Card className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                      <Globe className="h-5 w-5" strokeWidth={1.75} />
+                    </div>
+                    <div>
+                      <p className="font-data text-2xl font-bold text-ink">{latest.conversions?.toLocaleString("id-ID") ?? "—"}</p>
+                      <p className="text-xs text-muted">Leads / Form Submissions</p>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Metrik sekunder — Bounce Rate & Avg Session Duration input manual, Conversion Rate SELALU dihitung
+                    ulang dari Leads ÷ Visitors (tidak pernah disimpan sebagai field terpisah). */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-border bg-surface px-4 py-3">
+                    <TrendingDown className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} />
+                    <div>
+                      <p className="font-data text-sm font-bold text-ink">{latest.bounceRate != null ? `${latest.bounceRate}%` : "—"}</p>
+                      <p className="text-[11px] text-muted">Bounce Rate</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-data text-2xl font-bold text-ink">{latest.visitors?.toLocaleString("id-ID") ?? "—"}</p>
-                    <p className="text-xs text-muted">Visitors</p>
+                  <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-border bg-surface px-4 py-3">
+                    <Clock className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} />
+                    <div>
+                      <p className="font-data text-sm font-bold text-ink">{latest.avgSessionDuration ?? "—"}</p>
+                      <p className="text-[11px] text-muted">Avg Session Duration</p>
+                    </div>
                   </div>
-                </Card>
-                <Card className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-                    <Eye className="h-5 w-5" strokeWidth={1.75} />
+                  <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-accent/30 bg-accent-soft px-4 py-3">
+                    <Percent className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} />
+                    <div>
+                      <p className="font-data text-sm font-bold text-ink">
+                        {latest.visitors ? `${(((latest.conversions ?? 0) / latest.visitors) * 100).toFixed(2)}%` : "—"}
+                      </p>
+                      <p className="text-[11px] text-muted">Conversion Rate (otomatis)</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-data text-2xl font-bold text-ink">{latest.pageViews?.toLocaleString("id-ID") ?? "—"}</p>
-                    <p className="text-xs text-muted">Page Views</p>
-                  </div>
-                </Card>
-                <Card className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-                    <Clock className="h-5 w-5" strokeWidth={1.75} />
-                  </div>
-                  <div>
-                    <p className="font-data text-2xl font-bold text-ink">{latest.avgSessionDuration ?? "—"}</p>
-                    <p className="text-xs text-muted">Avg Session Duration</p>
-                  </div>
-                </Card>
-                <Card className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-                    <Globe className="h-5 w-5" strokeWidth={1.75} />
-                  </div>
-                  <div>
-                    <p className="font-data text-2xl font-bold text-ink">{latest.conversions?.toLocaleString("id-ID") ?? "—"}</p>
-                    <p className="text-xs text-muted">Leads / Form Submission</p>
-                  </div>
-                </Card>
+                </div>
               </div>
             )}
           </div>
 
           <Card padding="lg">
-            <SectionHeading title="Add Performance Data" />
-            <form action={addMetric} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-              <input name="date" type="date" required className={inputClass} />
-              <FormattedNumberInput name="visitors" placeholder="Visitors" className={inputClass} />
-              <FormattedNumberInput name="pageViews" placeholder="Page Views" className={inputClass} />
-              <FormattedNumberInput name="sessions" placeholder="Sessions" className={inputClass} />
-              <FormattedNumberInput name="bounceRate" allowDecimal placeholder="Bounce Rate (%)" className={inputClass} />
-              <input name="avgSessionDuration" placeholder="Avg Duration (2m 15s)" className={inputClass} />
-              <FormattedNumberInput name="conversions" placeholder="Leads / Form Submission" className={inputClass} />
-              <button type="submit" className={buttonVariants({ variant: "primary", size: "sm", className: "justify-center" })}>
-                <Plus className="h-3.5 w-3.5" /> Save Data
-              </button>
-            </form>
+            <SectionHeading title="Add Performance Data" description="Masukkan raw data — Conversion Rate dihitung otomatis di bawah." />
+            <WebsitePerformanceForm action={addMetric} />
           </Card>
 
           <Card padding="lg">
@@ -174,24 +210,26 @@ export default async function AdminClientWebsitePage({
                 {metrics.map((m) =>
                   edit === m.id ? (
                     <div key={m.id} className="bg-accent-soft/40 py-3">
-                      <form action={updateMetricAction} className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-                        <input type="hidden" name="id" value={m.id} />
-                        <input name="date" type="date" defaultValue={m.date} required className={inputClass} />
-                        <FormattedNumberInput name="visitors" defaultValue={m.visitors} placeholder="Visitors" className={inputClass} />
-                        <FormattedNumberInput name="pageViews" defaultValue={m.pageViews} placeholder="Page Views" className={inputClass} />
-                        <FormattedNumberInput name="sessions" defaultValue={m.sessions} placeholder="Sessions" className={inputClass} />
-                        <FormattedNumberInput name="bounceRate" allowDecimal defaultValue={m.bounceRate} placeholder="Bounce Rate" className={inputClass} />
-                        <input name="avgSessionDuration" defaultValue={m.avgSessionDuration ?? ""} placeholder="Avg Duration" className={inputClass} />
-                        <FormattedNumberInput name="conversions" defaultValue={m.conversions} placeholder="Leads" className={inputClass} />
-                        <div className="flex gap-2">
-                          <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
-                            Save
-                          </button>
+                      <WebsitePerformanceForm
+                        action={updateMetricAction}
+                        defaultValues={{
+                          id: m.id,
+                          date: m.date,
+                          visitors: m.visitors,
+                          sessions: m.sessions,
+                          pageViews: m.pageViews,
+                          bounceRate: m.bounceRate,
+                          avgSessionDuration: m.avgSessionDuration,
+                          conversions: m.conversions,
+                        }}
+                        submitLabel="Save"
+                        showPlusIcon={false}
+                        extra={
                           <Link href={path} className={buttonVariants({ variant: "outline", size: "sm" })}>
                             Cancel
                           </Link>
-                        </div>
-                      </form>
+                        }
+                      />
                     </div>
                   ) : (
                     <div key={m.id} className="flex items-center justify-between gap-3 py-3">
@@ -201,7 +239,10 @@ export default async function AdminClientWebsitePage({
                           {m.visitors != null && `${m.visitors.toLocaleString("id-ID")} visitors · `}
                           {m.sessions != null && `${m.sessions.toLocaleString("id-ID")} sessions · `}
                           {m.pageViews != null && `${m.pageViews.toLocaleString("id-ID")} page views · `}
-                          {m.conversions != null && `${m.conversions} leads`}
+                          {m.bounceRate != null && `${m.bounceRate}% bounce · `}
+                          {m.avgSessionDuration && `${m.avgSessionDuration} avg duration · `}
+                          {m.conversions != null && `${m.conversions.toLocaleString("id-ID")} leads`}
+                          {m.visitors ? ` · ${(((m.conversions ?? 0) / m.visitors) * 100).toFixed(2)}% conversion` : ""}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">

@@ -61,6 +61,7 @@ export function FormattedNumberInput({
   required,
   allowDecimal = false,
   allowNegative = false,
+  onValueChange,
 }: {
   name: string;
   id?: string;
@@ -72,6 +73,14 @@ export function FormattedNumberInput({
   /** Izinkan koma desimal (dipakai buat CTR, ROAS, dst). Default false — cuma bilangan bulat (Spend, Leads, dst). */
   allowDecimal?: boolean;
   allowNegative?: boolean;
+  /**
+   * Opsional — dipanggil tiap kali nilai mentah (raw, sebelum diformat)
+   * berubah. Dipakai untuk kalkulasi live di komponen pemanggil (mis.
+   * Conversion Rate = Leads ÷ Visitors di form Website Performance) TANPA
+   * perlu mengubah cara komponen ini submit ke Server Action — hidden
+   * input `name` yang sama tetap jadi satu-satunya sumber value form.
+   */
+  onValueChange?: (raw: string) => void;
 }) {
   const initialRaw = defaultValue != null && defaultValue !== "" ? String(defaultValue) : "";
   const [raw, setRaw] = useState(initialRaw);
@@ -86,7 +95,11 @@ export function FormattedNumberInput({
         className={className}
         required={required}
         value={formatForDisplay(raw)}
-        onChange={(e) => setRaw(toRaw(e.target.value, allowDecimal, allowNegative))}
+        onChange={(e) => {
+          const next = toRaw(e.target.value, allowDecimal, allowNegative);
+          setRaw(next);
+          onValueChange?.(next);
+        }}
       />
       <input type="hidden" name={name} value={raw} />
     </>
