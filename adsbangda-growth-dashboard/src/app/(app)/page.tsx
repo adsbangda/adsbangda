@@ -137,38 +137,38 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
 
             {quickStats.length > 0 && <QuickStats stats={quickStats} />}
 
-            {/* Meta Ads & Website Performance — berdampingan kalau dua-duanya
-                aktif, masing-masing full width kalau cuma satu yang aktif,
-                dan section-nya hilang total kalau dua-duanya tidak aktif. */}
-            {(client.metaAdsActive || client.websiteActive) && (
-              <div className={`grid grid-cols-1 items-start gap-6 ${client.metaAdsActive && client.websiteActive ? "xl:grid-cols-2" : ""}`}>
-                {client.metaAdsActive && (
-                  <Card>
-                    <SectionHeading
-                      title="Meta Ads Performance"
-                      action={
-                        <a href="/meta-ads" className="font-data text-xs font-semibold text-accent hover:underline">
-                          Lihat laporan
-                        </a>
-                      }
-                    />
-                    <MetaAdsSummary metrics={performanceSummary?.metaAds ?? []} budgetTarget={client.metaAdsBudgetTarget} />
-                  </Card>
-                )}
-                {client.websiteActive && (
-                  <Card>
-                    <SectionHeading
-                      title="Website Performance"
-                      action={
-                        <a href="/website" className="font-data text-xs font-semibold text-accent hover:underline">
-                          Lihat laporan
-                        </a>
-                      }
-                    />
-                    <WebsiteSummary metrics={performanceSummary?.website ?? []} />
-                  </Card>
-                )}
-              </div>
+            {/* Meta Ads Performance — full width sendiri (sejajar dengan pola
+                Platform Performance di bawah), section-nya hilang total
+                kalau metaAdsActive false. */}
+            {client.metaAdsActive && (
+              <Card>
+                <SectionHeading
+                  title="Meta Ads Performance"
+                  action={
+                    <a href="/meta-ads" className="font-data text-xs font-semibold text-accent hover:underline">
+                      Lihat laporan
+                    </a>
+                  }
+                />
+                <MetaAdsSummary metrics={performanceSummary?.metaAds ?? []} budgetTarget={client.metaAdsBudgetTarget} />
+              </Card>
+            )}
+
+            {/* Website Performance — SEKARANG full width sendiri di bawah Meta
+                Ads (bukan lagi berdampingan setengah-setengah), section-nya
+                hilang total kalau websiteActive false. */}
+            {client.websiteActive && (
+              <Card>
+                <SectionHeading
+                  title="Website Performance"
+                  action={
+                    <a href="/website" className="font-data text-xs font-semibold text-accent hover:underline">
+                      Lihat laporan
+                    </a>
+                  }
+                />
+                <WebsiteSummary metrics={performanceSummary?.website ?? []} />
+              </Card>
             )}
 
             {/* Platform Performance — tabel Followers/Reach/Impressions/
