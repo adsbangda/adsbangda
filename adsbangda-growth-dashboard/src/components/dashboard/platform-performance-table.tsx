@@ -39,6 +39,21 @@ function MetricCell({ value, delta }: { value?: number | null; delta?: number | 
   );
 }
 
+function PlatformCell({ platform }: { platform: string }) {
+  const logo = PLATFORM_META[platform] ?? null;
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-border bg-surface">
+        {logo && (
+          // eslint-disable-next-line @next/next/no-img-element -- next/image menolak SVG lokal tanpa config khusus; icon kecil ini tidak butuh optimisasi next/image.
+          <img src={logo.src} alt={logo.label} className={cn("h-full w-full object-cover", logo.scaleUp && "scale-[1.35]")} />
+        )}
+      </span>
+      <span className="truncate text-base font-semibold text-ink">{logo?.label ?? platform}</span>
+    </div>
+  );
+}
+
 /**
  * "Platform Performance" — satu tabel per platform (bukan grid card
  * terpisah-pisah) menampilkan Followers, Reach, Impressions, dan Profile
@@ -51,11 +66,12 @@ function MetricCell({ value, delta }: { value?: number | null; delta?: number | 
  * FLEKSIBEL — baris yang muncul cuma platform yang benar-benar ada
  * datanya (lihat getPlatformPerformanceTable), bukan daftar hardcode.
  *
- * Kolom "Replies"/"Reposts" ditambah khusus buat Threads (platform ini
- * tidak punya Reach/Profile Visit terpisah, lihat komentar di
- * PlatformPerformanceRow) — kolomnya SELALU ada di tabel (bukan
- * kolom-per-platform yang beda-beda, itu bakal bikin header tidak
- * konsisten), cuma isinya "—" buat platform selain Threads.
+ * Threads SENGAJA dipisah jadi tabel KEDUA di bawahnya (bukan kolom
+ * tambahan di tabel utama) — Threads tidak punya Reach/Profile Visit sama
+ * sekali (beda struktur data dari platform lain), jadi maksa masuk ke
+ * kolom yang sama cuma bikin banyak sel "—" tidak perlu. Tabel utama
+ * TETAP 4 kolom seperti semula, tidak berubah buat platform selain
+ * Threads.
  *
  * CATATAN: kolom Engagement SENGAJA tidak ditambah di sini (Overview) —
  * cuma ditampilkan di halaman Social Media (lihat MiniStat "Engagement"
@@ -66,69 +82,83 @@ export function PlatformPerformanceTable({ rows }: { rows: PlatformPerformanceRo
     return <EmptyState icon={Users} title="Belum ada data performance" description="Data akan muncul begitu tim Adsbangda mengisi performance mingguan per platform." />;
   }
 
-  const hasThreads = rows.some((r) => r.platform === "threads");
+  const mainRows = rows.filter((r) => r.platform !== "threads");
+  const threadsRow = rows.find((r) => r.platform === "threads");
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[560px] text-left">
-        <thead>
-          <tr className="border-b border-border text-sm text-muted">
-            <th className="pb-3 pr-4 font-medium">Platform</th>
-            <th className="pb-3 pr-4 font-medium">Followers</th>
-            <th className="pb-3 pr-4 font-medium">Reach</th>
-            <th className="pb-3 pr-4 font-medium">Impressions</th>
-            <th className={cn("pb-3 font-medium", hasThreads ? "pr-4" : "")}>Profile Visit</th>
-            {hasThreads && (
-              <>
+    <div className="space-y-6">
+      {mainRows.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-left">
+            <thead>
+              <tr className="border-b border-border text-sm text-muted">
+                <th className="pb-3 pr-4 font-medium">Platform</th>
+                <th className="pb-3 pr-4 font-medium">Followers</th>
+                <th className="pb-3 pr-4 font-medium">Reach</th>
+                <th className="pb-3 pr-4 font-medium">Impressions</th>
+                <th className="pb-3 font-medium">Profile Visit</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {mainRows.map((row) => (
+                <tr key={row.platform}>
+                  <td className="py-3.5 pr-4">
+                    <PlatformCell platform={row.platform} />
+                  </td>
+                  <td className="py-3.5 pr-4">
+                    <MetricCell value={row.followers} delta={row.followersDelta} />
+                  </td>
+                  <td className="py-3.5 pr-4">
+                    <MetricCell value={row.reach} delta={row.reachDelta} />
+                  </td>
+                  <td className="py-3.5 pr-4">
+                    <MetricCell value={row.impressions} delta={row.impressionsDelta} />
+                  </td>
+                  <td className="py-3.5">
+                    <MetricCell value={row.profileVisit} delta={row.profileVisitDelta} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {threadsRow && (
+        <div className="overflow-x-auto">
+          {mainRows.length > 0 && <p className="mb-2 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Threads</p>}
+          <table className="w-full min-w-[560px] text-left">
+            <thead>
+              <tr className="border-b border-border text-sm text-muted">
+                <th className="pb-3 pr-4 font-medium">Platform</th>
+                <th className="pb-3 pr-4 font-medium">Followers</th>
+                <th className="pb-3 pr-4 font-medium">Impressions</th>
                 <th className="pb-3 pr-4 font-medium">Replies</th>
                 <th className="pb-3 font-medium">Reposts</th>
-              </>
-            )}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {rows.map((row) => {
-            const logo = PLATFORM_META[row.platform] ?? null;
-            return (
-              <tr key={row.platform}>
-                <td className="py-3.5 pr-4">
-                  <div className="flex items-center gap-2.5">
-                    <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-border bg-surface">
-                      {logo && (
-                        // eslint-disable-next-line @next/next/no-img-element -- next/image menolak SVG lokal tanpa config khusus; icon kecil ini tidak butuh optimisasi next/image.
-                        <img src={logo.src} alt={logo.label} className={cn("h-full w-full object-cover", logo.scaleUp && "scale-[1.35]")} />
-                      )}
-                    </span>
-                    <span className="truncate text-base font-semibold text-ink">{logo?.label ?? row.platform}</span>
-                  </div>
-                </td>
-                <td className="py-3.5 pr-4">
-                  <MetricCell value={row.followers} delta={row.followersDelta} />
-                </td>
-                <td className="py-3.5 pr-4">
-                  <MetricCell value={row.reach} delta={row.reachDelta} />
-                </td>
-                <td className="py-3.5 pr-4">
-                  <MetricCell value={row.impressions} delta={row.impressionsDelta} />
-                </td>
-                <td className={cn("py-3.5", hasThreads ? "pr-4" : "")}>
-                  <MetricCell value={row.profileVisit} delta={row.profileVisitDelta} />
-                </td>
-                {hasThreads && (
-                  <>
-                    <td className="py-3.5 pr-4">
-                      <MetricCell value={row.replies} delta={row.repliesDelta} />
-                    </td>
-                    <td className="py-3.5">
-                      <MetricCell value={row.reposts} delta={row.repostsDelta} />
-                    </td>
-                  </>
-                )}
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody className="divide-y divide-border">
+              <tr>
+                <td className="py-3.5 pr-4">
+                  <PlatformCell platform="threads" />
+                </td>
+                <td className="py-3.5 pr-4">
+                  <MetricCell value={threadsRow.followers} delta={threadsRow.followersDelta} />
+                </td>
+                <td className="py-3.5 pr-4">
+                  <MetricCell value={threadsRow.impressions} delta={threadsRow.impressionsDelta} />
+                </td>
+                <td className="py-3.5 pr-4">
+                  <MetricCell value={threadsRow.replies} delta={threadsRow.repliesDelta} />
+                </td>
+                <td className="py-3.5">
+                  <MetricCell value={threadsRow.reposts} delta={threadsRow.repostsDelta} />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
