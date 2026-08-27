@@ -396,7 +396,17 @@ export async function getChannelOverview(client: Client): Promise<ChannelOvervie
  * (content_targets) ATAU pernah ada snapshot performance — bukan daftar
  * hardcode, jadi fleksibel sama seperti bagian Overview lainnya.
  */
-export async function getPlatformPerformanceTable(clientId: string): Promise<PlatformPerformanceRow[]> {
+/**
+ * `range` opsional — kalau diisi, delta dihitung PERIODE vs PERIODE (snapshot
+ * TERBARU di dalam `range` dibandingkan snapshot TERBARU di periode
+ * SEBELUMNYA dengan panjang yang SAMA, mundur persis dari `range.from`).
+ * Misal `range` = 3 hari terakhir → dibandingkan 3 hari SEBELUM itu, bukan
+ * cuma baris data paling akhir vs satu baris sebelumnya seperti sebelumnya.
+ * Tanpa `range` (default): fallback ke baris TERBARU vs SATU baris sebelum
+ * itu apa adanya (perilaku lama, dipakai kalau Overview belum pilih rentang
+ * spesifik).
+ */
+export async function getPlatformPerformanceTable(clientId: string, range?: DateRange): Promise<PlatformPerformanceRow[]> {
   if (!isSupabaseConfigured) return mockPlatformPerformanceTable;
 
   const supabase = await createClient();
@@ -412,10 +422,44 @@ export async function getPlatformPerformanceTable(clientId: string): Promise<Pla
 
   const pct = (curr?: number | null, prev?: number | null) => (curr == null || prev == null || prev === 0 ? null : Math.round(((curr - prev) / prev) * 1000) / 10);
 
+  // Batas periode "current" & "previous" — cuma dihitung sekali di sini,
+  // dipakai sama untuk semua platform di bawah.
+  let currentFrom: string | null = null;
+  let currentTo: string | null = null;
+  let previousFrom: string | null = null;
+  let previousTo: string | null = null;
+  if (range) {
+    const spanDays = Math.round((new Date(`${range.to}T00:00:00Z`).getTime() - new Date(`${range.from}T00:00:00Z`).getTime()) / 86400000) + 1;
+    currentFrom = range.from;
+    currentTo = range.to;
+    const prevToDate = new Date(`${range.from}T00:00:00Z`);
+    prevToDate.setUTCDate(prevToDate.getUTCDate() - 1);
+    const prevFromDate = new Date(prevToDate);
+    prevFromDate.setUTCDate(prevFromDate.getUTCDate() - (spanDays - 1));
+    previousTo = prevToDate.toISOString().slice(0, 10);
+    previousFrom = prevFromDate.toISOString().slice(0, 10);
+  }
+
   return platforms.map((platform) => {
     const history = socialMetrics.filter((m) => m.platform === platform);
-    const latest = history.at(-1);
-    const previous = history.at(-2);
+
+    let latest: (typeof history)[number] | undefined;
+    let previous: (typeof history)[number] | undefined;
+
+    if (range && currentFrom && currentTo && previousFrom && previousTo) {
+      // Snapshot TERBARU di dalam window masing-masing. Kalau window
+      // "current" kosong (belum ada data persis di rentang itu), fallback ke
+      // snapshot terakhir SEBELUM akhir window supaya kartu tidak kosong
+      // total cuma karena rentang yang dipilih pas hari libur sync/dll.
+      const inCurrent = history.filter((m) => m.date >= currentFrom! && m.date <= currentTo!);
+      latest = inCurrent.at(-1) ?? [...history].reverse().find((m) => m.date <= currentTo!);
+      const inPrevious = history.filter((m) => m.date >= previousFrom! && m.date <= previousTo!);
+      previous = inPrevious.at(-1) ?? [...history].reverse().find((m) => m.date <= previousTo!);
+    } else {
+      // Tanpa range — perilaku lama: baris TERBARU vs SATU baris sebelum itu.
+      latest = history.at(-1);
+      previous = history.at(-2);
+    }
 
     return {
       platform,
@@ -516,13 +560,23 @@ export async function getUpcomingEvents(clientId: string): Promise<UpcomingEvent
  * pakai vocabulary yang SAMA (lihat CONTENT_TYPES_BY_PLATFORM di types.ts),
  * jadi tidak perlu tabel translasi platform→bucket lagi.
  */
-export async function getWeeklyCalendar(clientId: string): Promise<WeeklyCalendar> {
+/**
+ * `anchorDate` opsional ("YYYY-MM-DD") — kalau diisi, minggu yang
+ * ditampilkan adalah minggu (Senin-Minggu) yang MENGANDUNG tanggal itu,
+ * BUKAN selalu minggu berjalan. Dipakai supaya card ini ikut rentang yang
+ * dipilih user di date-range picker Overview (`OverviewHeader`), bukan
+ * terkunci ke "minggu ini" terus seperti sebelumnya — user sekarang bisa
+ * pilih tanggal di minggu/bulan lain dan card ini otomatis geser ke situ.
+ */
+export async function getWeeklyCalendar(clientId: string, anchorDate?: string): Promise<WeeklyCalendar> {
   if (!isSupabaseConfigured) return mockWeeklyCalendar;
 
-  const now = new Date();
-  const day = now.getUTCDay() || 7; // Senin=1 ... Minggu=7
-  const monday = new Date(now);
-  monday.setUTCDate(now.getUTCDate() - day + 1);
+  const today = new Date();
+  const todayISO = today.toISOString().slice(0, 10);
+  const anchor = anchorDate && /^\d{4}-\d{2}-\d{2}$/.test(anchorDate) ? new Date(`${anchorDate}T00:00:00Z`) : today;
+  const day = anchor.getUTCDay() || 7; // Senin=1 ... Minggu=7
+  const monday = new Date(anchor);
+  monday.setUTCDate(anchor.getUTCDate() - day + 1);
   const sunday = new Date(monday);
   sunday.setUTCDate(monday.getUTCDate() + 6);
 
@@ -544,7 +598,11 @@ export async function getWeeklyCalendar(clientId: string): Promise<WeeklyCalenda
     d.setUTCDate(monday.getUTCDate() + i);
     return { label: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"][i], date: d.getUTCDate() };
   });
-  const activeIndex = day - 1;
+  // activeIndex sekarang menandai tanggal yang lagi "dipilih" (anchor),
+  // BUKAN selalu hari ini — kalau anchor = hari ini (default, tidak ada
+  // rentang dipilih), efeknya sama persis seperti sebelumnya.
+  const anchorDay = anchor.getUTCDay() || 7;
+  const activeIndex = anchorDay - 1;
 
   // Kombinasi platform+contentType unik yang PERNAH dikonfigurasi client ini
   // (period apa saja, sama prinsipnya dengan getSocialMediaBreakdown — bulan
@@ -571,8 +629,11 @@ export async function getWeeklyCalendar(clientId: string): Promise<WeeklyCalenda
   });
 
   const total = rows.reduce((sum, r) => sum + r.counts.reduce((s: number, c) => s + (c ?? 0), 0), 0);
+  const isCurrentWeek = todayISO >= monday.toISOString().slice(0, 10) && todayISO <= sunday.toISOString().slice(0, 10);
+  const rangeFmt = (d: Date) => new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short" }).format(d);
+  const rangeLabel = `${rangeFmt(monday)} – ${rangeFmt(sunday)}`;
 
-  return { weekDays, activeIndex, rows, totalLabel: `${total} konten` };
+  return { weekDays, activeIndex, rows, totalLabel: `${total} konten`, rangeLabel, isCurrentWeek };
 }
 
 /**

@@ -471,6 +471,10 @@ export interface WeeklyCalendar {
   activeIndex: number;
   rows: WeeklyCalendarRow[];
   totalLabel: string;
+  /** Label rentang tanggal minggu yang lagi ditampilkan (mis. "24–30 Agu") — dipakai UI supaya judul card tidak hardcode "Minggu Ini" waktu user geser ke minggu lain. */
+  rangeLabel: string;
+  /** true kalau minggu yang ditampilkan adalah minggu berjalan (mengandung hari ini) — dipakai UI utk teks "Minggu Ini" vs label tanggal biasa. */
+  isCurrentWeek: boolean;
 }
 
 export interface FileEntry {

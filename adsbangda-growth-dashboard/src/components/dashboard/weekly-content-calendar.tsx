@@ -4,7 +4,7 @@ import { PLATFORM_META } from "./platform-meta";
 import type { WeeklyCalendar } from "@/lib/types";
 
 export function WeeklyContentCalendar({ calendar }: { calendar: WeeklyCalendar }) {
-  const { weekDays, activeIndex, rows, totalLabel } = calendar;
+  const { weekDays, activeIndex, rows, totalLabel, isCurrentWeek } = calendar;
 
   return (
     <div>
@@ -71,7 +71,7 @@ export function WeeklyContentCalendar({ calendar }: { calendar: WeeklyCalendar }
       <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
         <span className="flex items-center gap-1.5 text-xs text-muted">
           <Calendar className="h-3.5 w-3.5" strokeWidth={1.75} />
-          Total Minggu Ini
+          {isCurrentWeek ? "Total Minggu Ini" : "Total Minggu Ini (dipilih)"}
         </span>
         <span className="font-data text-sm font-bold text-ink">{totalLabel}</span>
       </div>

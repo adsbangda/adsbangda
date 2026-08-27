@@ -227,6 +227,8 @@ export const mockWeeklyCalendar: WeeklyCalendar = {
   ],
   activeIndex: 1,
   totalLabel: "16 konten",
+  rangeLabel: "11 – 17 Agu",
+  isCurrentWeek: true,
   rows: [
     { id: "instagram:feed", platform: "instagram", contentType: "feed", label: "Instagram Feed", counts: [1, 1, 1, 1, 1, null, null] },
     { id: "instagram:story", platform: "instagram", contentType: "story", label: "Instagram Story", counts: [5, 5, 5, 5, 5, 5, 5] },

@@ -66,10 +66,12 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
   // ada hardcode per-client.
   //
   // `period`/`range` (dari date-range picker di OverviewHeader) mempengaruhi
-  // Monthly Delivery & "What AdsBangda Did" (dua-duanya konsep "terjadi pada
-  // tanggal tertentu") — Quick Stats, Meta Ads/Website/Platform Performance,
-  // dan Content Calendar tetap nunjukin snapshot/data TERBARU apa pun yang
-  // dipilih, karena itu snapshot mingguan, bukan aktivitas per-tanggal.
+  // Monthly Delivery, "What AdsBangda Did", Platform Performance (delta-nya
+  // dihitung periode vs periode sepanjang `range`, lihat getPlatformPerformanceTable),
+  // dan minggu yang ditampilkan di Kalender Konten (anchor ke `range.from`,
+  // lihat getWeeklyCalendar). Quick Stats & Meta Ads/Website Performance
+  // TETAP nunjukin snapshot/data TERBARU apa pun yang dipilih (belum masuk
+  // scope date-range ini).
   const [delivery, quickStats, attentionItems, activity, channelRows, upcomingEvents, weeklyCalendar, socialBreakdown, platformPerformance, performanceSummary] = await Promise.all([
     getMonthlyDelivery(client.id, period, range),
     getQuickStats(client.id),
@@ -77,9 +79,9 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
     getRecentActivity(client.id, period, range),
     getChannelOverview(client),
     getUpcomingEvents(client.id),
-    getWeeklyCalendar(client.id),
+    getWeeklyCalendar(client.id, range?.from),
     client.socialMediaActive ? getSocialMediaBreakdown(client.id, period) : Promise.resolve([]),
-    client.socialMediaActive ? getPlatformPerformanceTable(client.id) : Promise.resolve([]),
+    client.socialMediaActive ? getPlatformPerformanceTable(client.id, range) : Promise.resolve([]),
     client.metaAdsActive || client.websiteActive || client.socialMediaActive ? getPerformanceSummary(client.id) : Promise.resolve(null),
   ]);
 
@@ -197,7 +199,10 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
                 penuh, bukan dipasangkan setengah-setengah), karena "What
                 AdsBangda Did" pindah ke kolom kanan (lihat di bawah). */}
             <Card>
-              <SectionHeading title="Kalender Konten (Minggu Ini)" action={<a href="/content-calendar" className="font-data text-xs font-semibold text-accent hover:underline">Lihat kalender</a>} />
+              <SectionHeading
+                title={weeklyCalendar.isCurrentWeek ? "Kalender Konten (Minggu Ini)" : `Kalender Konten (${weeklyCalendar.rangeLabel})`}
+                action={<a href="/content-calendar" className="font-data text-xs font-semibold text-accent hover:underline">Lihat kalender</a>}
+              />
               <WeeklyContentCalendar calendar={weeklyCalendar} />
             </Card>
           </div>

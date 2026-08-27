@@ -85,6 +85,17 @@ export function OverviewHeader({ clientName, periodLabel, currentPeriod, dateFro
     }
   }
 
+  function applyPreset(days: number) {
+    const toDate = new Date();
+    const fromDate = new Date(toDate);
+    fromDate.setDate(toDate.getDate() - (days - 1));
+    const from = toISO(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+    const to = toISO(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+    const period = from.slice(0, 7);
+    router.push(`/?period=${period}&from=${from}&to=${to}`);
+    setPeriodOpen(false);
+  }
+
   function applySelection() {
     if (!selStart) return;
     const from = selStart;
@@ -141,10 +152,12 @@ export function OverviewHeader({ clientName, periodLabel, currentPeriod, dateFro
 
       <div className="flex items-center gap-3">
         {/* Kalender — klik 1 tanggal buat lihat hari itu saja, atau klik 2
-            tanggal buat lihat rentangnya. Cuma memengaruhi Monthly Delivery
-            & "What AdsBangda Did" (konsep "terjadi pada tanggal tertentu")
-            — Meta Ads/Website/Platform Performance tetap nunjukin snapshot
-            performance TERBARU apa pun yang dipilih di sini. */}
+            tanggal buat lihat rentangnya. Mempengaruhi Monthly Delivery,
+            "What AdsBangda Did", Platform Performance (delta dihitung
+            periode vs periode sepanjang rentang ini), dan minggu yang
+            ditampilkan di Kalender Konten. Meta Ads/Website Performance
+            tetap nunjukin snapshot performance TERBARU apa pun yang
+            dipilih di sini (belum masuk scope date-range). */}
         <div className="relative" ref={periodRef}>
           <button
             type="button"
@@ -158,6 +171,24 @@ export function OverviewHeader({ clientName, periodLabel, currentPeriod, dateFro
 
           {periodOpen && (
             <div className="absolute right-0 top-full z-30 mt-2 w-72 rounded-[var(--radius-md)] border border-border bg-surface p-3.5 shadow-[var(--shadow-md)]">
+              {/* Preset cepat — langsung "Terapkan" begitu diklik (tidak perlu klik 2 tanggal manual di kalender di bawah). Custom range tetap bisa lewat kalender seperti biasa. */}
+              <div className="mb-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => applyPreset(7)}
+                  className="flex-1 rounded-[var(--radius-sm)] border border-border px-2 py-1.5 text-xs font-medium text-ink transition-colors hover:border-ink hover:bg-black/[0.03]"
+                >
+                  7 Hari Terakhir
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset(30)}
+                  className="flex-1 rounded-[var(--radius-sm)] border border-border px-2 py-1.5 text-xs font-medium text-ink transition-colors hover:border-ink hover:bg-black/[0.03]"
+                >
+                  30 Hari Terakhir
+                </button>
+              </div>
+
               <div className="mb-3 flex items-center justify-between">
                 <button type="button" onClick={() => changeMonth(-1)} aria-label="Bulan sebelumnya" className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition-colors hover:bg-black/[0.05] hover:text-ink">
                   <ChevronLeft className="h-4 w-4" strokeWidth={2} />
