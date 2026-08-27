@@ -1488,6 +1488,7 @@ export async function adminCreatePostPerformance(clientId: string, input: Omit<P
       saves: input.saves ?? null,
       views: input.views ?? null,
       permalink: input.permalink ?? null,
+      thumbnail_url: input.thumbnailUrl ?? null,
     })
     .select()
     .single();
@@ -1515,6 +1516,7 @@ export async function adminUpdatePostPerformance(id: string, input: Partial<Omit
   if (input.saves !== undefined) payload.saves = input.saves;
   if (input.views !== undefined) payload.views = input.views;
   if (input.permalink !== undefined) payload.permalink = input.permalink;
+  if (input.thumbnailUrl !== undefined) payload.thumbnail_url = input.thumbnailUrl;
   if (Object.keys(payload).length === 0) return;
   const { error } = await supabase!.from("post_performance").update(payload).eq("id", id);
   if (error) throw new Error(error.message);

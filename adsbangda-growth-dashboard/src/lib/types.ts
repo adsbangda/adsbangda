@@ -299,6 +299,8 @@ export interface PostPerformance {
   saves?: number;
   views?: number; // plays/views — reels, video, story
   permalink?: string | null;
+  /** URL gambar/thumbnail konten — diisi otomatis dari sync IG/FB (Threads API tidak expose ini), atau manual lewat form admin. */
+  thumbnailUrl?: string | null;
   /** 'manual' (input admin, DEFAULT) vs 'meta' (diisi otomatis dari sync Instagram/Facebook/Threads). */
   source?: "manual" | "meta";
   /** ID media asli dari Meta — dipakai sync buat tahu postingan ini sudah pernah disync (update, bukan duplikat). Null untuk postingan manual. */

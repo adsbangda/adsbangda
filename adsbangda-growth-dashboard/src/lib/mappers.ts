@@ -146,6 +146,7 @@ export function mapPostPerformance(row: Record<string, unknown>): PostPerformanc
     saves: (row.saves as number | null) ?? undefined,
     views: (row.views as number | null) ?? undefined,
     permalink: (row.permalink as string | null) ?? null,
+    thumbnailUrl: (row.thumbnail_url as string | null) ?? null,
     source: (row.source as PostPerformance["source"]) ?? "manual",
     externalPostId: (row.external_post_id as string | null) ?? null,
   };

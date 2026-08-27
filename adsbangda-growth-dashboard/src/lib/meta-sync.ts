@@ -114,6 +114,7 @@ async function upsertPost(
     saves?: number | null;
     views?: number | null;
     permalink?: string | null;
+    thumbnailUrl?: string | null;
   }
 ) {
   const { data: existing } = await admin
@@ -138,6 +139,7 @@ async function upsertPost(
     saves: values.saves ?? null,
     views: values.views ?? null,
     permalink: values.permalink ?? null,
+    thumbnail_url: values.thumbnailUrl ?? null,
   };
 
   const { error } = existing
@@ -203,30 +205,61 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
     const account = await fetchJSON(`https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}?fields=followers_count&access_token=${accessToken}`);
     const followers = (account.followers_count as number | undefined) ?? null;
 
-    // Reach & Profile Visits — Insights API, harian, `days` hari terakhir.
+    // Reach — Insights API, breakdown harian, `days` hari terakhir. Dipisah
+    // try/catch sendiri dari Profile Visits di bawah supaya salah satu gagal
+    // tidak ikut menggagalkan yang lain.
     const since = Math.floor(new Date(today.getTime() - days * 86400000).getTime() / 1000);
     const until = Math.floor(today.getTime() / 1000);
-    const insights = await fetchJSON(
-      `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/insights?metric=reach,profile_views&period=day&since=${since}&until=${until}&access_token=${accessToken}`
-    );
-    const series = (insights.data as { name: string; values: { end_time: string; value: number }[] }[] | undefined) ?? [];
-    const reachByDate = new Map((series.find((s) => s.name === "reach")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-    const visitsByDate = new Map((series.find((s) => s.name === "profile_views")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-    const allDates = new Set([...reachByDate.keys(), ...visitsByDate.keys()]);
+    let reachByDate = new Map<string, number>();
+    try {
+      const reachInsights = await fetchJSON(
+        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/insights?metric=reach&period=day&since=${since}&until=${until}&access_token=${accessToken}`
+      );
+      const series = (reachInsights.data as { name: string; values?: { end_time: string; value: number }[] }[] | undefined) ?? [];
+      reachByDate = new Map((series.find((s) => s.name === "reach")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
+    } catch {
+      // Diamkan — reach gagal tidak menggagalkan followers/profile_views.
+    }
+
+    // Profile Visits — SEJAK UPDATE GRAPH API META (2024+), "profile_views"
+    // WAJIB pakai parameter metric_type=total_value dan balik SATU angka
+    // total untuk seluruh periode since-until (BUKAN breakdown per-hari lagi
+    // seperti sebelumnya, beda dari "reach" di atas yang masih time_series
+    // harian). Kalau query lama (tanpa metric_type=total_value) tetap
+    // dipakai, Meta akan menolak dengan error 400 "(#100) The following
+    // metrics (profile_views) should be specified with parameter
+    // metric_type=total_value".
+    let totalProfileViews: number | null = null;
+    try {
+      const visitsInsights = await fetchJSON(
+        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/insights?metric=profile_views&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${accessToken}`
+      );
+      const series = (visitsInsights.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
+      totalProfileViews = series.find((s) => s.name === "profile_views")?.total_value?.value ?? null;
+    } catch {
+      // Diamkan — profile_views gagal tidak menggagalkan reach/followers.
+    }
+
+    const allDates = new Set([...reachByDate.keys()]);
     if (allDates.size === 0 && followers != null) {
-      // Insights (reach/profile_views) gagal total tapi followers berhasil —
-      // tetap simpan 1 baris (kemarin, BUKAN hari ini — data harian provider
-      // biasanya baru final di hari sebelumnya) supaya followers kelihatan
-      // di "Latest Snapshot", daripada baris "hari ini" kosong menutupi
-      // baris lama yang justru lengkap datanya.
+      // Insights (reach) gagal total tapi followers berhasil — tetap simpan
+      // 1 baris (kemarin, BUKAN hari ini — data harian provider biasanya
+      // baru final di hari sebelumnya) supaya followers kelihatan di
+      // "Latest Snapshot", daripada baris "hari ini" kosong menutupi baris
+      // lama yang justru lengkap datanya.
       allDates.add(isoDate(new Date(today.getTime() - 86400000)));
     }
+    // profile_views sekarang cuma SATU angka total utk seluruh periode
+    // `days` hari (bukan breakdown per-hari) — taruh di baris TANGGAL
+    // TERBARU saja supaya tidak dobel-hitung kalau baris lain juga diisi
+    // angka yang sama.
+    const latestDate = Array.from(allDates).sort().at(-1);
 
     for (const date of allDates) {
       await upsertSocialMetric(admin, clientId, "instagram", date, {
         followers, // sama tiap hari (snapshot lifetime, bukan harian) — cukup taruh di semua baris supaya "latest" selalu punya angka.
         reach: reachByDate.get(date) ?? null,
-        visitors: visitsByDate.get(date) ?? null,
+        visitors: date === latestDate ? totalProfileViews : null,
       });
       metricsSynced++;
     }
@@ -235,7 +268,7 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
     // SUDAH disync di atas tetap tersimpan, tidak ikut ke-reset jadi gagal.
     try {
       const media = await fetchJSON(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/media?fields=id,caption,media_type,permalink,timestamp,like_count,comments_count&limit=25&access_token=${accessToken}`
+        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&limit=25&access_token=${accessToken}`
       );
       const items = (media.data as Record<string, unknown>[] | undefined) ?? [];
 
@@ -259,6 +292,11 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
         }
 
         const mediaType = String(item.media_type ?? "").toLowerCase();
+        // Video/Reels: media_url itu file video (gak bisa dipajang <img>),
+        // jadi pakai thumbnail_url. Image/Carousel: media_url langsung
+        // gambar, aman dipakai. Fallback ke media_url kalau thumbnail_url
+        // gak ada (mis. media_type IMAGE memang gak punya thumbnail_url).
+        const thumbnailUrl = (item.thumbnail_url as string | undefined) ?? (item.media_url as string | undefined) ?? null;
         await upsertPost(admin, clientId, "instagram", mediaId, {
           type: mediaType === "video" || mediaType === "reels" ? "reels" : mediaType === "carousel_album" ? "carousel" : "feed",
           title: String(item.caption ?? "").slice(0, 120) || "(tanpa caption)",
@@ -268,6 +306,7 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
           saves,
           views,
           permalink: (item.permalink as string | undefined) ?? null,
+          thumbnailUrl,
         });
         postsSynced++;
       }
@@ -331,7 +370,7 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
 
     try {
       const posts = await fetchJSON(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/posts?fields=id,message,created_time,permalink_url,likes.summary(true),comments.summary(true),shares&limit=25&access_token=${accessToken}`
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/posts?fields=id,message,created_time,permalink_url,full_picture,likes.summary(true),comments.summary(true),shares&limit=25&access_token=${accessToken}`
       );
       const items = (posts.data as Record<string, unknown>[] | undefined) ?? [];
       for (const item of items) {
@@ -352,6 +391,7 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
           comments: comments ?? null,
           shares: shares ?? null,
           permalink: (item.permalink_url as string | undefined) ?? null,
+          thumbnailUrl: (item.full_picture as string | undefined) ?? null,
         });
         postsSynced++;
       }

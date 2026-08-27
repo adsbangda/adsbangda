@@ -268,6 +268,7 @@ export default async function AdminClientSocialMediaPage({
       comments: Number(formData.get("comments") ?? 0) || undefined,
       shares: Number(formData.get("shares") ?? 0) || undefined,
       saves: Number(formData.get("saves") ?? 0) || undefined,
+      thumbnailUrl: String(formData.get("thumbnailUrl") ?? "").trim() || undefined,
     });
     revalidatePath(path);
   }
@@ -283,6 +284,7 @@ export default async function AdminClientSocialMediaPage({
       comments: Number(formData.get("comments") ?? 0) || undefined,
       shares: Number(formData.get("shares") ?? 0) || undefined,
       saves: Number(formData.get("saves") ?? 0) || undefined,
+      thumbnailUrl: String(formData.get("thumbnailUrl") ?? "").trim() || undefined,
     });
     revalidatePath(path);
     redirect(`${base}?tab=performance&platform=${activePlatform}`);
@@ -990,6 +992,7 @@ async function PerformancePanel({
                     <FormattedNumberInput name="comments" defaultValue={p.comments} placeholder="Comments" className={inputClass} />
                     <FormattedNumberInput name="shares" defaultValue={p.shares} placeholder="Shares" className={inputClass} />
                     <FormattedNumberInput name="saves" defaultValue={p.saves} placeholder="Saves" className={inputClass} />
+                    <input name="thumbnailUrl" defaultValue={p.thumbnailUrl ?? ""} placeholder="URL Gambar (opsional)" className={`${inputClass} sm:col-span-4`} />
                     <div className="flex gap-2 sm:col-span-4">
                       <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
                         Save
@@ -1046,6 +1049,7 @@ async function PerformancePanel({
           <FormattedNumberInput name="comments" placeholder="Comments" className={inputClass} />
           <FormattedNumberInput name="shares" placeholder="Shares" className={inputClass} />
           <FormattedNumberInput name="saves" placeholder="Saves" className={inputClass} />
+          <input name="thumbnailUrl" placeholder="URL Gambar (opsional)" className={`${inputClass} sm:col-span-4`} />
           <button type="submit" className={buttonVariants({ variant: "primary", size: "sm", className: "sm:col-span-4 justify-center" })}>
             <Plus className="h-3.5 w-3.5" /> Save Post
           </button>

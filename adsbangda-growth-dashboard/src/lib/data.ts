@@ -681,7 +681,7 @@ export async function getContentCalendar(clientId: string): Promise<ContentItem[
     .from("content_items")
     .select("*")
     .eq("client_id", clientId)
-    .order("planned_date", { ascending: true });
+    .order("planned_date", { ascending: false }); // Terbaru dulu di atas — biar client langsung lihat aktivitas paling baru (termasuk yang auto-sync) tanpa scroll jauh.
 
   return (data ?? []).map(mapContentItem);
 }
