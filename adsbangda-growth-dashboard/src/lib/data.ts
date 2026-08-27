@@ -406,7 +406,35 @@ export async function getChannelOverview(client: Client): Promise<ChannelOvervie
  * itu apa adanya (perilaku lama, dipakai kalau Overview belum pilih rentang
  * spesifik).
  */
-export async function getPlatformPerformanceTable(clientId: string, range?: DateRange): Promise<PlatformPerformanceRow[]> {
+/**
+ * PENTING soal semantik metric di sini — DUA jenis metric diperlakukan BEDA:
+ *
+ * 1. "Traffic" (reach, impressions, profileVisit) — nilainya DIJUMLAHKAN
+ *    (SUM) sepanjang periode yang dipilih. Baris di `performance_metrics`
+ *    memang satu baris per HARI (hasil sync harian), jadi "reach bulan ini"
+ *    yang benar adalah total dari SEMUA baris harian dalam bulan itu, BUKAN
+ *    cuma angka di baris hari terakhir — sebelumnya kode ini salah ambil
+ *    cuma snapshot 1 hari terakhir, makanya kelihatan kecil tidak masuk
+ *    akal (mis. "reach sebulan cuma 403" — itu reach SATU HARI, bukan
+ *    sebulan). Catatan jujur: menjumlah reach harian BUKAN sama persis
+ *    dengan "unique reach" sebulan (orang yang sama bisa ke-reach di
+ *    beberapa hari, jadi bisa ke-hitung dobel) — tapi ini pendekatan umum
+ *    dipakai kalau API tidak sediakan angka unique reach per-rentang
+ *    langsung, dan jauh lebih masuk akal dibanding snapshot 1 hari.
+ *
+ * 2. "Point-in-time" (followers, engagementRate, replies, reposts) — nilai
+ *    ini TIDAK dijumlah (followers 10 hari dijumlah jadi tidak ada artinya)
+ *    — dipakai snapshot TERBARU di dalam periode (atau snapshot terakhir
+ *    SEBELUM periode itu kalau periode itu sendiri kosong datanya).
+ *
+ * `range` opsional — kalau diisi, dipakai sebagai periode "current" persis
+ * apa adanya, dan periode "previous" dihitung mundur dengan panjang yang
+ * SAMA dari `range.from`. Tanpa `range`, `period` ("YYYY-MM", default bulan
+ * berjalan) dipakai sebagai batas SATU BULAN PENUH, dibandingkan ke SATU
+ * BULAN sebelumnya — jadi defaultnya SEKARANG selalu agregat bulanan, bukan
+ * snapshot harian seperti sebelumnya.
+ */
+export async function getPlatformPerformanceTable(clientId: string, range?: DateRange, period: string = currentPeriod()): Promise<PlatformPerformanceRow[]> {
   if (!isSupabaseConfigured) return mockPlatformPerformanceTable;
 
   const supabase = await createClient();
@@ -421,62 +449,66 @@ export async function getPlatformPerformanceTable(clientId: string, range?: Date
   const platforms = Array.from(new Set([...everConfigured, ...platformsWithMetrics]));
 
   const pct = (curr?: number | null, prev?: number | null) => (curr == null || prev == null || prev === 0 ? null : Math.round(((curr - prev) / prev) * 1000) / 10);
+  const sumOrNull = (values: (number | null | undefined)[]) => {
+    const nums = values.filter((v): v is number => v != null);
+    return nums.length > 0 ? nums.reduce((a, b) => a + b, 0) : null;
+  };
 
-  // Batas periode "current" & "previous" — cuma dihitung sekali di sini,
-  // dipakai sama untuk semua platform di bawah.
-  let currentFrom: string | null = null;
-  let currentTo: string | null = null;
-  let previousFrom: string | null = null;
-  let previousTo: string | null = null;
+  // Batas periode "current" & "previous" — SELALU dihitung (bukan cuma
+  // kalau `range` diisi), pakai `range` kalau ada, else batas satu bulan
+  // penuh dari `period`.
+  let currentFrom: string;
+  let currentTo: string;
   if (range) {
-    const spanDays = Math.round((new Date(`${range.to}T00:00:00Z`).getTime() - new Date(`${range.from}T00:00:00Z`).getTime()) / 86400000) + 1;
     currentFrom = range.from;
     currentTo = range.to;
-    const prevToDate = new Date(`${range.from}T00:00:00Z`);
-    prevToDate.setUTCDate(prevToDate.getUTCDate() - 1);
-    const prevFromDate = new Date(prevToDate);
-    prevFromDate.setUTCDate(prevFromDate.getUTCDate() - (spanDays - 1));
-    previousTo = prevToDate.toISOString().slice(0, 10);
-    previousFrom = prevFromDate.toISOString().slice(0, 10);
+  } else {
+    const [y, m] = period.split("-").map(Number);
+    currentFrom = `${y}-${String(m).padStart(2, "0")}-01`;
+    currentTo = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10); // hari terakhir bulan itu.
   }
+  const spanDays = Math.round((new Date(`${currentTo}T00:00:00Z`).getTime() - new Date(`${currentFrom}T00:00:00Z`).getTime()) / 86400000) + 1;
+  const prevToDate = new Date(`${currentFrom}T00:00:00Z`);
+  prevToDate.setUTCDate(prevToDate.getUTCDate() - 1);
+  const prevFromDate = new Date(prevToDate);
+  prevFromDate.setUTCDate(prevFromDate.getUTCDate() - (spanDays - 1));
+  const previousTo = prevToDate.toISOString().slice(0, 10);
+  const previousFrom = prevFromDate.toISOString().slice(0, 10);
 
   return platforms.map((platform) => {
     const history = socialMetrics.filter((m) => m.platform === platform);
+    const inCurrent = history.filter((m) => m.date >= currentFrom && m.date <= currentTo);
+    const inPrevious = history.filter((m) => m.date >= previousFrom && m.date <= previousTo);
 
-    let latest: (typeof history)[number] | undefined;
-    let previous: (typeof history)[number] | undefined;
+    // Point-in-time: snapshot TERBARU di dalam window, fallback ke snapshot
+    // terakhir SEBELUM akhir window kalau window itu sendiri kosong.
+    const latestPoint = inCurrent.at(-1) ?? [...history].reverse().find((m) => m.date <= currentTo);
+    const previousPoint = inPrevious.at(-1) ?? [...history].reverse().find((m) => m.date <= previousTo);
 
-    if (range && currentFrom && currentTo && previousFrom && previousTo) {
-      // Snapshot TERBARU di dalam window masing-masing. Kalau window
-      // "current" kosong (belum ada data persis di rentang itu), fallback ke
-      // snapshot terakhir SEBELUM akhir window supaya kartu tidak kosong
-      // total cuma karena rentang yang dipilih pas hari libur sync/dll.
-      const inCurrent = history.filter((m) => m.date >= currentFrom! && m.date <= currentTo!);
-      latest = inCurrent.at(-1) ?? [...history].reverse().find((m) => m.date <= currentTo!);
-      const inPrevious = history.filter((m) => m.date >= previousFrom! && m.date <= previousTo!);
-      previous = inPrevious.at(-1) ?? [...history].reverse().find((m) => m.date <= previousTo!);
-    } else {
-      // Tanpa range — perilaku lama: baris TERBARU vs SATU baris sebelum itu.
-      latest = history.at(-1);
-      previous = history.at(-2);
-    }
+    // Traffic: DIJUMLAH sepanjang window (lihat komentar besar di atas fungsi ini).
+    const currentReach = sumOrNull(inCurrent.map((m) => m.reach));
+    const previousReach = sumOrNull(inPrevious.map((m) => m.reach));
+    const currentImpressions = sumOrNull(inCurrent.map((m) => m.impressions));
+    const previousImpressions = sumOrNull(inPrevious.map((m) => m.impressions));
+    const currentVisitors = sumOrNull(inCurrent.map((m) => m.visitors));
+    const previousVisitors = sumOrNull(inPrevious.map((m) => m.visitors));
 
     return {
       platform,
-      followers: latest?.followers,
-      followersDelta: pct(latest?.followers, previous?.followers),
-      reach: latest?.reach,
-      reachDelta: pct(latest?.reach, previous?.reach),
-      impressions: latest?.impressions,
-      impressionsDelta: pct(latest?.impressions, previous?.impressions),
-      profileVisit: latest?.visitors,
-      profileVisitDelta: pct(latest?.visitors, previous?.visitors),
-      engagementRate: latest?.engagementRate,
-      engagementRateDelta: pct(latest?.engagementRate, previous?.engagementRate),
-      replies: latest?.replies,
-      repliesDelta: pct(latest?.replies, previous?.replies),
-      reposts: latest?.reposts,
-      repostsDelta: pct(latest?.reposts, previous?.reposts),
+      followers: latestPoint?.followers,
+      followersDelta: pct(latestPoint?.followers, previousPoint?.followers),
+      reach: currentReach ?? undefined,
+      reachDelta: pct(currentReach, previousReach),
+      impressions: currentImpressions ?? undefined,
+      impressionsDelta: pct(currentImpressions, previousImpressions),
+      profileVisit: currentVisitors ?? undefined,
+      profileVisitDelta: pct(currentVisitors, previousVisitors),
+      engagementRate: latestPoint?.engagementRate,
+      engagementRateDelta: pct(latestPoint?.engagementRate, previousPoint?.engagementRate),
+      replies: latestPoint?.replies,
+      repliesDelta: pct(latestPoint?.replies, previousPoint?.replies),
+      reposts: latestPoint?.reposts,
+      repostsDelta: pct(latestPoint?.reposts, previousPoint?.reposts),
     };
   });
 }

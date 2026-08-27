@@ -81,7 +81,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
     getUpcomingEvents(client.id),
     getWeeklyCalendar(client.id, range?.from),
     client.socialMediaActive ? getSocialMediaBreakdown(client.id, period) : Promise.resolve([]),
-    client.socialMediaActive ? getPlatformPerformanceTable(client.id, range) : Promise.resolve([]),
+    client.socialMediaActive ? getPlatformPerformanceTable(client.id, range, period) : Promise.resolve([]),
     client.metaAdsActive || client.websiteActive || client.socialMediaActive ? getPerformanceSummary(client.id) : Promise.resolve(null),
   ]);
 

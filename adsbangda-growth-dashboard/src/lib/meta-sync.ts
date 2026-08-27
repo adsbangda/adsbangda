@@ -302,7 +302,7 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
     let totalPostEngagement = 0; // sum likes+comments+saves dari post yang berhasil disync — dipakai hitung Engagement Rate di bawah.
     try {
       const items = await fetchPaginated(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&limit=50&access_token=${accessToken}`,
+        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/media?fields=id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&limit=50&access_token=${accessToken}`,
         MAX_POSTS
       );
 
@@ -332,6 +332,30 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
         const comments = (item.comments_count as number | undefined) ?? 0;
 
         const mediaType = String(item.media_type ?? "").toLowerCase();
+        // BUG SEBELUMNYA: klasifikasi feed/reels/carousel cuma nebak dari
+        // `media_type`, padahal Graph API TIDAK PERNAH balikin "REELS"
+        // sebagai media_type (nilainya cuma IMAGE/VIDEO/CAROUSEL_ALBUM) —
+        // jadi SEMUA video (baik Reels asli maupun video biasa yang
+        // ditujukan buat Feed) ke-klasifikasi "reels" semua, bikin angka
+        // Feed di Content Delivery/Kalender kelihatan jauh lebih sedikit
+        // dari upload asli. Field yang BENAR buat bedain ini adalah
+        // `media_product_type` (FEED/REELS/STORY/AD) — dipakai duluan di
+        // sini, media_type cuma fallback kalau field itu kosong (akun lama/
+        // API versi lama yang belum balikin field ini).
+        const productType = String(item.media_product_type ?? "").toLowerCase();
+        const contentType =
+          productType === "reels"
+            ? "reels"
+            : productType === "feed"
+              ? mediaType === "carousel_album"
+                ? "carousel"
+                : "feed"
+              : // Fallback lama kalau media_product_type kosong.
+                mediaType === "video" || mediaType === "reels"
+                ? "reels"
+                : mediaType === "carousel_album"
+                  ? "carousel"
+                  : "feed";
         // Video/Reels: media_url itu file video (gak bisa dipajang <img>),
         // jadi pakai thumbnail_url. Image/Carousel: media_url langsung
         // gambar, aman dipakai. Fallback ke media_url kalau thumbnail_url
@@ -347,7 +371,7 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
         // post" padahal upload aslinya jauh lebih banyak.
         try {
           await upsertPost(admin, clientId, "instagram", mediaId, {
-            type: mediaType === "video" || mediaType === "reels" ? "reels" : mediaType === "carousel_album" ? "carousel" : "feed",
+            type: contentType,
             title: String(item.caption ?? "").slice(0, 120) || "(tanpa caption)",
             postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
             likes: (item.like_count as number | undefined) ?? null,
