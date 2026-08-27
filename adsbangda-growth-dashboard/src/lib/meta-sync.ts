@@ -563,11 +563,15 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       itemsFailed++;
     }
 
-    // reach & views sekarang cuma SATU angka total utk seluruh periode
-    // `days` hari (bukan breakdown per-hari lagi, beda dari sebelumnya) —
-    // taruh di baris KEMARIN saja (bukan "hari ini" — data harian provider
-    // biasanya baru final di hari sebelumnya), sama pola dengan Instagram.
-    const fbDate = isoDate(new Date(today.getTime() - 86400000));
+    // Ditulis ke HARI INI (bukan "kemarin" seperti sebelumnya) — followers/
+    // reach/views semuanya sekarang snapshot TOTAL (bukan breakdown harian
+    // lagi), jadi tidak ada lagi "hari mana yang datanya udah final" buat
+    // dijadiin acuan seperti Instagram. Kalau ditulis ke "kemarin" padahal
+    // sudah ada baris "hari ini" dari sync SEBELUMNYA (yang masih salah),
+    // baris "hari ini" yang lebih baru itu tetap kepilih sebagai "latest"
+    // walau datanya sudah usang — nulis ke hari ini memastikan sync
+    // TERBARU selalu jadi baris TERBARU juga.
+    const fbDate = isoDate(today);
     if (followers != null || totalReach != null || totalViews != null) {
       await upsertSocialMetric(admin, clientId, "facebook", fbDate, {
         followers,
