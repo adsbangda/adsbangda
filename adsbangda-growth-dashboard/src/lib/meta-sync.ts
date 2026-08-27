@@ -660,6 +660,19 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
         engagementRate,
       });
       metricsSynced++;
+      // upsertSocialMetric() SENGAJA cuma nulis field yang dikirim (biar
+      // sync yang gagal sebagian gak nge-null-in data lain yang masih
+      // valid) — TAPI itu artinya kolom `impressions` yang DULU pernah
+      // keisi angka SALAH (dari sebelum field ini dipindah ke Profile
+      // Visits, dan dari sebelum ketahuan node-nya ketuker ke Instagram)
+      // akan TETAP nyangkut di baris-baris LAMA. Karena "Bulan Ini" itu
+      // MENJUMLAH impressions dari SEMUA baris bulan ini (lihat
+      // getPlatformPerformanceTable), satu baris lama yang basi cukup buat
+      // bikin totalnya salah terus. Dibersihkan SEMUA baris Facebook
+      // client ini (bukan cuma hari ini) — aman, karena sampai ketemu nama
+      // metric Impressions yang valid, field ini memang seharusnya kosong
+      // semua, bukan berisi angka yang salah maknanya.
+      await admin.from("performance_metrics").update({ impressions: null }).eq("client_id", clientId).eq("channel", "social").eq("platform", "facebook").eq("source", "meta");
     }
 
     return { clientId, platform: "facebook", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError, contentItemsFailed, firstContentItemError };
