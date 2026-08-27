@@ -98,6 +98,25 @@ async function upsertSocialMetric(
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Ambil beberapa halaman dari sebuah edge Graph API (mengikuti `paging.next`)
+ * sampai `maxItems` tercapai atau halaman benar-benar habis. Dipakai supaya
+ * Post Ranking tidak cuma kebatasi ke N post PALING BARU dalam satu page —
+ * sebelumnya `limit=25` di URL awal = hard cap, upload lama di luar 25
+ * terbaru tidak akan pernah ke-tarik walau di-sync berkali-kali.
+ */
+async function fetchPaginated(firstUrl: string, maxItems: number): Promise<Record<string, unknown>[]> {
+  const items: Record<string, unknown>[] = [];
+  let url: string | null = firstUrl;
+  while (url && items.length < maxItems) {
+    const page = await fetchJSON(url);
+    const data = (page.data as Record<string, unknown>[] | undefined) ?? [];
+    items.push(...data);
+    url = ((page.paging as Record<string, unknown> | undefined)?.next as string | undefined) ?? null;
+  }
+  return items.slice(0, maxItems);
+}
+
 /** Upsert satu postingan ke post_performance (source='meta') — cocok via (client_id, platform, external_post_id) supaya re-sync UPDATE, bukan duplikat. */
 async function upsertPost(
   admin: ReturnType<typeof createAdminClient>,
@@ -240,6 +259,24 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
       // Diamkan — profile_views gagal tidak menggagalkan reach/followers.
     }
 
+    // Views (account-level) — PENGGANTI RESMI "impressions", yang di-
+    // deprecate TOTAL oleh Meta per 21 April 2025 (request metric lama itu
+    // sekarang balik error, bukan angka, untuk media yang dibuat setelah 2
+    // Juli 2024). Sama seperti profile_views, "views" ada di batch metric
+    // yang butuh metric_type=total_value (satu angka total per periode,
+    // bukan breakdown harian). Ditulis ke kolom `impressions` yang sudah
+    // ada di skema — cuma sumber datanya yang berubah, bukan kolomnya.
+    let totalViews: number | null = null;
+    try {
+      const viewsInsights = await fetchJSON(
+        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/insights?metric=views&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${accessToken}`
+      );
+      const series = (viewsInsights.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
+      totalViews = series.find((s) => s.name === "views")?.total_value?.value ?? null;
+    } catch {
+      // Diamkan — views gagal tidak menggagalkan metric lain.
+    }
+
     const allDates = new Set([...reachByDate.keys()]);
     if (allDates.size === 0 && followers != null) {
       // Insights (reach) gagal total tapi followers berhasil — tetap simpan
@@ -249,47 +286,51 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
       // lama yang justru lengkap datanya.
       allDates.add(isoDate(new Date(today.getTime() - 86400000)));
     }
-    // profile_views sekarang cuma SATU angka total utk seluruh periode
-    // `days` hari (bukan breakdown per-hari) — taruh di baris TANGGAL
-    // TERBARU saja supaya tidak dobel-hitung kalau baris lain juga diisi
-    // angka yang sama.
+    // profile_views & views sekarang cuma SATU angka total utk seluruh
+    // periode `days` hari (bukan breakdown per-hari) — taruh di baris
+    // TANGGAL TERBARU saja supaya tidak dobel-hitung kalau baris lain juga
+    // diisi angka yang sama.
     const latestDate = Array.from(allDates).sort().at(-1);
 
-    for (const date of allDates) {
-      await upsertSocialMetric(admin, clientId, "instagram", date, {
-        followers, // sama tiap hari (snapshot lifetime, bukan harian) — cukup taruh di semua baris supaya "latest" selalu punya angka.
-        reach: reachByDate.get(date) ?? null,
-        visitors: date === latestDate ? totalProfileViews : null,
-      });
-      metricsSynced++;
-    }
-    // Post Ranking — dibungkus try/catch (konsisten dengan Threads di
-    // bawah): kalau list media gagal, metrics followers/reach/visitors yang
-    // SUDAH disync di atas tetap tersimpan, tidak ikut ke-reset jadi gagal.
+    // Post Ranking — Feed/Reels/Carousel. Limit dinaikkan 25 -> 50 lewat
+    // fetchPaginated (mengikuti paging.next) supaya upload lama yang lebih
+    // dari 25 post ke belakang ikut ke-tarik, bukan cuma yang paling baru.
+    // Dibungkus try/catch (konsisten dengan Threads): kalau list media
+    // gagal total, metrics followers/reach/visitors/views yang SUDAH
+    // disync di atas tetap tersimpan, tidak ikut ke-reset jadi gagal.
+    const MAX_POSTS = 50;
+    let totalPostEngagement = 0; // sum likes+comments+saves dari post yang berhasil disync — dipakai hitung Engagement Rate di bawah.
     try {
-      const media = await fetchJSON(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&limit=25&access_token=${accessToken}`
+      const items = await fetchPaginated(
+        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&limit=50&access_token=${accessToken}`,
+        MAX_POSTS
       );
-      const items = (media.data as Record<string, unknown>[] | undefined) ?? [];
 
       for (const item of items) {
         const mediaId = item.id as string;
-        // Saves/Shares/Views butuh panggilan Insights terpisah PER media, dan
+        // Saves/Views butuh panggilan Insights terpisah PER media, dan
         // metric yang valid beda-beda tergantung media_type (IMAGE/VIDEO/
         // CAROUSEL_ALBUM/REELS) — di-coba, gagal salah satu metric tidak
-        // menggagalkan seluruh sync (postingan tetap tersimpan tanpa metrik itu).
+        // menggagalkan seluruh sync (postingan tetap tersimpan tanpa metrik
+        // itu). "views" dipakai di sini (BUKAN "plays" — nama lama itu juga
+        // ikut di-deprecate Meta bareng "impressions" per 21 April 2025).
         let saves: number | null = null;
         let views: number | null = null;
         try {
           const mediaInsights = await fetchJSON(
-            `https://graph.facebook.com/${GRAPH_VERSION}/${mediaId}/insights?metric=saved,plays&access_token=${accessToken}`
+            `https://graph.facebook.com/${GRAPH_VERSION}/${mediaId}/insights?metric=saved,views&access_token=${accessToken}`
           );
-          const mSeries = (mediaInsights.data as { name: string; values: { value: number }[] }[] | undefined) ?? [];
+          const mSeries = (mediaInsights.data as { name: string; values?: { value: number }[]; total_value?: { value: number } }[] | undefined) ?? [];
           saves = mSeries.find((s) => s.name === "saved")?.values?.[0]?.value ?? null;
-          views = mSeries.find((s) => s.name === "plays")?.values?.[0]?.value ?? null;
+          const viewsRow = mSeries.find((s) => s.name === "views");
+          views = viewsRow?.total_value?.value ?? viewsRow?.values?.[0]?.value ?? null;
         } catch {
           // Diamkan — media_type ini mungkin tidak support metric tersebut.
         }
+
+        const likes = (item.like_count as number | undefined) ?? 0;
+        const comments = (item.comments_count as number | undefined) ?? 0;
+        totalPostEngagement += likes + comments + (saves ?? 0);
 
         const mediaType = String(item.media_type ?? "").toLowerCase();
         // Video/Reels: media_url itu file video (gak bisa dipajang <img>),
@@ -312,6 +353,65 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
       }
     } catch {
       // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
+    }
+
+    // STORY — endpoint TERPISAH dari /media (`/stories`, bukan bagian dari
+    // list di atas). Story cuma tersedia di endpoint ini selama 24 jam
+    // sejak diupload, jadi WAJAR kalau list ini sering kosong total di luar
+    // jam-jam Story sedang aktif — itu bukan error, endpoint memang begitu.
+    // Metric performanya "views" juga (pengganti "impressions" yang lama
+    // dipakai khusus utk Story sebelum deprecation April 2025).
+    try {
+      const stories = await fetchJSON(
+        `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/stories?fields=id,media_type,media_url,thumbnail_url,timestamp,permalink&access_token=${accessToken}`
+      );
+      const items = (stories.data as Record<string, unknown>[] | undefined) ?? [];
+      for (const item of items) {
+        const mediaId = item.id as string;
+        let storyViews: number | null = null;
+        try {
+          const storyInsights = await fetchJSON(`https://graph.facebook.com/${GRAPH_VERSION}/${mediaId}/insights?metric=views&access_token=${accessToken}`);
+          const mSeries = (storyInsights.data as { name: string; values?: { value: number }[]; total_value?: { value: number } }[] | undefined) ?? [];
+          const viewsRow = mSeries.find((s) => s.name === "views");
+          storyViews = viewsRow?.total_value?.value ?? viewsRow?.values?.[0]?.value ?? null;
+        } catch {
+          // Diamkan — insight per-Story kadang belum tersedia kalau baru saja diupload.
+        }
+
+        const postedDate = String(item.timestamp ?? "").slice(0, 10) || isoDate(today);
+        const thumbnailUrl = (item.thumbnail_url as string | undefined) ?? (item.media_url as string | undefined) ?? null;
+        await upsertPost(admin, clientId, "instagram", mediaId, {
+          type: "story", // CONTENT_TYPES_BY_PLATFORM.instagram sudah termasuk "story" — cocok tanpa perlu migration tambahan.
+          title: `Story ${postedDate}`, // Story tidak punya caption di Graph API.
+          postedDate,
+          views: storyViews,
+          permalink: (item.permalink as string | undefined) ?? null,
+          thumbnailUrl,
+        });
+        postsSynced++;
+      }
+    } catch {
+      // Diamkan — endpoint /stories kosong/gagal itu normal (Story expired atau memang belum pernah upload), tidak menggagalkan sync lain.
+    }
+
+    // Engagement Rate — dihitung dari total (likes+comments+saves) SEMUA
+    // post yang berhasil disync di atas (sampai MAX_POSTS), dibagi jumlah
+    // followers, dikali 100. Pendekatan umum dipakai kalau tidak ada satu
+    // metric resmi "engagement rate" langsung dari Meta untuk Instagram
+    // (beda dari Threads yang punya pembagi "views" resmi). Catatan: ini
+    // dihitung dari post yang ke-tarik (maks 50 terbaru), BUKAN dibatasi
+    // ketat ke jendela `days` hari seperti reach/views.
+    const engagementRate = followers != null && followers > 0 ? Math.round((totalPostEngagement / followers) * 1000) / 10 : null;
+
+    for (const date of allDates) {
+      await upsertSocialMetric(admin, clientId, "instagram", date, {
+        followers, // sama tiap hari (snapshot lifetime, bukan harian) — cukup taruh di semua baris supaya "latest" selalu punya angka.
+        reach: reachByDate.get(date) ?? null,
+        visitors: date === latestDate ? totalProfileViews : null,
+        impressions: date === latestDate ? totalViews : null,
+        engagementRate: date === latestDate ? engagementRate : null,
+      });
+      metricsSynced++;
     }
 
     return { clientId, platform: "instagram", metricsSynced, postsSynced };
