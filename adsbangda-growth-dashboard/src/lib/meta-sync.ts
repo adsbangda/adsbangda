@@ -530,17 +530,17 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
     const until = Math.floor(today.getTime() / 1000);
     let totalReach: number | null = null;
     try {
-      // Percobaan sebelumnya (period=day breakdown harian) gagal dengan
-      // error "(#100) The value must be a valid insights metric" pas
-      // dites ke Facebook Page ASLI (bukan lagi ketuker ke node Instagram
-      // seperti sebelumnya). Coba pola yang sama seperti "views"/
-      // profile_views di tempat lain: metric_type=total_value (satu angka
-      // total per periode, BUKAN breakdown per-hari).
+      // KONFIRMASI GANDA dari 2 sumber independen: metric reach Page yang
+      // BENAR adalah "page_total_media_view_unique" (bukan "reach" polos).
+      // Percobaan PERTAMA pakai nama ini sebenarnya sudah BENAR — yang
+      // bikin gagal waktu itu adalah bug LAIN (salah manggil node Instagram
+      // gara-gara Facebook Page ID ke-tuker), BUKAN nama metric-nya. Sama
+      // pola dengan "views" — WAJIB metric_type=total_value.
       const insights = await fetchJSON(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=reach&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${accessToken}`
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=page_total_media_view_unique&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${accessToken}`
       );
       const series = (insights.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
-      totalReach = series.find((s) => s.name === "reach")?.total_value?.value ?? null;
+      totalReach = series.find((s) => s.name === "page_total_media_view_unique")?.total_value?.value ?? null;
     } catch (err) {
       firstItemError = `[Reach] ${err instanceof Error ? err.message : String(err)}`;
       itemsFailed++;
