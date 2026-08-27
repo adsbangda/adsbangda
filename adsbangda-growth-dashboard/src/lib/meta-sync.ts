@@ -532,16 +532,20 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
     let reachByDate = new Map<string, number>();
     try {
       // Meta resmi men-deprecate "impressions" utk Page Insights per 15 Nov
-      // 2025 (diganti "views"), dan "page_impressions_unique" (reach) per
-      // 15 Jun 2026 (diganti "page_total_media_view_unique") — dua-duanya
-      // SUDAH LEWAT tanggal per hari ini, jadi nama metric lama pasti error
-      // kalau masih dipakai. Nama BARU dipakai di sini.
+      // 2025, diganti "views" — dikonfirmasi valid dari error API langsung
+      // (daftar metric valid yang Meta balikin waktu percobaan sebelumnya
+      // salah nama: reach, follower_count, website_clicks, profile_views,
+      // online_followers, accounts_engaged, total_interactions, likes,
+      // comments, shares, saves, replies, views, dll). Nama metric reach
+      // yang BENAR ternyata cuma "reach" polos — BUKAN
+      // "page_impressions_unique" (lama) ataupun "page_total_media_view_unique"
+      // (tebakan saya sebelumnya, ternyata salah juga).
       const insights = await fetchJSON(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=views,page_total_media_view_unique&period=day&since=${since}&until=${until}&access_token=${accessToken}`
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=views,reach&period=day&since=${since}&until=${until}&access_token=${accessToken}`
       );
       const series = (insights.data as { name: string; values: { end_time: string; value: number }[] }[] | undefined) ?? [];
       impressionsByDate = new Map((series.find((s) => s.name === "views")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-      reachByDate = new Map((series.find((s) => s.name === "page_total_media_view_unique")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
+      reachByDate = new Map((series.find((s) => s.name === "reach")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
     } catch (err) {
       // Nama metric Page Insights cukup sering berubah antar versi Graph
       // API — kalau gagal, followers tetap kesimpan, impressions/reach
