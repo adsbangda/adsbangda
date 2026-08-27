@@ -41,6 +41,10 @@ export interface MetaSyncResult {
   itemsFailed?: number;
   /** Pesan error dari kegagalan simpan PERTAMA yang ketemu (bukan semua — biar tidak kepanjangan) — ini kunci diagnosis kenapa suatu item gagal disimpan. */
   firstItemError?: string;
+  /** Jumlah post yang berhasil masuk post_performance (Post Ranking) TAPI gagal ikut tercatat di content_items (Content Delivery/Kalender Konten) — dua tabel ini diisi terpisah per post, jadi bisa saja satu sukses satu gagal untuk post yang sama. */
+  contentItemsFailed?: number;
+  /** Pesan error dari kegagalan content_items PERTAMA yang ketemu. */
+  firstContentItemError?: string;
 }
 
 function isoDate(d: Date): string {
@@ -141,7 +145,7 @@ async function upsertPost(
     permalink?: string | null;
     thumbnailUrl?: string | null;
   }
-) {
+): Promise<{ contentItemError?: string }> {
   const { data: existing } = await admin
     .from("post_performance")
     .select("id")
@@ -173,11 +177,14 @@ async function upsertPost(
   if (error) throw new Error(error.message);
 
   // Ikut catat sebagai content_items status='published' juga — supaya
-  // progress Goals (Content Delivery) di halaman Social Media otomatis
-  // kehitung tanpa admin perlu input manual lagi buat post yang udah
-  // ke-tarik dari sync ini. Dibungkus try/catch sendiri: kalau ini gagal
-  // (mis. constraint belum di-migrate), post_performance yang di atas
-  // TETAP berhasil tersimpan — Post Ranking tidak ikut kena imbas.
+  // progress Content Delivery & Kalender Konten otomatis kehitung tanpa
+  // admin perlu input manual lagi buat post yang udah ke-tarik dari sync
+  // ini. TIDAK di-throw ke atas (post_performance yang di atas TETAP
+  // berhasil tersimpan walau bagian ini gagal — Post Ranking tidak ikut
+  // kena imbas) — TAPI SEKARANG dikembalikan sebagai `contentItemError`
+  // biar pemanggil bisa LAPORKAN kegagalannya, bukan didiamkan total tanpa
+  // jejak seperti sebelumnya (itu bikin Content Delivery/Kalender Konten
+  // kelihatan "tidak update" tanpa ada cara diagnosis dari UI sama sekali).
   try {
     const { data: existingContent } = await admin
       .from("content_items")
@@ -200,13 +207,13 @@ async function upsertPost(
       publish_link: values.permalink ?? null,
     };
 
-    if (existingContent) {
-      await admin.from("content_items").update(contentPayload).eq("id", existingContent.id);
-    } else {
-      await admin.from("content_items").insert(contentPayload);
-    }
-  } catch {
-    // Diamkan — lihat komentar di atas.
+    const { error: contentError } = existingContent
+      ? await admin.from("content_items").update(contentPayload).eq("id", existingContent.id)
+      : await admin.from("content_items").insert(contentPayload);
+    if (contentError) return { contentItemError: contentError.message };
+    return {};
+  } catch (err) {
+    return { contentItemError: err instanceof Error ? err.message : String(err) };
   }
 }
 
@@ -228,6 +235,8 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
     let itemsFound = 0;
     let itemsFailed = 0;
     let firstItemError: string | undefined;
+    let contentItemsFailed = 0;
+    let firstContentItemError: string | undefined;
 
     // Followers — field lifetime di object akun, bukan Insights metric.
     const account = await fetchJSON(`https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}?fields=followers_count&access_token=${accessToken}`);
@@ -380,7 +389,7 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
         // kenapa Post Ranking/Content Calendar sering "baru kebaca beberapa
         // post" padahal upload aslinya jauh lebih banyak.
         try {
-          await upsertPost(admin, clientId, "instagram", mediaId, {
+          const result = await upsertPost(admin, clientId, "instagram", mediaId, {
             type: contentType,
             title: String(item.caption ?? "").slice(0, 120) || "(tanpa caption)",
             postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
@@ -391,6 +400,10 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
             permalink: (item.permalink as string | undefined) ?? null,
             thumbnailUrl,
           });
+          if (result.contentItemError) {
+            contentItemsFailed++;
+            if (!firstContentItemError) firstContentItemError = result.contentItemError;
+          }
           totalPostEngagement += likes + comments + (saves ?? 0); // cuma dihitung kalau berhasil kesimpan, biar konsisten dengan yang benar-benar masuk post_performance.
           postsSynced++;
         } catch (err) {
@@ -433,7 +446,7 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
         const postedDate = String(item.timestamp ?? "").slice(0, 10) || isoDate(today);
         const thumbnailUrl = (item.thumbnail_url as string | undefined) ?? (item.media_url as string | undefined) ?? null;
         try {
-          await upsertPost(admin, clientId, "instagram", mediaId, {
+          const result = await upsertPost(admin, clientId, "instagram", mediaId, {
             type: "story", // CONTENT_TYPES_BY_PLATFORM.instagram sudah termasuk "story" — cocok tanpa perlu migration tambahan.
             title: `Story ${postedDate}`, // Story tidak punya caption di Graph API.
             postedDate,
@@ -441,6 +454,10 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
             permalink: (item.permalink as string | undefined) ?? null,
             thumbnailUrl,
           });
+          if (result.contentItemError) {
+            contentItemsFailed++;
+            if (!firstContentItemError) firstContentItemError = result.contentItemError;
+          }
           postsSynced++;
         } catch (err) {
           itemsFailed++;
@@ -471,7 +488,7 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
       metricsSynced++;
     }
 
-    return { clientId, platform: "instagram", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError };
+    return { clientId, platform: "instagram", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError, contentItemsFailed, firstContentItemError };
   } catch (err) {
     return { clientId, platform: "instagram", metricsSynced: 0, postsSynced: 0, error: err instanceof Error ? err.message : String(err) };
   }
@@ -494,6 +511,8 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
     let itemsFound = 0;
     let itemsFailed = 0;
     let firstItemError: string | undefined;
+    let contentItemsFailed = 0;
+    let firstContentItemError: string | undefined;
 
     // "fan_count" sudah DIHAPUS Meta dari Graph API (konfirmasi langsung
     // dari error live: "(#100) Tried accessing nonexisting field
@@ -557,7 +576,7 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
         // loop (exception lolos ke try/catch besar di luar), bukan cuma post
         // itu sendiri yang gagal.
         try {
-          await upsertPost(admin, clientId, "facebook", postId, {
+          const result = await upsertPost(admin, clientId, "facebook", postId, {
             type: "post", // CONTENT_TYPES_BY_PLATFORM.facebook = ["post","video"] — "feed" bukan tipe valid buat Facebook, harus cocok biar ke-hitung di Content Delivery.
             title: String(item.message ?? "").slice(0, 120) || "(tanpa teks)",
             postedDate: String(item.created_time ?? "").slice(0, 10) || isoDate(today),
@@ -567,6 +586,10 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
             permalink: (item.permalink_url as string | undefined) ?? null,
             thumbnailUrl: (item.full_picture as string | undefined) ?? null,
           });
+          if (result.contentItemError) {
+            contentItemsFailed++;
+            if (!firstContentItemError) firstContentItemError = result.contentItemError;
+          }
           postsSynced++;
         } catch (err) {
           itemsFailed++;
@@ -577,7 +600,7 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
     }
 
-    return { clientId, platform: "facebook", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError };
+    return { clientId, platform: "facebook", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError, contentItemsFailed, firstContentItemError };
   } catch (err) {
     return { clientId, platform: "facebook", metricsSynced: 0, postsSynced: 0, error: err instanceof Error ? err.message : String(err) };
   }
@@ -602,6 +625,8 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
     let itemsFound = 0;
     let itemsFailed = 0;
     let firstItemError: string | undefined;
+    let contentItemsFailed = 0;
+    let firstContentItemError: string | undefined;
 
     let followers: number | null = null;
     let totalLikes: number | null = null;
@@ -704,7 +729,7 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
         // try/catch PER-ITEM — sama alasannya seperti Instagram/Facebook:
         // satu post gagal disimpan tidak boleh menghentikan sisa loop.
         try {
-          await upsertPost(admin, clientId, "threads", mediaId, {
+          const result = await upsertPost(admin, clientId, "threads", mediaId, {
             type: "post", // CONTENT_TYPES_BY_PLATFORM.threads = ["post"] — "feed" bukan tipe valid buat Threads, harus cocok biar ke-hitung di Content Delivery.
             title: String(item.text ?? "").slice(0, 120) || "(tanpa teks)",
             postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
@@ -712,6 +737,10 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
             views,
             permalink: (item.permalink as string | undefined) ?? null,
           });
+          if (result.contentItemError) {
+            contentItemsFailed++;
+            if (!firstContentItemError) firstContentItemError = result.contentItemError;
+          }
           postsSynced++;
         } catch (err) {
           itemsFailed++;
@@ -722,7 +751,7 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
       // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
     }
 
-    return { clientId, platform: "threads", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError };
+    return { clientId, platform: "threads", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError, contentItemsFailed, firstContentItemError };
   } catch (err) {
     return { clientId, platform: "threads", metricsSynced: 0, postsSynced: 0, error: err instanceof Error ? err.message : String(err) };
   }

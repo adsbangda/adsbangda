@@ -106,12 +106,15 @@ export default async function AdminClientSocialMediaPage({
     itemsFound?: string;
     itemsFailed?: string;
     itemError?: string;
+    contentItemsFailed?: string;
+    contentItemError?: string;
     from?: string;
     to?: string;
   }>;
 }) {
   const { clientId } = await params;
-  const { tab = "delivery", platform = "instagram", edit, editTarget, editPost, sync, rows, message, itemsFound, itemsFailed, itemError, from, to } = await searchParams;
+  const { tab = "delivery", platform = "instagram", edit, editTarget, editPost, sync, rows, message, itemsFound, itemsFailed, itemError, contentItemsFailed, contentItemError, from, to } =
+    await searchParams;
   // Rentang perbandingan performance — validasi sama seperti Client Portal
   // Overview (dua-duanya ada, format benar, urut). Tanpa ini (default),
   // getPlatformPerformanceTable otomatis pakai SATU BULAN PENUH (bulan
@@ -289,12 +292,12 @@ export default async function AdminClientSocialMediaPage({
     // sebagian item tidak masuk — sebelumnya ini didiamkan total tanpa jejak.
     const itemsFound = result.itemsFound ?? 0;
     const itemsFailed = result.itemsFailed ?? 0;
+    const contentItemsFailed = result.contentItemsFailed ?? 0;
     const diagParams =
-      itemsFailed > 0
-        ? `&itemsFound=${itemsFound}&itemsFailed=${itemsFailed}&itemError=${encodeURIComponent(result.firstItemError ?? "")}`
-        : itemsFound > 0
-          ? `&itemsFound=${itemsFound}`
-          : "";
+      (itemsFailed > 0 ? `&itemsFound=${itemsFound}&itemsFailed=${itemsFailed}&itemError=${encodeURIComponent(result.firstItemError ?? "")}` : itemsFound > 0 ? `&itemsFound=${itemsFound}` : "") +
+      (contentItemsFailed > 0
+        ? `&contentItemsFailed=${contentItemsFailed}&contentItemError=${encodeURIComponent(result.firstContentItemError ?? "")}`
+        : "");
     redirect(`${base}?tab=performance&platform=${activePlatform}&sync=ok&rows=${result.metricsSynced + result.postsSynced}${diagParams}`);
   }
 
@@ -659,6 +662,8 @@ export default async function AdminClientSocialMediaPage({
           syncItemsFound={itemsFound}
           syncItemsFailed={itemsFailed}
           syncItemError={itemError}
+          syncContentItemsFailed={contentItemsFailed}
+          syncContentItemError={contentItemError}
           performanceRange={performanceRange}
         />
       )}
@@ -768,6 +773,8 @@ async function PerformancePanel({
   syncItemsFound,
   syncItemsFailed,
   syncItemError,
+  syncContentItemsFailed,
+  syncContentItemError,
   performanceRange,
 }: {
   clientId: string;
@@ -789,6 +796,8 @@ async function PerformancePanel({
   syncItemsFound?: string;
   syncItemsFailed?: string;
   syncItemError?: string;
+  syncContentItemsFailed?: string;
+  syncContentItemError?: string;
   performanceRange?: DateRange;
 }) {
   const [metrics, posts, connections, performanceTable] = await Promise.all([
@@ -830,6 +839,18 @@ async function PerformancePanel({
               {Number(syncItemsFailed ?? 0) > 0
                 ? `Ditemukan ${syncItemsFound} post dari API, ${syncItemsFailed} GAGAL disimpan. Error pertama: ${syncItemError || "(tidak ada pesan)"}`
                 : `Ditemukan ${syncItemsFound} post dari API, semuanya berhasil disimpan.`}
+            </p>
+          )}
+          {/* Post bisa saja berhasil masuk post_performance (Post Ranking)
+              TAPI gagal ikut tercatat di content_items (Content Delivery &
+              Kalender Konten) — dua tabel diisi terpisah di dalam
+              upsertPost(). Sebelumnya kegagalan bagian INI didiamkan total
+              tanpa jejak sama sekali, jadi Content Delivery/Kalender Konten
+              bisa kelihatan "tidak update" padahal Post Ranking-nya baik-baik
+              saja — sekarang ditampilkan terpisah di sini. */}
+          {syncStatus === "ok" && Number(syncContentItemsFailed ?? 0) > 0 && (
+            <p className="pl-6 text-xs font-semibold opacity-90">
+              ⚠ {syncContentItemsFailed} post GAGAL tercatat di Content Delivery/Kalender Konten (walau berhasil di Post Ranking). Error pertama: {syncContentItemError || "(tidak ada pesan)"}
             </p>
           )}
         </div>
