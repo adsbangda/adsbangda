@@ -834,10 +834,10 @@ async function PerformancePanel({
               gap antara "jumlah post asli di Instagram/Facebook" vs "jumlah
               yang muncul di Content Delivery/Kalender" tidak ada cara buat
               didiagnosis dari UI sama sekali. */}
-          {syncStatus === "ok" && syncItemsFound && (
+          {syncStatus === "ok" && (Number(syncItemsFound ?? 0) > 0 || Number(syncItemsFailed ?? 0) > 0) && (
             <p className="pl-6 text-xs opacity-80">
               {Number(syncItemsFailed ?? 0) > 0
-                ? `Ditemukan ${syncItemsFound} post dari API, ${syncItemsFailed} GAGAL disimpan. Error pertama: ${syncItemError || "(tidak ada pesan)"}`
+                ? `Ditemukan ${syncItemsFound ?? 0} post dari API, ${syncItemsFailed} GAGAL disimpan/ditarik. Error pertama: ${syncItemError || "(tidak ada pesan)"}`
                 : `Ditemukan ${syncItemsFound} post dari API, semuanya berhasil disimpan.`}
             </p>
           )}

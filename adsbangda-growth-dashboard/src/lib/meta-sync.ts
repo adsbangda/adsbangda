@@ -254,8 +254,10 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
       );
       const series = (reachInsights.data as { name: string; values?: { end_time: string; value: number }[] }[] | undefined) ?? [];
       reachByDate = new Map((series.find((s) => s.name === "reach")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-    } catch {
-      // Diamkan — reach gagal tidak menggagalkan followers/profile_views.
+    } catch (err) {
+      // Diamkan — reach gagal tidak menggagalkan followers/profile_views, tapi errornya dicatat biar kelihatan di banner Admin.
+      firstItemError = `[Reach] ${err instanceof Error ? err.message : String(err)}`;
+      itemsFailed++;
     }
 
     // Profile Visits — SEJAK UPDATE GRAPH API META (2024+), "profile_views"
@@ -273,8 +275,10 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
       );
       const series = (visitsInsights.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
       totalProfileViews = series.find((s) => s.name === "profile_views")?.total_value?.value ?? null;
-    } catch {
-      // Diamkan — profile_views gagal tidak menggagalkan reach/followers.
+    } catch (err) {
+      // Diamkan — profile_views gagal tidak menggagalkan reach/followers, tapi errornya dicatat.
+      if (!firstItemError) firstItemError = `[Profile Views] ${err instanceof Error ? err.message : String(err)}`;
+      itemsFailed++;
     }
 
     // Views (account-level) — PENGGANTI RESMI "impressions", yang di-
@@ -291,8 +295,10 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
       );
       const series = (viewsInsights.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
       totalViews = series.find((s) => s.name === "views")?.total_value?.value ?? null;
-    } catch {
-      // Diamkan — views gagal tidak menggagalkan metric lain.
+    } catch (err) {
+      // Diamkan — views gagal tidak menggagalkan metric lain, tapi errornya dicatat.
+      if (!firstItemError) firstItemError = `[Views] ${err instanceof Error ? err.message : String(err)}`;
+      itemsFailed++;
     }
 
     const allDates = new Set([...reachByDate.keys()]);
@@ -536,8 +542,13 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       const series = (insights.data as { name: string; values: { end_time: string; value: number }[] }[] | undefined) ?? [];
       impressionsByDate = new Map((series.find((s) => s.name === "views")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
       reachByDate = new Map((series.find((s) => s.name === "page_total_media_view_unique")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-    } catch {
-      // Nama metric Page Insights cukup sering berubah antar versi Graph API — kalau gagal, followers tetap kesimpan, impressions/reach cuma kosong.
+    } catch (err) {
+      // Nama metric Page Insights cukup sering berubah antar versi Graph
+      // API — kalau gagal, followers tetap kesimpan, impressions/reach
+      // cuma kosong. TAPI errornya sekarang DICATAT (bukan didiamkan total)
+      // supaya kelihatan di banner Admin persis kenapa gagal.
+      firstItemError = `[Insights] ${err instanceof Error ? err.message : String(err)}`;
+      itemsFailed++;
     }
 
     const allDates = new Set([...impressionsByDate.keys(), ...reachByDate.keys()]);
@@ -596,8 +607,14 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
           if (!firstItemError) firstItemError = err instanceof Error ? err.message : String(err);
         }
       }
-    } catch {
-      // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
+    } catch (err) {
+      // Diamkan sebagian — metrics yang sudah disync di atas TETAP
+      // tersimpan (tidak ikut gagal), tapi errornya sekarang DICATAT: kalau
+      // fetchPaginated() sendiri gagal (URL/permission salah, dll — BUKAN
+      // gagal per-item), sebelumnya ini didiamkan TOTAL tanpa jejak sama
+      // sekali, jadi "0 post ditemukan" kelihatan seperti akun memang kosong
+      // padahal sebenarnya request-nya sendiri yang gagal.
+      if (!firstItemError) firstItemError = `[Fetch Posts] ${err instanceof Error ? err.message : String(err)}`;
     }
 
     return { clientId, platform: "facebook", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError, contentItemsFailed, firstContentItemError };
@@ -647,8 +664,10 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
       totalReplies = totals.find((s) => s.name === "replies")?.total_value?.value ?? null;
       totalReposts = totals.find((s) => s.name === "reposts")?.total_value?.value ?? null;
       totalQuotes = totals.find((s) => s.name === "quotes")?.total_value?.value ?? null;
-    } catch {
-      // Diamkan — endpoint/nama metric Threads paling sering berubah dari 3 platform ini.
+    } catch (err) {
+      // Diamkan — endpoint/nama metric Threads paling sering berubah dari 3 platform ini, tapi errornya dicatat.
+      firstItemError = `[Totals] ${err instanceof Error ? err.message : String(err)}`;
+      itemsFailed++;
     }
 
     let viewsByDate = new Map<string, number>();
@@ -665,8 +684,10 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
       );
       const series = (insights.data as { name: string; values?: { end_time: string; value: number }[] }[] | undefined) ?? [];
       viewsByDate = new Map((series.find((s) => s.name === "views")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-    } catch {
-      // Sama seperti di atas — sengaja tidak menggagalkan seluruh sync.
+    } catch (err) {
+      // Sama seperti di atas — sengaja tidak menggagalkan seluruh sync, tapi errornya dicatat.
+      if (!firstItemError) firstItemError = `[Views] ${err instanceof Error ? err.message : String(err)}`;
+      itemsFailed++;
     }
 
     // Engagement Rate = (likes+replies+reposts+quotes total) / (total views
