@@ -266,24 +266,35 @@ export default async function AdminClientSocialMediaPage({
     revalidatePath(path);
   }
 
-  async function syncSocialAction() {
+  async function syncSocialAction(formData: FormData) {
     "use server";
+    // BUG SEBELUMNYA (kemungkinan besar akar dari "Facebook nunjukin data
+    // Instagram" yang persisten): fungsi ini PARAMETER-NYA KOSONG, jadi
+    // 100% pakai closure `activePlatform` dari render SEBELUMNYA — kalau
+    // render itu stale (server action reference lama ke-invoke dari
+    // navigasi/cache yang belum ter-refresh), tombol "Sync Sekarang" bisa
+    // diam-diam sync platform yang BEDA dari yang kelihatan aktif di layar.
+    // Sekarang platform-nya dibaca dari FormData submit (hidden input
+    // "platform" di form yang sama) — SAMA pola robust-nya seperti
+    // saveSocialConnectionAction, yang percaya isi form saat submit, bukan
+    // closure di memory.
+    const platformValue = String(formData.get("platform") ?? activePlatform) as SocialConnection["platform"];
     const connections = await adminListSocialConnections(clientId);
-    const conn = connections.find((c) => c.platform === activePlatform);
+    const conn = connections.find((c) => c.platform === platformValue);
     if (!conn) {
-      redirect(`${base}?tab=performance&platform=${activePlatform}&sync=error&message=${encodeURIComponent("Belum ada koneksi tersimpan.")}`);
+      redirect(`${base}?tab=performance&platform=${platformValue}&sync=error&message=${encodeURIComponent("Belum ada koneksi tersimpan.")}`);
     }
     const result =
-      activePlatform === "instagram"
+      platformValue === "instagram"
         ? await syncInstagramForClient(clientId, conn!.externalAccountId, conn!.accessToken)
-        : activePlatform === "facebook"
+        : platformValue === "facebook"
           ? await syncFacebookForClient(clientId, conn!.externalAccountId, conn!.accessToken)
-          : activePlatform === "threads"
+          : platformValue === "threads"
             ? await syncThreadsForClient(clientId, conn!.externalAccountId, conn!.accessToken)
             : null;
     revalidatePath(path);
     if (!result || result.error) {
-      redirect(`${base}?tab=performance&platform=${activePlatform}&sync=error&message=${encodeURIComponent(result?.error ?? "Platform tidak didukung.")}`);
+      redirect(`${base}?tab=performance&platform=${platformValue}&sync=error&message=${encodeURIComponent(result?.error ?? "Platform tidak didukung.")}`);
     }
     // Kalau ada item yang GAGAL disimpan (ketarik dari Meta tapi gagal
     // upsert ke database), tetap redirect ke "sync=ok" (metrics/post lain
@@ -298,7 +309,7 @@ export default async function AdminClientSocialMediaPage({
       (contentItemsFailed > 0
         ? `&contentItemsFailed=${contentItemsFailed}&contentItemError=${encodeURIComponent(result.firstContentItemError ?? "")}`
         : "");
-    redirect(`${base}?tab=performance&platform=${activePlatform}&sync=ok&rows=${result.metricsSynced + result.postsSynced}${diagParams}`);
+    redirect(`${base}?tab=performance&platform=${platformValue}&sync=ok&rows=${result.metricsSynced + result.postsSynced}${diagParams}`);
   }
 
   async function addPostAction(formData: FormData) {
@@ -789,7 +800,7 @@ async function PerformancePanel({
   deletePostAction: (formData: FormData) => Promise<void>;
   editPost?: string;
   saveSocialConnectionAction: (formData: FormData) => Promise<void>;
-  syncSocialAction: () => Promise<void>;
+  syncSocialAction: (formData: FormData) => Promise<void>;
   syncStatus?: string;
   syncRows?: string;
   syncMessage?: string;
