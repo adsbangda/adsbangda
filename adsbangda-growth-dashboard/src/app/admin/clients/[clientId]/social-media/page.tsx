@@ -866,14 +866,16 @@ async function PerformancePanel({
                 : "Opsional — hubungkan biar Followers/Reach/Post Ranking ke-isi otomatis. Belum sempat setup? Form manual di bawah tetap 100% berfungsi."
             }
           />
-          <form action={saveSocialConnectionAction} className="flex flex-wrap items-end gap-2">
+          <form action={saveSocialConnectionAction} className="flex flex-wrap items-end gap-2" autoComplete="off">
             <input type="hidden" name="platform" value={activePlatform} />
             <div>
               <label className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
                 {activePlatform === "facebook" ? "Facebook Page ID" : activePlatform === "threads" ? "Threads User ID" : "IG Business Account ID"}
               </label>
               <input
+                key={`${activePlatform}-externalAccountId`}
                 name="externalAccountId"
+                autoComplete="off"
                 defaultValue={connection?.externalAccountId ?? ""}
                 placeholder="mis. 17841400000000000"
                 className={`mt-1 block w-56 ${inputClass}`}
@@ -882,8 +884,10 @@ async function PerformancePanel({
             <div>
               <label className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Access Token</label>
               <input
+                key={`${activePlatform}-accessToken`}
                 name="accessToken"
                 type="password"
+                autoComplete="new-password"
                 placeholder={connection ? "•••••• (kosongkan kalau tidak ganti)" : "Paste token di sini"}
                 className={`mt-1 block w-56 ${inputClass}`}
               />
