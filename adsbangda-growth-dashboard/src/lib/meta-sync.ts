@@ -528,43 +528,55 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
 
     const since = Math.floor(new Date(today.getTime() - days * 86400000).getTime() / 1000);
     const until = Math.floor(today.getTime() / 1000);
-    let impressionsByDate = new Map<string, number>();
     let reachByDate = new Map<string, number>();
     try {
-      // Meta resmi men-deprecate "impressions" utk Page Insights per 15 Nov
-      // 2025, diganti "views" — dikonfirmasi valid dari error API langsung
-      // (daftar metric valid yang Meta balikin waktu percobaan sebelumnya
-      // salah nama: reach, follower_count, website_clicks, profile_views,
-      // online_followers, accounts_engaged, total_interactions, likes,
-      // comments, shares, saves, replies, views, dll). Nama metric reach
-      // yang BENAR ternyata cuma "reach" polos — BUKAN
-      // "page_impressions_unique" (lama) ataupun "page_total_media_view_unique"
-      // (tebakan saya sebelumnya, ternyata salah juga).
+      // Nama metric reach yang BENAR ternyata cuma "reach" polos —
+      // dikonfirmasi dari error API langsung (daftar metric valid yang Meta
+      // balikin waktu percobaan sebelumnya salah nama), BUKAN
+      // "page_impressions_unique" (lama) ataupun tebakan2 sebelumnya. Ini
+      // masih boleh pakai period=day (breakdown harian, time series) —
+      // beda dari "views" di bawah yang WAJIB metric_type=total_value.
       const insights = await fetchJSON(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=views,reach&period=day&since=${since}&until=${until}&access_token=${accessToken}`
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=reach&period=day&since=${since}&until=${until}&access_token=${accessToken}`
       );
       const series = (insights.data as { name: string; values: { end_time: string; value: number }[] }[] | undefined) ?? [];
-      impressionsByDate = new Map((series.find((s) => s.name === "views")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
       reachByDate = new Map((series.find((s) => s.name === "reach")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
     } catch (err) {
-      // Nama metric Page Insights cukup sering berubah antar versi Graph
-      // API — kalau gagal, followers tetap kesimpan, impressions/reach
-      // cuma kosong. TAPI errornya sekarang DICATAT (bukan didiamkan total)
-      // supaya kelihatan di banner Admin persis kenapa gagal.
-      firstItemError = `[Insights] ${err instanceof Error ? err.message : String(err)}`;
+      firstItemError = `[Reach] ${err instanceof Error ? err.message : String(err)}`;
       itemsFailed++;
     }
 
-    const allDates = new Set([...impressionsByDate.keys(), ...reachByDate.keys()]);
+    // "views" — PENGGANTI RESMI "impressions" (di-deprecate Meta per 15 Nov
+    // 2025). SAMA seperti profile_views di Instagram: dikonfirmasi dari
+    // error API langsung bahwa metric ini WAJIB pakai
+    // metric_type=total_value (satu angka total per periode since-until,
+    // BUKAN breakdown per-hari kayak "reach" di atas).
+    let totalViews: number | null = null;
+    try {
+      const viewsInsights = await fetchJSON(
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=views&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${accessToken}`
+      );
+      const series = (viewsInsights.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
+      totalViews = series.find((s) => s.name === "views")?.total_value?.value ?? null;
+    } catch (err) {
+      if (!firstItemError) firstItemError = `[Views] ${err instanceof Error ? err.message : String(err)}`;
+      itemsFailed++;
+    }
+
+    const allDates = new Set([...reachByDate.keys()]);
     if (allDates.size === 0 && followers != null) {
       // Sama alasannya kayak Instagram di atas — jangan paksa "hari ini"
       // kalau memang gak ada data Insights sama sekali buat tanggal itu.
       allDates.add(isoDate(new Date(today.getTime() - 86400000)));
     }
+    // "views" sekarang cuma SATU angka total utk seluruh periode `days`
+    // hari (bukan breakdown per-hari) — taruh di baris TANGGAL TERBARU saja
+    // (sama pola dengan Instagram) supaya tidak dobel-hitung.
+    const latestFbDate = Array.from(allDates).sort().at(-1);
     for (const date of allDates) {
       await upsertSocialMetric(admin, clientId, "facebook", date, {
         followers,
-        impressions: impressionsByDate.get(date) ?? null,
+        impressions: date === latestFbDate ? totalViews : null,
         reach: reachByDate.get(date) ?? null,
       });
       metricsSynced++;
