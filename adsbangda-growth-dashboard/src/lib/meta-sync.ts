@@ -528,19 +528,19 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
 
     const since = Math.floor(new Date(today.getTime() - days * 86400000).getTime() / 1000);
     const until = Math.floor(today.getTime() / 1000);
-    let reachByDate = new Map<string, number>();
+    let totalReach: number | null = null;
     try {
-      // Nama metric reach yang BENAR ternyata cuma "reach" polos —
-      // dikonfirmasi dari error API langsung (daftar metric valid yang Meta
-      // balikin waktu percobaan sebelumnya salah nama), BUKAN
-      // "page_impressions_unique" (lama) ataupun tebakan2 sebelumnya. Ini
-      // masih boleh pakai period=day (breakdown harian, time series) —
-      // beda dari "views" di bawah yang WAJIB metric_type=total_value.
+      // Percobaan sebelumnya (period=day breakdown harian) gagal dengan
+      // error "(#100) The value must be a valid insights metric" pas
+      // dites ke Facebook Page ASLI (bukan lagi ketuker ke node Instagram
+      // seperti sebelumnya). Coba pola yang sama seperti "views"/
+      // profile_views di tempat lain: metric_type=total_value (satu angka
+      // total per periode, BUKAN breakdown per-hari).
       const insights = await fetchJSON(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=reach&period=day&since=${since}&until=${until}&access_token=${accessToken}`
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=reach&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${accessToken}`
       );
-      const series = (insights.data as { name: string; values: { end_time: string; value: number }[] }[] | undefined) ?? [];
-      reachByDate = new Map((series.find((s) => s.name === "reach")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
+      const series = (insights.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
+      totalReach = series.find((s) => s.name === "reach")?.total_value?.value ?? null;
     } catch (err) {
       firstItemError = `[Reach] ${err instanceof Error ? err.message : String(err)}`;
       itemsFailed++;
@@ -563,21 +563,16 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       itemsFailed++;
     }
 
-    const allDates = new Set([...reachByDate.keys()]);
-    if (allDates.size === 0 && followers != null) {
-      // Sama alasannya kayak Instagram di atas — jangan paksa "hari ini"
-      // kalau memang gak ada data Insights sama sekali buat tanggal itu.
-      allDates.add(isoDate(new Date(today.getTime() - 86400000)));
-    }
-    // "views" sekarang cuma SATU angka total utk seluruh periode `days`
-    // hari (bukan breakdown per-hari) — taruh di baris TANGGAL TERBARU saja
-    // (sama pola dengan Instagram) supaya tidak dobel-hitung.
-    const latestFbDate = Array.from(allDates).sort().at(-1);
-    for (const date of allDates) {
-      await upsertSocialMetric(admin, clientId, "facebook", date, {
+    // reach & views sekarang cuma SATU angka total utk seluruh periode
+    // `days` hari (bukan breakdown per-hari lagi, beda dari sebelumnya) —
+    // taruh di baris KEMARIN saja (bukan "hari ini" — data harian provider
+    // biasanya baru final di hari sebelumnya), sama pola dengan Instagram.
+    const fbDate = isoDate(new Date(today.getTime() - 86400000));
+    if (followers != null || totalReach != null || totalViews != null) {
+      await upsertSocialMetric(admin, clientId, "facebook", fbDate, {
         followers,
-        impressions: date === latestFbDate ? totalViews : null,
-        reach: reachByDate.get(date) ?? null,
+        impressions: totalViews,
+        reach: totalReach,
       });
       metricsSynced++;
     }
