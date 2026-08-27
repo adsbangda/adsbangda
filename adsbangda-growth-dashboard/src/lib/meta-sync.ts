@@ -495,20 +495,28 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
     let itemsFailed = 0;
     let firstItemError: string | undefined;
 
-    const page = await fetchJSON(`https://graph.facebook.com/${GRAPH_VERSION}/${pageId}?fields=fan_count&access_token=${accessToken}`);
-    const followers = (page.fan_count as number | undefined) ?? null;
+    // "fan_count" sudah DIHAPUS Meta dari Graph API (konfirmasi langsung
+    // dari error live: "(#100) Tried accessing nonexisting field
+    // (fan_count)") — field penggantinya "followers_count".
+    const page = await fetchJSON(`https://graph.facebook.com/${GRAPH_VERSION}/${pageId}?fields=followers_count&access_token=${accessToken}`);
+    const followers = (page.followers_count as number | undefined) ?? null;
 
     const since = Math.floor(new Date(today.getTime() - days * 86400000).getTime() / 1000);
     const until = Math.floor(today.getTime() / 1000);
     let impressionsByDate = new Map<string, number>();
     let reachByDate = new Map<string, number>();
     try {
+      // Meta resmi men-deprecate "impressions" utk Page Insights per 15 Nov
+      // 2025 (diganti "views"), dan "page_impressions_unique" (reach) per
+      // 15 Jun 2026 (diganti "page_total_media_view_unique") — dua-duanya
+      // SUDAH LEWAT tanggal per hari ini, jadi nama metric lama pasti error
+      // kalau masih dipakai. Nama BARU dipakai di sini.
       const insights = await fetchJSON(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=page_impressions,page_impressions_unique&period=day&since=${since}&until=${until}&access_token=${accessToken}`
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=views,page_total_media_view_unique&period=day&since=${since}&until=${until}&access_token=${accessToken}`
       );
       const series = (insights.data as { name: string; values: { end_time: string; value: number }[] }[] | undefined) ?? [];
-      impressionsByDate = new Map((series.find((s) => s.name === "page_impressions")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
-      reachByDate = new Map((series.find((s) => s.name === "page_impressions_unique")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
+      impressionsByDate = new Map((series.find((s) => s.name === "views")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
+      reachByDate = new Map((series.find((s) => s.name === "page_total_media_view_unique")?.values ?? []).map((v) => [v.end_time.slice(0, 10), v.value]));
     } catch {
       // Nama metric Page Insights cukup sering berubah antar versi Graph API — kalau gagal, followers tetap kesimpan, impressions/reach cuma kosong.
     }
