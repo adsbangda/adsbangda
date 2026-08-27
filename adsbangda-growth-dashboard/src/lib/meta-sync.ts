@@ -520,6 +520,7 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
     let firstItemError: string | undefined;
     let contentItemsFailed = 0;
     let firstContentItemError: string | undefined;
+    let totalPostEngagement = 0; // sum likes+comments+shares dari post yang berhasil disync — dipakai hitung Engagement Rate (baru ditambahkan, sebelumnya Facebook gak pernah hitung ini sama sekali).
 
     // "fan_count" sudah DIHAPUS Meta dari Graph API (konfirmasi langsung
     // dari error live: "(#100) Tried accessing nonexisting field
@@ -550,11 +551,8 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       itemsFailed++;
     }
 
-    // "views" — PENGGANTI RESMI "impressions" (di-deprecate Meta per 15 Nov
-    // 2025). SAMA seperti profile_views di Instagram: dikonfirmasi dari
-    // error API langsung bahwa metric ini WAJIB pakai
-    // metric_type=total_value (satu angka total per periode since-until,
-    // BUKAN breakdown per-hari kayak "reach" di atas).
+    // page_views_total — lihat komentar besar setelah blok ini soal
+    // maknanya (sebenarnya "Profile Visits", bukan "Impressions").
     let totalViews: number | null = null;
     try {
       // KONFIRMASI dari test manual di API Tester: nama metric yang BENAR
@@ -574,23 +572,16 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       itemsFailed++;
     }
 
-    // Ditulis ke HARI INI (bukan "kemarin" seperti sebelumnya) — followers/
-    // reach/views semuanya sekarang snapshot TOTAL (bukan breakdown harian
-    // lagi), jadi tidak ada lagi "hari mana yang datanya udah final" buat
-    // dijadiin acuan seperti Instagram. Kalau ditulis ke "kemarin" padahal
-    // sudah ada baris "hari ini" dari sync SEBELUMNYA (yang masih salah),
-    // baris "hari ini" yang lebih baru itu tetap kepilih sebagai "latest"
-    // walau datanya sudah usang — nulis ke hari ini memastikan sync
-    // TERBARU selalu jadi baris TERBARU juga.
-    const fbDate = isoDate(today);
-    if (followers != null || totalReach != null || totalViews != null) {
-      await upsertSocialMetric(admin, clientId, "facebook", fbDate, {
-        followers,
-        impressions: totalViews,
-        reach: totalReach,
-      });
-      metricsSynced++;
-    }
+    // "page_views_total" itu SEBENARNYA "kunjungan ke halaman Page" (mirip
+    // konsep profile_views Instagram) — BUKAN "Impressions" (berapa kali
+    // konten dilihat di feed). Sebelumnya salah taruh di kolom impressions;
+    // sekarang ditaruh di kolom `visitors` (Profile Visits) yang memang
+    // dimaksudkan buat metric ini. Impressions Facebook Page konten SEJAUH
+    // INI belum ketemu nama metric-nya yang valid buat akun ini (percobaan
+    // "views" & "page_total_media_view_unique" ditolak Meta) — dibiarkan
+    // kosong (bisa diisi manual lewat form di bawah) daripada dipaksa isi
+    // angka yang salah maknanya.
+    const totalProfileVisits = totalViews;
 
     try {
       const items = await fetchPaginated(
@@ -627,6 +618,7 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
             contentItemsFailed++;
             if (!firstContentItemError) firstContentItemError = result.contentItemError;
           }
+          totalPostEngagement += (likes ?? 0) + (comments ?? 0) + (shares ?? 0); // dipakai hitung Engagement Rate di bawah, sama pola dengan Instagram.
           postsSynced++;
         } catch (err) {
           itemsFailed++;
@@ -641,6 +633,33 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       // sekali, jadi "0 post ditemukan" kelihatan seperti akun memang kosong
       // padahal sebenarnya request-nya sendiri yang gagal.
       if (!firstItemError) firstItemError = `[Fetch Posts] ${err instanceof Error ? err.message : String(err)}`;
+    }
+
+    // Engagement Rate — SEBELUMNYA TIDAK PERNAH DIHITUNG SAMA SEKALI untuk
+    // Facebook (beda dari Instagram yang sudah dari awal ada). Sekarang
+    // dihitung dari total (likes+comments+shares) post yang berhasil
+    // disync di atas, dibagi followers, dikali 100 — sama pendekatan dgn
+    // Instagram (tidak ada metric resmi "engagement rate" langsung dari
+    // Meta untuk Facebook Page).
+    const engagementRate = followers != null && followers > 0 ? Math.round((totalPostEngagement / followers) * 1000) / 10 : null;
+
+    // Ditulis ke HARI INI (bukan "kemarin" seperti sebelumnya) — followers/
+    // reach/views semuanya sekarang snapshot TOTAL (bukan breakdown harian
+    // lagi), jadi tidak ada lagi "hari mana yang datanya udah final" buat
+    // dijadiin acuan seperti Instagram. Kalau ditulis ke "kemarin" padahal
+    // sudah ada baris "hari ini" dari sync SEBELUMNYA (yang masih salah),
+    // baris "hari ini" yang lebih baru itu tetap kepilih sebagai "latest"
+    // walau datanya sudah usang — nulis ke hari ini memastikan sync
+    // TERBARU selalu jadi baris TERBARU juga.
+    const fbDate = isoDate(today);
+    if (followers != null || totalReach != null || totalProfileVisits != null || engagementRate != null) {
+      await upsertSocialMetric(admin, clientId, "facebook", fbDate, {
+        followers,
+        reach: totalReach,
+        visitors: totalProfileVisits,
+        engagementRate,
+      });
+      metricsSynced++;
     }
 
     return { clientId, platform: "facebook", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError, contentItemsFailed, firstContentItemError };
