@@ -422,8 +422,11 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
           if (!firstItemError) firstItemError = err instanceof Error ? err.message : String(err);
         }
       }
-    } catch {
-      // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
+    } catch (err) {
+      // Errornya sekarang dicatat (bukan didiamkan total tanpa jejak) —
+      // lihat komentar sama di Facebook.
+      itemsFailed++;
+      if (!firstItemError) firstItemError = `[Fetch Media] ${err instanceof Error ? err.message : String(err)}`;
     }
 
     // STORY — endpoint TERPISAH dari /media (`/stories`, bukan bagian dari
@@ -471,8 +474,11 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
           if (!firstItemError) firstItemError = err instanceof Error ? err.message : String(err);
         }
       }
-    } catch {
-      // Diamkan — endpoint /stories kosong/gagal itu normal (Story expired atau memang belum pernah upload), tidak menggagalkan sync lain.
+    } catch (err) {
+      // Errornya sekarang dicatat (bukan didiamkan total tanpa jejak) —
+      // lihat komentar sama di Facebook.
+      itemsFailed++;
+      if (!firstItemError) firstItemError = `[Fetch Stories] ${err instanceof Error ? err.message : String(err)}`;
     }
 
     // Engagement Rate — dihitung dari total (likes+comments+saves) SEMUA
@@ -585,7 +591,13 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
 
     try {
       const items = await fetchPaginated(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/posts?fields=id,message,created_time,permalink_url,full_picture,likes.summary(true),comments.summary(true),shares&limit=50&access_token=${accessToken}`,
+        // KONFIRMASI dari API Tester: limit=50 SEKALIGUS dengan field berat
+        // (likes.summary, comments.summary, shares) bikin Meta balikin
+        // error 500 "Please reduce the amount of data you're asking for" —
+        // limit per-halaman diperkecil jadi 10 (fetchPaginated tetap ambil
+        // total sampai MAX_POSTS lewat beberapa halaman via paging.next,
+        // cuma tiap halaman sekarang lebih ringan).
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/posts?fields=id,message,created_time,permalink_url,full_picture,likes.summary(true),comments.summary(true),shares&limit=10&access_token=${accessToken}`,
         50 // sama seperti Instagram — dulu hard cap 25 di limit URL, sekarang ikut paging.next lewat fetchPaginated supaya upload lama juga ke-tarik.
       );
       itemsFound += items.length;
@@ -632,6 +644,13 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       // gagal per-item), sebelumnya ini didiamkan TOTAL tanpa jejak sama
       // sekali, jadi "0 post ditemukan" kelihatan seperti akun memang kosong
       // padahal sebenarnya request-nya sendiri yang gagal.
+      // BUG SEBELUMNYA: catch di sini set firstItemError TAPI TIDAK
+      // nambah itemsFailed — akibatnya kondisi tampil banner di Admin
+      // (`itemsFailed > 0`) gak pernah kepenuhi walau errornya beneran ada,
+      // jadi error kayak "(500) Please reduce the amount of data..." bisa
+      // gagal TOTAL tanpa jejak SAMA SEKALI di banner. Sekarang itemsFailed
+      // ikut ditambah di sini juga.
+      itemsFailed++;
       if (!firstItemError) firstItemError = `[Fetch Posts] ${err instanceof Error ? err.message : String(err)}`;
     }
 
@@ -826,8 +845,11 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
           if (!firstItemError) firstItemError = err instanceof Error ? err.message : String(err);
         }
       }
-    } catch {
-      // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
+    } catch (err) {
+      // Errornya sekarang dicatat (bukan didiamkan total tanpa jejak) —
+      // lihat komentar sama di Facebook.
+      itemsFailed++;
+      if (!firstItemError) firstItemError = `[Fetch Threads Posts] ${err instanceof Error ? err.message : String(err)}`;
     }
 
     return { clientId, platform: "threads", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError, contentItemsFailed, firstContentItemError };
