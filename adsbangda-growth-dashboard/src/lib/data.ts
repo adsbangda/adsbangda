@@ -540,7 +540,12 @@ export async function getSocialMediaBreakdown(clientId: string, period: string =
 
   const everConfigured = Array.from(new Set((everTargetRows ?? []).map((r) => r.platform as string)));
   const targets = (currentTargetRows ?? []).map(mapContentTarget);
-  const published = items.filter((i) => i.status === "published");
+  // BUG SEBELUMNYA (sama persis dengan yang di Admin Portal): `published`
+  // mengambil SEMUA content_items berstatus published SEPANJANG MASA, lalu
+  // dibandingkan ke target SATU BULAN (`period`) — progress % jadi tidak
+  // masuk akal (numpuk terus dari bulan ke bulan). Sekarang di-scope ke
+  // bulan `period` yang sama dengan target-nya, pakai `plannedDate`.
+  const published = items.filter((i) => i.status === "published" && i.plannedDate.slice(0, 7) === period);
 
   return everConfigured.map((platform) => ({
     platform: platform as SocialPlatformSummary["platform"],

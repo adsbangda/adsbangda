@@ -34,6 +34,7 @@ import {
   adminSaveSocialConnection,
 } from "@/lib/admin-data";
 import { syncInstagramForClient, syncFacebookForClient, syncThreadsForClient } from "@/lib/meta-sync";
+import { getPlatformPerformanceTable, type DateRange } from "@/lib/data";
 import { CONTENT_TYPES_BY_PLATFORM, CONTENT_TYPE_LABEL, type SocialPlatform, type SocialConnection, type GoalStatus, type ContentStatus } from "@/lib/types";
 import { PlatformContentTypeFields } from "@/components/dashboard/platform-content-type-fields";
 import { QuickStatusSelect } from "@/components/admin/quick-status-select";
@@ -93,10 +94,30 @@ export default async function AdminClientSocialMediaPage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string; platform?: string; edit?: string; editTarget?: string; editPost?: string; sync?: string; rows?: string; message?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    platform?: string;
+    edit?: string;
+    editTarget?: string;
+    editPost?: string;
+    sync?: string;
+    rows?: string;
+    message?: string;
+    itemsFound?: string;
+    itemsFailed?: string;
+    itemError?: string;
+    from?: string;
+    to?: string;
+  }>;
 }) {
   const { clientId } = await params;
-  const { tab = "delivery", platform = "instagram", edit, editTarget, editPost, sync, rows, message } = await searchParams;
+  const { tab = "delivery", platform = "instagram", edit, editTarget, editPost, sync, rows, message, itemsFound, itemsFailed, itemError, from, to } = await searchParams;
+  // Rentang perbandingan performance — validasi sama seperti Client Portal
+  // Overview (dua-duanya ada, format benar, urut). Tanpa ini (default),
+  // getPlatformPerformanceTable otomatis pakai SATU BULAN PENUH (bulan
+  // berjalan) dibanding SATU BULAN sebelumnya.
+  const isValidDate = (v: string | undefined): v is string => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(new Date(v).getTime());
+  const performanceRange: DateRange | undefined = isValidDate(from) && isValidDate(to) && from <= to ? { from, to } : undefined;
   const base = `/admin/clients/${clientId}/social-media`;
   const path = base;
   const period = currentPeriod();
@@ -106,7 +127,14 @@ export default async function AdminClientSocialMediaPage({
   const [content, targets] = await Promise.all([adminListContent(clientId), adminListContentTargets(clientId, period)]);
 
   const totalTarget = targets.reduce((sum, t) => sum + t.target, 0);
-  const delivered = content.filter((c) => c.status === "published").length; // sesuai brief: HANYA published yang dihitung Delivered
+  // BUG SEBELUMNYA: `delivered` menghitung SEMUA post published SEPANJANG
+  // MASA (all-time), padahal dibandingkan ke `totalTarget` yang cuma target
+  // SATU BULAN (`period`) — progress % jadi tidak pernah masuk akal (makin
+  // lama makin numpuk, atau malah kelihatan "kurang" relatif kalau target
+  // bulan ini dinaikkan tapi actual lama ikut kehitung terus). Sekarang
+  // di-scope ke bulan `period` yang sama persis dengan target-nya, pakai
+  // `plannedDate` (tanggal konten itu SEHARUSNYA/SEBENARNYA tayang).
+  const delivered = content.filter((c) => c.status === "published" && c.plannedDate.slice(0, 7) === period).length; // sesuai brief: HANYA published yang dihitung Delivered
   const deliveryPct = totalTarget > 0 ? Math.min(100, Math.round((delivered / totalTarget) * 100)) : 0;
 
   async function addContent(formData: FormData) {
@@ -254,7 +282,20 @@ export default async function AdminClientSocialMediaPage({
     if (!result || result.error) {
       redirect(`${base}?tab=performance&platform=${activePlatform}&sync=error&message=${encodeURIComponent(result?.error ?? "Platform tidak didukung.")}`);
     }
-    redirect(`${base}?tab=performance&platform=${activePlatform}&sync=ok&rows=${result.metricsSynced + result.postsSynced}`);
+    // Kalau ada item yang GAGAL disimpan (ketarik dari Meta tapi gagal
+    // upsert ke database), tetap redirect ke "sync=ok" (metrics/post lain
+    // yang berhasil TETAP tersimpan), tapi kirim juga detail diagnostiknya
+    // lewat query param terpisah supaya admin bisa lihat PERSIS kenapa
+    // sebagian item tidak masuk — sebelumnya ini didiamkan total tanpa jejak.
+    const itemsFound = result.itemsFound ?? 0;
+    const itemsFailed = result.itemsFailed ?? 0;
+    const diagParams =
+      itemsFailed > 0
+        ? `&itemsFound=${itemsFound}&itemsFailed=${itemsFailed}&itemError=${encodeURIComponent(result.firstItemError ?? "")}`
+        : itemsFound > 0
+          ? `&itemsFound=${itemsFound}`
+          : "";
+    redirect(`${base}?tab=performance&platform=${activePlatform}&sync=ok&rows=${result.metricsSynced + result.postsSynced}${diagParams}`);
   }
 
   async function addPostAction(formData: FormData) {
@@ -369,7 +410,9 @@ export default async function AdminClientSocialMediaPage({
                     </div>
                     <div className="divide-y divide-border">
                       {rows.map((t) => {
-                        const actual = content.filter((c) => c.status === "published" && c.platform === t.platform && c.type === t.contentType).length;
+                        const actual = content.filter(
+                          (c) => c.status === "published" && c.platform === t.platform && c.type === t.contentType && c.plannedDate.slice(0, 7) === period
+                        ).length; // di-scope ke `period` yang sama dengan target (lihat komentar di deklarasi `delivered` di atas — bug yang sama).
                         const pct = t.target > 0 ? Math.min(100, Math.round((actual / t.target) * 100)) : 0;
                         return editTarget === t.id ? (
                           <form key={t.id} action={updateTargetAction} className="flex flex-wrap items-center gap-2 bg-accent-soft/40 px-4 py-3">
@@ -613,6 +656,10 @@ export default async function AdminClientSocialMediaPage({
           syncStatus={sync}
           syncRows={rows}
           syncMessage={message}
+          syncItemsFound={itemsFound}
+          syncItemsFailed={itemsFailed}
+          syncItemError={itemError}
+          performanceRange={performanceRange}
         />
       )}
 
@@ -718,6 +765,10 @@ async function PerformancePanel({
   syncStatus,
   syncRows,
   syncMessage,
+  syncItemsFound,
+  syncItemsFailed,
+  syncItemError,
+  performanceRange,
 }: {
   clientId: string;
   base: string;
@@ -735,14 +786,24 @@ async function PerformancePanel({
   syncStatus?: string;
   syncRows?: string;
   syncMessage?: string;
+  syncItemsFound?: string;
+  syncItemsFailed?: string;
+  syncItemError?: string;
+  performanceRange?: DateRange;
 }) {
-  const [metrics, posts, connections] = await Promise.all([
+  const [metrics, posts, connections, performanceTable] = await Promise.all([
     adminListPerformanceMetrics(clientId, "social", activePlatform),
     adminListPostPerformance(clientId, activePlatform),
     adminListSocialConnections(clientId),
+    getPlatformPerformanceTable(clientId, performanceRange),
   ]);
+  // Baris teragregasi (SUM traffic sepanjang periode + snapshot terbaru utk
+  // point-in-time, lihat komentar besar di getPlatformPerformanceTable) buat
+  // platform yang lagi aktif — ini yang dipakai kartu ringkasan di bawah,
+  // GANTI cara lama yang cuma nampilin `latest` (snapshot SATU HARI
+  // terakhir tanpa agregasi/perbandingan sama sekali).
+  const summary = performanceTable.find((r) => r.platform === activePlatform);
   const connection = connections.find((c) => c.platform === activePlatform);
-  const latest = metrics[0];
   const performanceBase = `${base}?tab=performance&platform=${activePlatform}`;
   const postTypes = CONTENT_TYPES_BY_PLATFORM[activePlatform] ?? [];
 
@@ -750,12 +811,27 @@ async function PerformancePanel({
     <div className="animate-rise space-y-6">
       {syncStatus && (
         <div
-          className={`flex items-center gap-2 rounded-[var(--radius-md)] border px-4 py-3 text-sm ${
+          className={`flex flex-col gap-1 rounded-[var(--radius-md)] border px-4 py-3 text-sm ${
             syncStatus === "ok" ? "border-success/30 bg-success-soft text-success" : "border-danger/30 bg-danger-soft text-danger"
           }`}
         >
-          {syncStatus === "ok" ? <CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={1.75} /> : <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.75} />}
-          {syncStatus === "ok" ? `Sync berhasil — ${syncRows ?? 0} baris ter-update.` : `Sync gagal: ${syncMessage ?? "Terjadi error."}`}
+          <div className="flex items-center gap-2">
+            {syncStatus === "ok" ? <CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={1.75} /> : <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.75} />}
+            {syncStatus === "ok" ? `Sync berhasil — ${syncRows ?? 0} baris ter-update.` : `Sync gagal: ${syncMessage ?? "Terjadi error."}`}
+          </div>
+          {/* Detail diagnostik — SENGAJA ditampilkan (bukan didiamkan lagi
+              seperti sebelumnya) supaya kelihatan JELAS kalau ada post yang
+              ketarik dari Meta tapi gagal disimpan, dan kenapa. Tanpa ini,
+              gap antara "jumlah post asli di Instagram/Facebook" vs "jumlah
+              yang muncul di Content Delivery/Kalender" tidak ada cara buat
+              didiagnosis dari UI sama sekali. */}
+          {syncStatus === "ok" && syncItemsFound && (
+            <p className="pl-6 text-xs opacity-80">
+              {Number(syncItemsFailed ?? 0) > 0
+                ? `Ditemukan ${syncItemsFound} post dari API, ${syncItemsFailed} GAGAL disimpan. Error pertama: ${syncItemError || "(tidak ada pesan)"}`
+                : `Ditemukan ${syncItemsFound} post dari API, semuanya berhasil disimpan.`}
+            </p>
+          )}
         </div>
       )}
 
@@ -811,7 +887,14 @@ async function PerformancePanel({
       )}
 
       <Card padding="lg">
-        <SectionHeading title="Performance" description="Pilih platform, lalu masukkan data snapshot per tanggal." />
+        <SectionHeading
+          title="Performance"
+          description={
+            performanceRange
+              ? `Menampilkan ${performanceRange.from} s/d ${performanceRange.to}, dibandingkan periode sebelumnya dengan panjang yang sama.`
+              : "Menampilkan bulan berjalan, dibandingkan bulan sebelumnya. Pilih preset di bawah untuk lihat harian/mingguan, atau isi form snapshot per tanggal."
+          }
+        />
 
         <div className="mb-4 flex flex-wrap gap-1.5">
           {SOCIAL_PLATFORMS.map((p) => (
@@ -828,25 +911,66 @@ async function PerformancePanel({
           ))}
         </div>
 
-        {!latest ? (
-          <EmptyState icon={TrendingUp} title={`Belum ada data ${activePlatform}`} description="Tambahkan snapshot pertama lewat form di bawah." />
+        {/* Preset periode perbandingan — SAMA konsepnya dengan date-range
+            picker di Overview Client Portal: klik salah satu, "current" vs
+            "previous" otomatis dihitung ulang dengan panjang yang sama
+            (harian dibanding kemarin, mingguan dibanding minggu lalu, dst).
+            "Bulan Ini" (tanpa parameter from/to) = default. */}
+        <div className="mb-5 flex flex-wrap gap-1.5 border-b border-border pb-4">
+          {(
+            [
+              { label: "Bulan Ini", days: undefined },
+              { label: "Hari Ini vs Kemarin", days: 1 },
+              { label: "7 Hari Terakhir", days: 7 },
+              { label: "30 Hari Terakhir", days: 30 },
+              { label: "Tahun Ini", days: 365 },
+            ] as { label: string; days: number | undefined }[]
+          ).map((preset) => {
+            let href = `${base}?tab=performance&platform=${activePlatform}`;
+            let isActive = !performanceRange;
+            if (preset.days != null) {
+              const toDate = new Date();
+              const fromDate = new Date(toDate);
+              fromDate.setDate(toDate.getDate() - (preset.days - 1));
+              const fromISO = fromDate.toISOString().slice(0, 10);
+              const toISO = toDate.toISOString().slice(0, 10);
+              href += `&from=${fromISO}&to=${toISO}`;
+              isActive = performanceRange?.from === fromISO && performanceRange?.to === toISO;
+            }
+            return (
+              <Link
+                key={preset.label}
+                href={href}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 font-data text-[11px] font-semibold transition-all duration-200",
+                  isActive ? "border-ink bg-ink text-white" : "border-border bg-surface text-muted hover:border-ink hover:text-ink"
+                )}
+              >
+                {preset.label}
+              </Link>
+            );
+          })}
+        </div>
+
+        {!summary || (summary.followers == null && summary.reach == null && summary.impressions == null) ? (
+          <EmptyState icon={TrendingUp} title={`Belum ada data ${activePlatform}`} description="Tambahkan snapshot pertama lewat form di bawah, atau klik Sync Sekarang kalau platform ini sudah terhubung." />
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            <MiniMetric icon={Users} label="Followers" value={latest.followers} />
+            <MiniMetric icon={Users} label="Followers" value={summary.followers} delta={summary.followersDelta} />
             {activePlatform === "threads" ? (
               <>
                 {/* Threads tidak punya Reach/Profile Visits terpisah (semua digabung jadi "Views", ikut Impressions) — diganti Replies/Reposts yang beneran ada datanya di Threads. */}
-                <MiniMetric icon={Eye} label="Views" value={latest.impressions} />
-                <MiniMetric icon={Heart} label="Engagement Rate" value={latest.engagementRate} suffix="%" />
-                <MiniMetric icon={MessageCircle} label="Replies" value={latest.replies} />
-                <MiniMetric icon={Repeat2} label="Reposts" value={latest.reposts} />
+                <MiniMetric icon={Eye} label="Views" value={summary.impressions} delta={summary.impressionsDelta} />
+                <MiniMetric icon={Heart} label="Engagement Rate" value={summary.engagementRate} suffix="%" delta={summary.engagementRateDelta} />
+                <MiniMetric icon={MessageCircle} label="Replies" value={summary.replies} delta={summary.repliesDelta} />
+                <MiniMetric icon={Repeat2} label="Reposts" value={summary.reposts} delta={summary.repostsDelta} />
               </>
             ) : (
               <>
-                <MiniMetric icon={Eye} label="Reach" value={latest.reach} />
-                <MiniMetric icon={Eye} label="Impressions" value={latest.impressions} />
-                <MiniMetric icon={Heart} label="Engagement Rate" value={latest.engagementRate} suffix="%" />
-                <MiniMetric icon={TrendingUp} label="Profile Visits" value={latest.visitors} />
+                <MiniMetric icon={Eye} label="Reach" value={summary.reach} delta={summary.reachDelta} />
+                <MiniMetric icon={Eye} label="Impressions" value={summary.impressions} delta={summary.impressionsDelta} />
+                <MiniMetric icon={Heart} label="Engagement Rate" value={summary.engagementRate} suffix="%" delta={summary.engagementRateDelta} />
+                <MiniMetric icon={TrendingUp} label="Profile Visits" value={summary.profileVisit} delta={summary.profileVisitDelta} />
               </>
             )}
           </div>
@@ -1059,7 +1183,7 @@ async function PerformancePanel({
   );
 }
 
-function MiniMetric({ icon: Icon, label, value, suffix = "" }: { icon: React.ElementType; label: string; value?: number; suffix?: string }) {
+function MiniMetric({ icon: Icon, label, value, suffix = "", delta }: { icon: React.ElementType; label: string; value?: number; suffix?: string; delta?: number | null }) {
   return (
     <Card className="flex items-center gap-4">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
@@ -1068,6 +1192,11 @@ function MiniMetric({ icon: Icon, label, value, suffix = "" }: { icon: React.Ele
       <div className="min-w-0">
         <p className="font-data text-2xl font-bold text-ink">{value != null ? `${value.toLocaleString("id-ID")}${suffix}` : "—"}</p>
         <p className="text-xs text-muted">{label}</p>
+        {delta != null && (
+          <p className={cn("mt-0.5 font-data text-[11px] font-semibold", delta >= 0 ? "text-success" : "text-danger")}>
+            {delta >= 0 ? "↑" : "↓"} {Math.abs(delta)}%
+          </p>
+        )}
       </div>
     </Card>
   );

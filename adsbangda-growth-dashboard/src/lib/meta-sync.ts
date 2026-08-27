@@ -35,6 +35,12 @@ export interface MetaSyncResult {
   metricsSynced: number;
   postsSynced: number;
   error?: string;
+  /** Total item (post/media/story) yang berhasil DITARIK dari API, SEBELUM disaring gagal/berhasil disimpan — dipakai bandingkan dengan `postsSynced` supaya kelihatan jelas kalau ada yang ketarik tapi gagal disimpan (bukan gagal ketarik dari Meta sama sekali). */
+  itemsFound?: number;
+  /** Jumlah item yang GAGAL disimpan ke database (ditarik dari API tapi upsert-nya error) — kalau ini 0 padahal itemsFound > postsSynced, berarti ada item yang memang tidak ketarik/tidak lolos filter, bukan gagal simpan. */
+  itemsFailed?: number;
+  /** Pesan error dari kegagalan simpan PERTAMA yang ketemu (bukan semua — biar tidak kepanjangan) — ini kunci diagnosis kenapa suatu item gagal disimpan. */
+  firstItemError?: string;
 }
 
 function isoDate(d: Date): string {
@@ -219,6 +225,9 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
     const today = new Date();
     let metricsSynced = 0;
     let postsSynced = 0;
+    let itemsFound = 0;
+    let itemsFailed = 0;
+    let firstItemError: string | undefined;
 
     // Followers — field lifetime di object akun, bukan Insights metric.
     const account = await fetchJSON(`https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}?fields=followers_count&access_token=${accessToken}`);
@@ -305,6 +314,7 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
         `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/media?fields=id,caption,media_type,media_product_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&limit=50&access_token=${accessToken}`,
         MAX_POSTS
       );
+      itemsFound += items.length;
 
       for (const item of items) {
         const mediaId = item.id as string;
@@ -383,8 +393,13 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
           });
           totalPostEngagement += likes + comments + (saves ?? 0); // cuma dihitung kalau berhasil kesimpan, biar konsisten dengan yang benar-benar masuk post_performance.
           postsSynced++;
-        } catch {
-          // Diamkan — SATU post gagal tidak boleh menghentikan post lain di loop ini.
+        } catch (err) {
+          // TIDAK didiamkan total lagi — dicatat (itemsFailed + pesan
+          // errornya) supaya kelihatan di hasil sync, tapi loop TETAP lanjut
+          // ke post berikutnya (satu post gagal tidak boleh menghentikan
+          // post lain).
+          itemsFailed++;
+          if (!firstItemError) firstItemError = err instanceof Error ? err.message : String(err);
         }
       }
     } catch {
@@ -402,6 +417,7 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
         `https://graph.facebook.com/${GRAPH_VERSION}/${igAccountId}/stories?fields=id,media_type,media_url,thumbnail_url,timestamp,permalink&access_token=${accessToken}`
       );
       const items = (stories.data as Record<string, unknown>[] | undefined) ?? [];
+      itemsFound += items.length;
       for (const item of items) {
         const mediaId = item.id as string;
         let storyViews: number | null = null;
@@ -426,8 +442,9 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
             thumbnailUrl,
           });
           postsSynced++;
-        } catch {
-          // Diamkan — satu Story gagal tidak boleh menghentikan Story lain di loop ini.
+        } catch (err) {
+          itemsFailed++;
+          if (!firstItemError) firstItemError = err instanceof Error ? err.message : String(err);
         }
       }
     } catch {
@@ -454,7 +471,7 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
       metricsSynced++;
     }
 
-    return { clientId, platform: "instagram", metricsSynced, postsSynced };
+    return { clientId, platform: "instagram", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError };
   } catch (err) {
     return { clientId, platform: "instagram", metricsSynced: 0, postsSynced: 0, error: err instanceof Error ? err.message : String(err) };
   }
@@ -474,6 +491,9 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
     const today = new Date();
     let metricsSynced = 0;
     let postsSynced = 0;
+    let itemsFound = 0;
+    let itemsFailed = 0;
+    let firstItemError: string | undefined;
 
     const page = await fetchJSON(`https://graph.facebook.com/${GRAPH_VERSION}/${pageId}?fields=fan_count&access_token=${accessToken}`);
     const followers = (page.fan_count as number | undefined) ?? null;
@@ -513,6 +533,7 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
         `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/posts?fields=id,message,created_time,permalink_url,full_picture,likes.summary(true),comments.summary(true),shares&limit=50&access_token=${accessToken}`,
         50 // sama seperti Instagram — dulu hard cap 25 di limit URL, sekarang ikut paging.next lewat fetchPaginated supaya upload lama juga ke-tarik.
       );
+      itemsFound += items.length;
       for (const item of items) {
         const postId = item.id as string;
         const likes = ((item.likes as Record<string, unknown> | undefined)?.summary as Record<string, unknown> | undefined)?.total_count as
@@ -539,15 +560,16 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
             thumbnailUrl: (item.full_picture as string | undefined) ?? null,
           });
           postsSynced++;
-        } catch {
-          // Diamkan — satu post gagal tidak boleh menghentikan post lain di loop ini.
+        } catch (err) {
+          itemsFailed++;
+          if (!firstItemError) firstItemError = err instanceof Error ? err.message : String(err);
         }
       }
     } catch {
       // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
     }
 
-    return { clientId, platform: "facebook", metricsSynced, postsSynced };
+    return { clientId, platform: "facebook", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError };
   } catch (err) {
     return { clientId, platform: "facebook", metricsSynced: 0, postsSynced: 0, error: err instanceof Error ? err.message : String(err) };
   }
@@ -569,6 +591,9 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
     const today = new Date();
     let metricsSynced = 0;
     let postsSynced = 0;
+    let itemsFound = 0;
+    let itemsFailed = 0;
+    let firstItemError: string | undefined;
 
     let followers: number | null = null;
     let totalLikes: number | null = null;
@@ -654,6 +679,7 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
         `https://graph.threads.net/v1.0/${threadsUserId}/threads?fields=id,text,permalink,timestamp&limit=50&access_token=${accessToken}`,
         50 // sama seperti Instagram/Facebook — sebelumnya hard cap 25, sekarang ikut paging.next.
       );
+      itemsFound += items.length;
       for (const item of items) {
         const mediaId = item.id as string;
         let likes: number | null = null;
@@ -679,15 +705,16 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
             permalink: (item.permalink as string | undefined) ?? null,
           });
           postsSynced++;
-        } catch {
-          // Diamkan — satu post gagal tidak boleh menghentikan post lain di loop ini.
+        } catch (err) {
+          itemsFailed++;
+          if (!firstItemError) firstItemError = err instanceof Error ? err.message : String(err);
         }
       }
     } catch {
       // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
     }
 
-    return { clientId, platform: "threads", metricsSynced, postsSynced };
+    return { clientId, platform: "threads", metricsSynced, postsSynced, itemsFound, itemsFailed, firstItemError };
   } catch (err) {
     return { clientId, platform: "threads", metricsSynced: 0, postsSynced: 0, error: err instanceof Error ? err.message : String(err) };
   }
