@@ -330,7 +330,6 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
 
         const likes = (item.like_count as number | undefined) ?? 0;
         const comments = (item.comments_count as number | undefined) ?? 0;
-        totalPostEngagement += likes + comments + (saves ?? 0);
 
         const mediaType = String(item.media_type ?? "").toLowerCase();
         // Video/Reels: media_url itu file video (gak bisa dipajang <img>),
@@ -338,18 +337,31 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
         // gambar, aman dipakai. Fallback ke media_url kalau thumbnail_url
         // gak ada (mis. media_type IMAGE memang gak punya thumbnail_url).
         const thumbnailUrl = (item.thumbnail_url as string | undefined) ?? (item.media_url as string | undefined) ?? null;
-        await upsertPost(admin, clientId, "instagram", mediaId, {
-          type: mediaType === "video" || mediaType === "reels" ? "reels" : mediaType === "carousel_album" ? "carousel" : "feed",
-          title: String(item.caption ?? "").slice(0, 120) || "(tanpa caption)",
-          postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
-          likes: (item.like_count as number | undefined) ?? null,
-          comments: (item.comments_count as number | undefined) ?? null,
-          saves,
-          views,
-          permalink: (item.permalink as string | undefined) ?? null,
-          thumbnailUrl,
-        });
-        postsSynced++;
+        // PENTING: try/catch PER-ITEM di sini. upsertPost() bisa throw kalau
+        // satu post gagal disimpan (mis. caption berisi karakter yang bikin
+        // payload aneh, constraint DB, dll) — SEBELUM perbaikan ini, satu
+        // post gagal = seluruh loop berhenti total (exception-nya lolos ke
+        // try/catch besar di luar), jadi post-post SETELAHNYA (termasuk yang
+        // sebenarnya valid) ikut tidak pernah kesimpan. Ini akar masalah
+        // kenapa Post Ranking/Content Calendar sering "baru kebaca beberapa
+        // post" padahal upload aslinya jauh lebih banyak.
+        try {
+          await upsertPost(admin, clientId, "instagram", mediaId, {
+            type: mediaType === "video" || mediaType === "reels" ? "reels" : mediaType === "carousel_album" ? "carousel" : "feed",
+            title: String(item.caption ?? "").slice(0, 120) || "(tanpa caption)",
+            postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
+            likes: (item.like_count as number | undefined) ?? null,
+            comments: (item.comments_count as number | undefined) ?? null,
+            saves,
+            views,
+            permalink: (item.permalink as string | undefined) ?? null,
+            thumbnailUrl,
+          });
+          totalPostEngagement += likes + comments + (saves ?? 0); // cuma dihitung kalau berhasil kesimpan, biar konsisten dengan yang benar-benar masuk post_performance.
+          postsSynced++;
+        } catch {
+          // Diamkan — SATU post gagal tidak boleh menghentikan post lain di loop ini.
+        }
       }
     } catch {
       // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
@@ -380,15 +392,19 @@ export async function syncInstagramForClient(clientId: string, igAccountId: stri
 
         const postedDate = String(item.timestamp ?? "").slice(0, 10) || isoDate(today);
         const thumbnailUrl = (item.thumbnail_url as string | undefined) ?? (item.media_url as string | undefined) ?? null;
-        await upsertPost(admin, clientId, "instagram", mediaId, {
-          type: "story", // CONTENT_TYPES_BY_PLATFORM.instagram sudah termasuk "story" — cocok tanpa perlu migration tambahan.
-          title: `Story ${postedDate}`, // Story tidak punya caption di Graph API.
-          postedDate,
-          views: storyViews,
-          permalink: (item.permalink as string | undefined) ?? null,
-          thumbnailUrl,
-        });
-        postsSynced++;
+        try {
+          await upsertPost(admin, clientId, "instagram", mediaId, {
+            type: "story", // CONTENT_TYPES_BY_PLATFORM.instagram sudah termasuk "story" — cocok tanpa perlu migration tambahan.
+            title: `Story ${postedDate}`, // Story tidak punya caption di Graph API.
+            postedDate,
+            views: storyViews,
+            permalink: (item.permalink as string | undefined) ?? null,
+            thumbnailUrl,
+          });
+          postsSynced++;
+        } catch {
+          // Diamkan — satu Story gagal tidak boleh menghentikan Story lain di loop ini.
+        }
       }
     } catch {
       // Diamkan — endpoint /stories kosong/gagal itu normal (Story expired atau memang belum pernah upload), tidak menggagalkan sync lain.
@@ -469,10 +485,10 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
     }
 
     try {
-      const posts = await fetchJSON(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/posts?fields=id,message,created_time,permalink_url,full_picture,likes.summary(true),comments.summary(true),shares&limit=25&access_token=${accessToken}`
+      const items = await fetchPaginated(
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/posts?fields=id,message,created_time,permalink_url,full_picture,likes.summary(true),comments.summary(true),shares&limit=50&access_token=${accessToken}`,
+        50 // sama seperti Instagram — dulu hard cap 25 di limit URL, sekarang ikut paging.next lewat fetchPaginated supaya upload lama juga ke-tarik.
       );
-      const items = (posts.data as Record<string, unknown>[] | undefined) ?? [];
       for (const item of items) {
         const postId = item.id as string;
         const likes = ((item.likes as Record<string, unknown> | undefined)?.summary as Record<string, unknown> | undefined)?.total_count as
@@ -483,17 +499,25 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
           | undefined;
         const shares = (item.shares as Record<string, unknown> | undefined)?.count as number | undefined;
 
-        await upsertPost(admin, clientId, "facebook", postId, {
-          type: "post", // CONTENT_TYPES_BY_PLATFORM.facebook = ["post","video"] — "feed" bukan tipe valid buat Facebook, harus cocok biar ke-hitung di Content Delivery.
-          title: String(item.message ?? "").slice(0, 120) || "(tanpa teks)",
-          postedDate: String(item.created_time ?? "").slice(0, 10) || isoDate(today),
-          likes: likes ?? null,
-          comments: comments ?? null,
-          shares: shares ?? null,
-          permalink: (item.permalink_url as string | undefined) ?? null,
-          thumbnailUrl: (item.full_picture as string | undefined) ?? null,
-        });
-        postsSynced++;
+        // try/catch PER-ITEM — lihat komentar sama di syncInstagramForClient:
+        // tanpa ini, satu post gagal disimpan akan menghentikan SELURUH sisa
+        // loop (exception lolos ke try/catch besar di luar), bukan cuma post
+        // itu sendiri yang gagal.
+        try {
+          await upsertPost(admin, clientId, "facebook", postId, {
+            type: "post", // CONTENT_TYPES_BY_PLATFORM.facebook = ["post","video"] — "feed" bukan tipe valid buat Facebook, harus cocok biar ke-hitung di Content Delivery.
+            title: String(item.message ?? "").slice(0, 120) || "(tanpa teks)",
+            postedDate: String(item.created_time ?? "").slice(0, 10) || isoDate(today),
+            likes: likes ?? null,
+            comments: comments ?? null,
+            shares: shares ?? null,
+            permalink: (item.permalink_url as string | undefined) ?? null,
+            thumbnailUrl: (item.full_picture as string | undefined) ?? null,
+          });
+          postsSynced++;
+        } catch {
+          // Diamkan — satu post gagal tidak boleh menghentikan post lain di loop ini.
+        }
       }
     } catch {
       // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
@@ -602,10 +626,10 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
     // SUDAH berhasil disync di atas tetap tersimpan — tidak ikut ke-reset
     // jadi gagal cuma gara-gara bagian Post Ranking-nya bermasalah.
     try {
-      const media = await fetchJSON(
-        `https://graph.threads.net/v1.0/${threadsUserId}/threads?fields=id,text,permalink,timestamp&limit=25&access_token=${accessToken}`
+      const items = await fetchPaginated(
+        `https://graph.threads.net/v1.0/${threadsUserId}/threads?fields=id,text,permalink,timestamp&limit=50&access_token=${accessToken}`,
+        50 // sama seperti Instagram/Facebook — sebelumnya hard cap 25, sekarang ikut paging.next.
       );
-      const items = (media.data as Record<string, unknown>[] | undefined) ?? [];
       for (const item of items) {
         const mediaId = item.id as string;
         let likes: number | null = null;
@@ -619,15 +643,21 @@ export async function syncThreadsForClient(clientId: string, threadsUserId: stri
           // Diamkan.
         }
 
-        await upsertPost(admin, clientId, "threads", mediaId, {
-          type: "post", // CONTENT_TYPES_BY_PLATFORM.threads = ["post"] — "feed" bukan tipe valid buat Threads, harus cocok biar ke-hitung di Content Delivery.
-          title: String(item.text ?? "").slice(0, 120) || "(tanpa teks)",
-          postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
-          likes,
-          views,
-          permalink: (item.permalink as string | undefined) ?? null,
-        });
-        postsSynced++;
+        // try/catch PER-ITEM — sama alasannya seperti Instagram/Facebook:
+        // satu post gagal disimpan tidak boleh menghentikan sisa loop.
+        try {
+          await upsertPost(admin, clientId, "threads", mediaId, {
+            type: "post", // CONTENT_TYPES_BY_PLATFORM.threads = ["post"] — "feed" bukan tipe valid buat Threads, harus cocok biar ke-hitung di Content Delivery.
+            title: String(item.text ?? "").slice(0, 120) || "(tanpa teks)",
+            postedDate: String(item.timestamp ?? "").slice(0, 10) || isoDate(today),
+            likes,
+            views,
+            permalink: (item.permalink as string | undefined) ?? null,
+          });
+          postsSynced++;
+        } catch {
+          // Diamkan — satu post gagal tidak boleh menghentikan post lain di loop ini.
+        }
       }
     } catch {
       // Diamkan — Post Ranking gagal/kosong tidak menggagalkan metrics yang sudah disync di atas.
