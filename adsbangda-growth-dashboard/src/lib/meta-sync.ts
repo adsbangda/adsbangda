@@ -51,7 +51,8 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-async function fetchJSON(url: string): Promise<Record<string, unknown>> {
+/** Diekspor supaya bisa dipakai fitur "API Tester" di Admin Portal — biar admin bisa test query Graph API langsung dari UI (raw response, tanpa perlu tunggu deploy/tebak-tebakan lagi). */
+export async function fetchJSON(url: string): Promise<Record<string, unknown>> {
   const res = await fetch(url);
   const json = (await res.json()) as Record<string, unknown>;
   if (!res.ok || json.error) {

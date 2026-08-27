@@ -32,8 +32,10 @@ import {
   adminDeleteGoal,
   adminListSocialConnections,
   adminSaveSocialConnection,
+  adminRunDiagnostics,
+  type DiagnosticCheck,
 } from "@/lib/admin-data";
-import { syncInstagramForClient, syncFacebookForClient, syncThreadsForClient } from "@/lib/meta-sync";
+import { syncInstagramForClient, syncFacebookForClient, syncThreadsForClient, fetchJSON } from "@/lib/meta-sync";
 import { getPlatformPerformanceTable, type DateRange } from "@/lib/data";
 import { CONTENT_TYPES_BY_PLATFORM, CONTENT_TYPE_LABEL, type SocialPlatform, type SocialConnection, type GoalStatus, type ContentStatus } from "@/lib/types";
 import { PlatformContentTypeFields } from "@/components/dashboard/platform-content-type-fields";
@@ -110,11 +112,32 @@ export default async function AdminClientSocialMediaPage({
     contentItemError?: string;
     from?: string;
     to?: string;
+    apiTestQuery?: string;
+    apiTestResult?: string;
+    apiTestOk?: string;
   }>;
 }) {
   const { clientId } = await params;
-  const { tab = "delivery", platform = "instagram", edit, editTarget, editPost, sync, rows, message, itemsFound, itemsFailed, itemError, contentItemsFailed, contentItemError, from, to } =
-    await searchParams;
+  const {
+    tab = "delivery",
+    platform = "instagram",
+    edit,
+    editTarget,
+    editPost,
+    sync,
+    rows,
+    message,
+    itemsFound,
+    itemsFailed,
+    itemError,
+    contentItemsFailed,
+    contentItemError,
+    from,
+    to,
+    apiTestQuery,
+    apiTestResult,
+    apiTestOk,
+  } = await searchParams;
   // Rentang perbandingan performance — validasi sama seperti Client Portal
   // Overview (dua-duanya ada, format benar, urut). Tanpa ini (default),
   // getPlatformPerformanceTable otomatis pakai SATU BULAN PENUH (bulan
@@ -127,7 +150,7 @@ export default async function AdminClientSocialMediaPage({
   const activeTab = tab === "performance" ? "performance" : tab === "goals" ? "goals" : "delivery";
   const activePlatform = (SOCIAL_PLATFORMS.includes(platform as SocialPlatform) ? platform : "instagram") as SocialPlatform;
 
-  const [content, targets] = await Promise.all([adminListContent(clientId), adminListContentTargets(clientId, period)]);
+  const [content, targets, diagnostics] = await Promise.all([adminListContent(clientId), adminListContentTargets(clientId, period), adminRunDiagnostics(clientId)]);
 
   const totalTarget = targets.reduce((sum, t) => sum + t.target, 0);
   // BUG SEBELUMNYA: `delivered` menghitung SEMUA post published SEPANJANG
@@ -312,6 +335,51 @@ export default async function AdminClientSocialMediaPage({
     redirect(`${base}?tab=performance&platform=${platformValue}&sync=ok&rows=${result.metricsSynced + result.postsSynced}${diagParams}`);
   }
 
+  /**
+   * API TESTER — biar bisa coba query Graph API LANGSUNG dari Admin Portal,
+   * pakai Account ID + Access Token yang SUDAH tersimpan, dan lihat hasil
+   * MENTAH-nya (sukses atau error) tanpa perlu ubah kode/deploy dulu.
+   * Tujuannya: kalau ada error API baru, tinggal coba-coba query di sini
+   * dulu sampai dapat yang jalan, BARU itu yang dimasukkan ke kode —
+   * membalik urutan dari "tebak di kode dulu, tau hasilnya belakangan"
+   * jadi "tau hasilnya dulu, baru masukkan ke kode".
+   */
+  async function testApiAction(formData: FormData) {
+    "use server";
+    const platformValue = String(formData.get("platform") ?? activePlatform) as SocialConnection["platform"];
+    const query = String(formData.get("query") ?? "").trim();
+    if (!query) {
+      redirect(`${base}?tab=performance&platform=${platformValue}`);
+    }
+    const connections = await adminListSocialConnections(clientId);
+    const conn = connections.find((c) => c.platform === platformValue);
+    if (!conn) {
+      redirect(
+        `${base}?tab=performance&platform=${platformValue}&apiTestQuery=${encodeURIComponent(query)}&apiTestOk=0&apiTestResult=${encodeURIComponent("Belum ada koneksi tersimpan untuk platform ini.")}`
+      );
+    }
+    // Base URL beda antara Threads (graph.threads.net) vs Instagram/Facebook
+    // (graph.facebook.com) — sama seperti di meta-sync.ts.
+    const baseUrl = platformValue === "threads" ? "https://graph.threads.net/v1.0" : `https://graph.facebook.com/v26.0`;
+    const separator = query.includes("?") ? "&" : "?";
+    const fullUrl = `${baseUrl}/${query}${separator}access_token=${conn!.accessToken}`;
+    let resultText: string;
+    let ok = true;
+    try {
+      const json = await fetchJSON(fullUrl);
+      resultText = JSON.stringify(json, null, 2);
+    } catch (err) {
+      ok = false;
+      resultText = err instanceof Error ? err.message : String(err);
+    }
+    // URL query param ada batas panjang praktis (~2000 karakter aman lintas
+    // browser) — dipotong kalau kepanjangan, cukup buat kebutuhan debug.
+    const truncated = resultText.length > 1800 ? resultText.slice(0, 1800) + "\n... (dipotong, hasil aslinya lebih panjang)" : resultText;
+    redirect(
+      `${base}?tab=performance&platform=${platformValue}&apiTestQuery=${encodeURIComponent(query)}&apiTestOk=${ok ? "1" : "0"}&apiTestResult=${encodeURIComponent(truncated)}`
+    );
+  }
+
   async function addPostAction(formData: FormData) {
     "use server";    await adminCreatePostPerformance(clientId, {
       platform: String(formData.get("platform")) as SocialPlatform,
@@ -387,6 +455,8 @@ export default async function AdminClientSocialMediaPage({
       </div>
 
       <SegmentedNav base={base} active={activeTab} />
+
+      <DiagnosticsPanel checks={diagnostics} />
 
       {activeTab === "delivery" && (
         <div className="animate-rise space-y-6">
@@ -676,6 +746,10 @@ export default async function AdminClientSocialMediaPage({
           syncContentItemsFailed={contentItemsFailed}
           syncContentItemError={contentItemError}
           performanceRange={performanceRange}
+          testApiAction={testApiAction}
+          apiTestQuery={apiTestQuery}
+          apiTestResult={apiTestResult}
+          apiTestOk={apiTestOk}
         />
       )}
 
@@ -787,6 +861,10 @@ async function PerformancePanel({
   syncContentItemsFailed,
   syncContentItemError,
   performanceRange,
+  testApiAction,
+  apiTestQuery,
+  apiTestResult,
+  apiTestOk,
 }: {
   clientId: string;
   base: string;
@@ -810,6 +888,10 @@ async function PerformancePanel({
   syncContentItemsFailed?: string;
   syncContentItemError?: string;
   performanceRange?: DateRange;
+  testApiAction: (formData: FormData) => Promise<void>;
+  apiTestQuery?: string;
+  apiTestResult?: string;
+  apiTestOk?: string;
 }) {
   const [metrics, posts, connections, performanceTable] = await Promise.all([
     adminListPerformanceMetrics(clientId, "social", activePlatform),
@@ -919,6 +1001,41 @@ async function PerformancePanel({
               {connection ? "● Terhubung" : "○ Belum terhubung"}
             </span>
           </form>
+        </Card>
+      )}
+
+      {connection && (
+        <Card padding="lg">
+          <SectionHeading
+            title="API Tester"
+            description="Coba query Graph API langsung pakai Account ID & Access Token yang sudah tersimpan — lihat hasil MENTAH-nya (sukses/error) tanpa perlu deploy kode dulu. Kalau ada error API baru, coba-coba di sini dulu sampai dapat query yang jalan."
+          />
+          <form action={testApiAction} className="flex flex-wrap items-start gap-2" autoComplete="off">
+            <input type="hidden" name="platform" value={activePlatform} />
+            <div className="min-w-[320px] flex-1">
+              <label className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Query (tanpa domain/access_token, itu otomatis ditambahkan)</label>
+              <input
+                key={`${activePlatform}-apiTestQuery`}
+                name="query"
+                defaultValue={apiTestQuery ?? `${connection.externalAccountId}/insights?metric=reach&period=day`}
+                placeholder={`${connection.externalAccountId}/insights?metric=...`}
+                className={`mt-1 block w-full font-data text-xs ${inputClass}`}
+              />
+            </div>
+            <SubmitButton variant="primary" size="sm" loadingLabel="Nge-test..." className="mt-[22px]">
+              Test Query
+            </SubmitButton>
+          </form>
+          {apiTestResult && (
+            <div className="mt-4">
+              <p className={`mb-1.5 font-data text-[11px] font-semibold uppercase tracking-wider ${apiTestOk === "1" ? "text-success" : "text-danger"}`}>
+                {apiTestOk === "1" ? "✓ Berhasil" : "✗ Gagal"}
+              </p>
+              <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-[var(--radius-md)] border border-border bg-black/[0.03] p-3 font-data text-[11px] leading-relaxed text-ink">
+                {apiTestResult}
+              </pre>
+            </div>
+          )}
         </Card>
       )}
 
@@ -1215,6 +1332,43 @@ async function PerformancePanel({
           </button>
         </form>
       </Card>
+    </div>
+  );
+}
+
+/**
+ * Panel "Diagnostics" — nunjukin hasil adminRunDiagnostics() secara ringkas.
+ * Kalau semua "ok", cukup 1 baris hijau kecil (gak ganggu). Kalau ada
+ * warning/error, ditampilkan MENONJOL dengan detail lengkap kenapa & apa
+ * yang perlu dilakukan — tujuannya supaya begitu ada yang salah, langsung
+ * kelihatan JELAS tanpa admin perlu nanya/screenshot dulu.
+ */
+function DiagnosticsPanel({ checks }: { checks: DiagnosticCheck[] }) {
+  if (checks.length === 0) return null;
+  const problems = checks.filter((c) => c.status !== "ok");
+
+  if (problems.length === 0) {
+    return (
+      <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-success/30 bg-success-soft px-4 py-2 text-xs font-semibold text-success">
+        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+        Diagnostics: semua {checks.length} pengecekan otomatis lolos, tidak ada masalah terdeteksi.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 rounded-[var(--radius-md)] border border-warning/30 bg-warning-soft p-4">
+      <p className="flex items-center gap-2 font-data text-xs font-bold uppercase tracking-wider text-warning">
+        <AlertCircle className="h-3.5 w-3.5" strokeWidth={1.75} />
+        Diagnostics — {problems.length} hal butuh perhatian
+      </p>
+      <ul className="space-y-1.5">
+        {problems.map((c, i) => (
+          <li key={i} className="text-xs leading-relaxed text-ink">
+            <span className={`font-semibold ${c.status === "error" ? "text-danger" : "text-warning"}`}>[{c.label}]</span> {c.detail}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

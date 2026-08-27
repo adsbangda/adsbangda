@@ -1609,6 +1609,105 @@ export async function adminDeleteSocialConnection(clientId: string, platform: So
   if (error) throw new Error(error.message);
 }
 
+export interface DiagnosticCheck {
+  label: string;
+  status: "ok" | "warning" | "error";
+  detail: string;
+}
+
+/**
+ * "Diagnostics" — kumpulan pengecekan OTOMATIS terhadap DATA LIVE client ini
+ * (bukan simulasi/tebakan), dirancang khusus dari pola-pola masalah yang
+ * SUDAH PERNAH kejadian nyata (lihat komentar tiap check di bawah). Beda
+ * dari "API Tester" (buat coba-coba query Meta manual) — ini jalan
+ * OTOMATIS begitu halaman dibuka, tanpa perlu tahu query apa yang mau
+ * dicek duluan.
+ */
+export async function adminRunDiagnostics(clientId: string): Promise<DiagnosticCheck[]> {
+  await requireAdmin();
+  if (!isSupabaseConfigured || !isServiceRoleConfigured()) return [];
+
+  const admin = createAdminClient();
+  const checks: DiagnosticCheck[] = [];
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const period = todayISO.slice(0, 7);
+
+  // ---------------------------------------------------------------------
+  // CHECK 1 — Kesegaran sync per platform auto-sync (instagram/facebook/
+  // threads). Pola nyata yang pernah kejadian: token expired diam-diam,
+  // sync "berhasil" tapi cuma followers doang (reach/impressions kosong
+  // semua karena insights-nya gagal tapi gak ke-notice).
+  // ---------------------------------------------------------------------
+  const AUTO_SYNC: SocialConnection["platform"][] = ["instagram", "facebook", "threads"];
+  const [{ data: connRows }, { data: metricRows }] = await Promise.all([
+    admin.from("social_connections").select("*").eq("client_id", clientId),
+    admin.from("performance_metrics").select("*").eq("client_id", clientId).eq("channel", "social").eq("source", "meta").order("date", { ascending: false }),
+  ]);
+
+  for (const platform of AUTO_SYNC) {
+    const conn = (connRows ?? []).find((r) => r.platform === platform);
+    if (!conn) continue; // Belum dihubungkan sama sekali — bukan error, ini kondisi normal kalau memang belum di-setup.
+
+    const latest = (metricRows ?? []).find((r) => r.platform === platform);
+    if (!latest) {
+      checks.push({ label: `Sync ${platform}`, status: "error", detail: "Sudah terhubung (ada Account ID + Token tersimpan) TAPI belum pernah berhasil sync sama sekali — belum ada satu baris pun data tersimpan. Coba klik 'Sync Sekarang'." });
+      continue;
+    }
+    const daysSinceSync = Math.floor((Date.now() - new Date(`${latest.date}T00:00:00Z`).getTime()) / 86400000);
+    if (daysSinceSync > 2) {
+      checks.push({
+        label: `Sync ${platform}`,
+        status: "warning",
+        detail: `Data terakhir tanggal ${latest.date} (${daysSinceSync} hari lalu). Sync harian mungkin macet (token expired, dll) — coba klik 'Sync Sekarang' manual & cek banner errornya.`,
+      });
+    } else if (latest.followers == null && latest.reach == null && latest.impressions == null) {
+      checks.push({
+        label: `Sync ${platform}`,
+        status: "warning",
+        detail: `Baris terbaru (${latest.date}) semua metric-nya kosong (followers/reach/impressions null). Sync jalan tapi kemungkinan besar semua request Insights-nya gagal — cek banner sync terakhir atau coba API Tester.`,
+      });
+    } else {
+      checks.push({ label: `Sync ${platform}`, status: "ok", detail: `Data terbaru tanggal ${latest.date}, followers=${latest.followers ?? "—"}, reach=${latest.reach ?? "—"}, impressions=${latest.impressions ?? "—"}.` });
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // CHECK 2 — Post/content yang published TAPI tipenya tidak match target
+  // manapun bulan ini, jadi "hilang" dari Content Delivery walau ikut
+  // kehitung di total keseluruhan. Pola nyata: post Carousel Instagram
+  // ke-sync benar tapi tidak ada kartu buat nampilinnya karena admin belum
+  // pernah bikin target utk tipe itu.
+  // ---------------------------------------------------------------------
+  const [{ data: itemRows }, { data: targetRows }] = await Promise.all([
+    admin.from("content_items").select("platform, type, status, planned_date").eq("client_id", clientId).eq("status", "published"),
+    admin.from("content_targets").select("platform, content_type").eq("client_id", clientId).eq("period", period),
+  ]);
+  const targetKeys = new Set((targetRows ?? []).map((t) => `${t.platform}:${t.content_type}`));
+  const thisMonthPublished = (itemRows ?? []).filter((i) => (i.planned_date as string).slice(0, 7) === period);
+  const orphanCounts = new Map<string, number>();
+  for (const item of thisMonthPublished) {
+    const key = `${item.platform}:${item.type}`;
+    if (!targetKeys.has(key)) orphanCounts.set(key, (orphanCounts.get(key) ?? 0) + 1);
+  }
+  if (orphanCounts.size > 0) {
+    const detail = Array.from(orphanCounts.entries())
+      .map(([key, count]) => {
+        const [platform, type] = key.split(":");
+        return `${count}x ${platform}/${type}`;
+      })
+      .join(", ");
+    checks.push({
+      label: "Content Delivery — tipe tanpa target",
+      status: "warning",
+      detail: `Ada post published bulan ini yang tipenya BELUM punya target: ${detail}. Post ini ikut kehitung di total keseluruhan tapi TIDAK muncul di breakdown per-platform. Tambahkan target untuk tipe ini di tab Goals kalau mau kelihatan.`,
+    });
+  } else {
+    checks.push({ label: "Content Delivery — tipe tanpa target", status: "ok", detail: "Semua post published bulan ini tipenya sudah punya target yang cocok." });
+  }
+
+  return checks;
+}
+
 // ---------------------------------------------------------------------------
 // GOALS (Phase 3A) — target & pencapaian client. `actual` untuk sekarang
 // diisi manual oleh admin; disiapkan supaya bisa dihitung otomatis dari
