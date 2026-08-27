@@ -557,18 +557,18 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
     // BUKAN breakdown per-hari kayak "reach" di atas).
     let totalViews: number | null = null;
     try {
+      // KONFIRMASI dari test manual di API Tester: nama metric yang BENAR
+      // adalah "page_views_total" (BUKAN "views" polos) — Meta balikin
+      // "(#100) The value must be a valid insights metric" utk "views" baik
+      // pakai metric_type=total_value ataupun tanpa. "page_views_total"
+      // juga balik array "values" per-hari (sama pola dengan "reach" di
+      // atas), BUKAN objek "total_value" tunggal.
       const viewsInsights = await fetchJSON(
-        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=views&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${accessToken}`
+        `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=page_views_total&period=day&since=${since}&until=${until}&access_token=${accessToken}`
       );
-      const series =
-        (viewsInsights.data as { name: string; total_value?: { value: number }; values?: { value: number }[] }[] | undefined) ?? [];
-      const row = series.find((s) => s.name === "views");
-      // Struktur respons metric_type=total_value ternyata TIDAK konsisten
-      // antar metric (lihat komentar panjang di "reach" di atas — "reach"
-      // ternyata balik "values" array per-hari, bukan "total_value" objek
-      // tunggal walau parameternya sama) — jadi di sini dicoba DUA-DUANYA,
-      // pakai yang mana saja yang ada datanya.
-      totalViews = row?.total_value?.value ?? (row?.values && row.values.length > 0 ? row.values.reduce((sum, v) => sum + v.value, 0) : null);
+      const series = (viewsInsights.data as { name: string; values?: { value: number }[] }[] | undefined) ?? [];
+      const dailyValues = series.find((s) => s.name === "page_views_total")?.values ?? [];
+      totalViews = dailyValues.length > 0 ? dailyValues.reduce((sum, v) => sum + v.value, 0) : null;
     } catch (err) {
       if (!firstItemError) firstItemError = `[Views] ${err instanceof Error ? err.message : String(err)}`;
       itemsFailed++;
