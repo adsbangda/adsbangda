@@ -530,17 +530,20 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
     const until = Math.floor(today.getTime() / 1000);
     let totalReach: number | null = null;
     try {
-      // KONFIRMASI GANDA dari 2 sumber independen: metric reach Page yang
-      // BENAR adalah "page_total_media_view_unique" (bukan "reach" polos).
-      // Percobaan PERTAMA pakai nama ini sebenarnya sudah BENAR — yang
-      // bikin gagal waktu itu adalah bug LAIN (salah manggil node Instagram
-      // gara-gara Facebook Page ID ke-tuker), BUKAN nama metric-nya. Sama
-      // pola dengan "views" — WAJIB metric_type=total_value.
+      // KONFIRMASI dari test manual langsung di Graph API Explorer: metric
+      // reach Page yang BENAR adalah "page_total_media_view_unique", dan
+      // parameter metric_type=total_value memang WAJIB ada di request
+      // (tanpa itu, error "must be specified with parameter
+      // metric_type=total_value") — TAPI hasilnya TETAP balik sebagai
+      // ARRAY "values" per-hari (bukan objek "total_value" tunggal seperti
+      // "views" Instagram/profile_views). Jadi dijumlah manual di sini dari
+      // array itu buat dapat total sepanjang periode `days` hari.
       const insights = await fetchJSON(
         `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=page_total_media_view_unique&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${accessToken}`
       );
-      const series = (insights.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
-      totalReach = series.find((s) => s.name === "page_total_media_view_unique")?.total_value?.value ?? null;
+      const series = (insights.data as { name: string; values?: { end_time: string; value: number }[] }[] | undefined) ?? [];
+      const dailyValues = series.find((s) => s.name === "page_total_media_view_unique")?.values ?? [];
+      totalReach = dailyValues.length > 0 ? dailyValues.reduce((sum, v) => sum + v.value, 0) : null;
     } catch (err) {
       firstItemError = `[Reach] ${err instanceof Error ? err.message : String(err)}`;
       itemsFailed++;
@@ -556,8 +559,15 @@ export async function syncFacebookForClient(clientId: string, pageId: string, ac
       const viewsInsights = await fetchJSON(
         `https://graph.facebook.com/${GRAPH_VERSION}/${pageId}/insights?metric=views&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${accessToken}`
       );
-      const series = (viewsInsights.data as { name: string; total_value?: { value: number } }[] | undefined) ?? [];
-      totalViews = series.find((s) => s.name === "views")?.total_value?.value ?? null;
+      const series =
+        (viewsInsights.data as { name: string; total_value?: { value: number }; values?: { value: number }[] }[] | undefined) ?? [];
+      const row = series.find((s) => s.name === "views");
+      // Struktur respons metric_type=total_value ternyata TIDAK konsisten
+      // antar metric (lihat komentar panjang di "reach" di atas — "reach"
+      // ternyata balik "values" array per-hari, bukan "total_value" objek
+      // tunggal walau parameternya sama) — jadi di sini dicoba DUA-DUANYA,
+      // pakai yang mana saja yang ada datanya.
+      totalViews = row?.total_value?.value ?? (row?.values && row.values.length > 0 ? row.values.reduce((sum, v) => sum + v.value, 0) : null);
     } catch (err) {
       if (!firstItemError) firstItemError = `[Views] ${err instanceof Error ? err.message : String(err)}`;
       itemsFailed++;
