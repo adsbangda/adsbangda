@@ -1,7 +1,0 @@
-# File ini untuk PROJECT TERPISAH: adsbangda-growth-dashboard (Next.js)
-# Taruh sebagai: adsbangda-growth-dashboard/public/robots.txt
-# Tujuannya: mencegah Google meng-crawl/index halaman login & dashboard client,
-# supaya tidak bersaing sebagai "sitelink" dengan halaman publik di adsbangda.com.
-
-User-agent: *
-Disallow: /
