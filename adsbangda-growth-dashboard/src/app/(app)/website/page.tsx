@@ -3,15 +3,16 @@ import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { WebsiteTrendChart } from "@/components/dashboard/website-trend-chart";
-import { DateRangeTabs } from "@/components/dashboard/date-range-tabs";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { MiniStat, pctDelta } from "@/components/dashboard/mini-stat";
 import { getCurrentClient, getPerformanceSummary } from "@/lib/data";
+import { aggregateWebsiteMetricsByMonth } from "@/lib/website-monthly";
 import { formatNumber, formatPercent } from "@/lib/utils";
 import { Users, Activity, Eye, MousePointerClick, Globe } from "lucide-react";
 
-function shortDate(iso: string) {
-  return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short" }).format(new Date(iso));
+/** "2026-08-01" → "Agu 2026" — label per bulan untuk KPI/chart, bukan lagi per hari. */
+function monthLabel(iso: string) {
+  return new Intl.DateTimeFormat("id-ID", { month: "short", year: "numeric" }).format(new Date(iso));
 }
 
 /**
@@ -29,8 +30,14 @@ export default async function WebsitePage() {
   const client = await getCurrentClient();
   const { website } = await getPerformanceSummary(client.id);
 
-  const latest = website.at(-1);
-  const previous = website.at(-2);
+  // website = baris mentah per HARI (hasil GA4 auto-sync) atau per snapshot
+  // manual admin. Digabung dulu jadi per BULAN sebelum dipakai di mana pun
+  // di halaman ini — client mau lihat ringkasan bulanan, bukan grafik
+  // naik-turun harian.
+  const monthly = aggregateWebsiteMetricsByMonth(website);
+
+  const latest = monthly.at(-1);
+  const previous = monthly.at(-2);
 
   const visitorsDelta = pctDelta(latest?.visitors, previous?.visitors);
   const sessionsDelta = pctDelta(latest?.sessions, previous?.sessions);
@@ -41,8 +48,8 @@ export default async function WebsitePage() {
   const conversionRate = conversionRateOf(latest);
   const conversionRateDelta = pctDelta(conversionRate, conversionRateOf(previous));
 
-  const trafficChart = website.map((w) => ({
-    label: shortDate(w.date),
+  const trafficChart = monthly.map((w) => ({
+    label: monthLabel(w.date),
     visitors: w.visitors ?? null,
     sessions: w.sessions ?? null,
     pageViews: w.pageViews ?? null,
@@ -51,10 +58,10 @@ export default async function WebsitePage() {
   if (!latest) {
     return (
       <div className="page-backdrop min-h-screen">
-        <Topbar title="Website" subtitle="Traffic & konversi website — data mingguan." />
+        <Topbar title="Website" subtitle="Traffic & konversi website — data bulanan." />
         <div className="p-5 lg:p-8">
           <Card>
-            <EmptyState icon={Globe} title="Belum ada data Website" description="Data akan muncul begitu tim Adsbangda mengisi performance mingguan." />
+            <EmptyState icon={Globe} title="Belum ada data Website" description="Data akan muncul begitu tim Adsbangda mengisi/menyinkronkan performance website." />
           </Card>
         </div>
       </div>
@@ -63,7 +70,7 @@ export default async function WebsitePage() {
 
   return (
     <div className="page-backdrop min-h-screen">
-      <Topbar title="Website" subtitle="Traffic & konversi website — data mingguan." />
+      <Topbar title="Website" subtitle="Traffic & konversi website — data bulanan." />
 
       <div className="space-y-6 p-5 lg:p-8">
         {/* KPI utama — Visitors, Sessions, Page Views, Leads. Avg Session
@@ -107,7 +114,7 @@ export default async function WebsitePage() {
 
         {/* Website Traffic — satu chart gabungan Visitors/Sessions/Page Views, data langsung dari raw performance data. */}
         <Card>
-          <SectionHeading title="Website Traffic" description="Data mingguan" action={<DateRangeTabs />} />
+          <SectionHeading title="Website Traffic" description="Data bulanan" />
           <WebsiteTrendChart data={trafficChart} />
         </Card>
 
