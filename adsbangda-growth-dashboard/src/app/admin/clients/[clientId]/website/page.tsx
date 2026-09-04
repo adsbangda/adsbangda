@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { Trash2, Globe, Eye, Users, Clock, Pencil, Activity, TrendingDown, Percent, Plus, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import { Trash2, Globe, Eye, Users, Clock, Pencil, Activity, TrendingDown, Percent, Plus, RefreshCw, CheckCircle2, AlertCircle, CalendarRange } from "lucide-react";
 import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { EmptyState } from "@/components/dashboard/empty-state";
@@ -20,9 +20,31 @@ import {
   adminDeleteWebsiteActivity,
 } from "@/lib/admin-data";
 import { syncGA4ForClient, getServiceAccountEmail } from "@/lib/ga4-sync";
+import { aggregateWebsiteMetrics, filterWebsiteMetricsByDateRange } from "@/lib/website-monthly";
 import { formatDateID } from "@/lib/utils";
 import { PillTabs } from "@/components/admin/pill-tabs";
 import { WebsitePerformanceForm } from "@/components/admin/website-performance-form";
+
+function toISO(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Rentang tanggal untuk filter "Ringkasan Periode" & "Performance History"
+ * di bawah — DIPISAH dari rentang hari yang di-tarik dari GA4 saat sync
+ * (lihat syncGA4ForClient, selalu 30 hari terakhir & selalu meng-upsert).
+ * Filter ini murni cara MELIHAT data yang sudah tersimpan, tidak
+ * memengaruhi data itu sendiri sama sekali.
+ */
+function resolveDateRange(from?: string, to?: string, all?: string) {
+  if (all === "1") return { from: undefined, to: undefined, isAll: true };
+
+  const now = new Date();
+  const defaultFrom = toISO(new Date(now.getFullYear(), now.getMonth(), 1)); // 1 bulan berjalan
+  const defaultTo = toISO(now);
+
+  return { from: from || defaultFrom, to: to || defaultTo, isAll: false };
+}
 
 const inputClass = "rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink";
 
@@ -63,16 +85,49 @@ export default async function AdminClientWebsitePage({
   searchParams,
 }: {
   params: Promise<{ clientId: string }>;
-  searchParams: Promise<{ tab?: string; edit?: string; sync?: string; rows?: string; message?: string }>;
+  searchParams: Promise<{ tab?: string; edit?: string; sync?: string; rows?: string; message?: string; from?: string; to?: string; all?: string }>;
 }) {
   const { clientId } = await params;
-  const { tab = "performance", edit, sync, rows, message } = await searchParams;
+  const { tab = "performance", edit, sync, rows, message, from: fromParam, to: toParam, all: allParam } = await searchParams;
   const base = `/admin/clients/${clientId}/website`;
   const path = base;
   const activeTab = tab === "activity" ? "activity" : "performance";
 
   const [client, metrics] = await Promise.all([adminGetClient(clientId), adminListPerformanceMetrics(clientId, "website")]);
-  const latest = metrics[0];
+
+  // Filter tanggal (default: bulan berjalan) — murni untuk TAMPILAN,
+  // tidak menghapus/mengubah data apa pun. `metrics` sendiri tetap array
+  // lengkap semua baris (dipakai form Edit tetap bisa cari baris di luar
+  // rentang filter kalau linknya di-share/bookmark).
+  const { from, to, isAll } = resolveDateRange(fromParam, toParam, allParam);
+  const metricsInRange = filterWebsiteMetricsByDateRange(metrics, from, to);
+  const summary = aggregateWebsiteMetrics(metricsInRange);
+
+  // Query string filter aktif — dipakai ulang di semua link (preset, edit,
+  // cancel, dst) supaya pindah halaman/edit tidak mereset filter tanggal
+  // yang sedang admin lihat.
+  const filterQuery = isAll ? "all=1" : `from=${from}&to=${to}`;
+  const rangeLabel = isAll ? "Semua Waktu" : `${formatDateID(from!)} – ${formatDateID(to!)}`;
+
+  // Satu `now` dipakai ulang untuk semua preset di bawah — hindari panggil
+  // `new Date()`/`Date.now()` berkali-kali langsung di JSX saat render.
+  const now = new Date();
+  const todayIso = toISO(now);
+  const last30Start = toISO(new Date(now.getTime() - 29 * 86400000));
+  const presetLinks = [
+    { label: "Bulan Ini", href: `${path}?tab=performance&from=${toISO(new Date(now.getFullYear(), now.getMonth(), 1))}&to=${todayIso}` },
+    {
+      label: "Bulan Lalu",
+      href: `${path}?tab=performance&from=${toISO(new Date(now.getFullYear(), now.getMonth() - 1, 1))}&to=${toISO(new Date(now.getFullYear(), now.getMonth(), 0))}`,
+    },
+    { label: "30 Hari Terakhir", href: `${path}?tab=performance&from=${last30Start}&to=${todayIso}` },
+    { label: "Semua Waktu", href: `${path}?tab=performance&all=1` },
+  ];
+
+  // Sama persis "30 Hari Terakhir" — dipakai syncGA4Action supaya setelah
+  // klik Sync Sekarang, admin diarahkan ke filter yang mencakup 30 hari
+  // yang baru saja ditarik dari GA4 (bukan tetap di default "Bulan Ini").
+  const syncedRangeQuery = `from=${last30Start}&to=${todayIso}`;
 
   async function saveGA4PropertyIdAction(formData: FormData) {
     "use server";
@@ -93,7 +148,11 @@ export default async function AdminClientWebsitePage({
     if (result.error) {
       redirect(`${path}?tab=performance&sync=error&message=${encodeURIComponent(result.error)}`);
     }
-    redirect(`${path}?tab=performance&sync=ok&rows=${result.rowsSynced}`);
+    // Sync GA4 selalu tarik 30 hari terakhir (lihat syncGA4ForClient) —
+    // setelah sync, otomatis alihkan filter ke "30 Hari Terakhir" supaya
+    // admin LANGSUNG lihat data yang baru saja masuk, bukan tetap kepentok
+    // filter "Bulan Ini" default kalau baris barunya jatuh di bulan lalu.
+    redirect(`${path}?tab=performance&sync=ok&rows=${result.rowsSynced}&${syncedRangeQuery}`);
   }
 
   async function addMetric(formData: FormData) {
@@ -222,14 +281,56 @@ export default async function AdminClientWebsitePage({
             )}
           </Card>
 
+          <Card padding="lg">
+            <SectionHeading
+              title="Filter Tanggal"
+              description="Menentukan rentang data yang dihitung di Ringkasan Periode & ditampilkan di Performance History di bawah — tidak menghapus/mengubah data apa pun."
+            />
+            <div className="mb-3 flex flex-wrap gap-2">
+              {presetLinks.map((preset) => (
+                <Link key={preset.label} href={preset.href} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                  <CalendarRange className="h-3.5 w-3.5" /> {preset.label}
+                </Link>
+              ))}
+            </div>
+            <form action={path} method="get" className="flex flex-wrap items-end gap-2 border-t border-border pt-3">
+              <input type="hidden" name="tab" value="performance" />
+              <div>
+                <label htmlFor="from" className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
+                  Dari Tanggal
+                </label>
+                <input id="from" name="from" type="date" defaultValue={isAll ? "" : from} className={`mt-1 block ${inputClass}`} />
+              </div>
+              <div>
+                <label htmlFor="to" className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
+                  Sampai Tanggal
+                </label>
+                <input id="to" name="to" type="date" defaultValue={isAll ? "" : to} className={`mt-1 block ${inputClass}`} />
+              </div>
+              <button type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                Terapkan
+              </button>
+            </form>
+          </Card>
+
           <div>
-            <p className="mb-3 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">Latest Snapshot</p>
-            {!latest ? (
+            <p className="mb-3 font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
+              Ringkasan Periode <span className="normal-case text-muted/70">— {rangeLabel}</span>
+            </p>
+            {!summary ? (
               <Card>
-                <EmptyState icon={Globe} title="Belum ada data performance" description="Tambahkan snapshot pertama lewat form di bawah." />
+                <EmptyState
+                  icon={Globe}
+                  title="Belum ada data performance di rentang ini"
+                  description="Coba ganti filter tanggal di atas, atau tambahkan snapshot pertama lewat form di bawah."
+                />
               </Card>
             ) : (
               <div className="space-y-3">
+                <p className="text-xs text-muted">
+                  Dihitung dari {metricsInRange.length} baris data ({metricsInRange.length === 1 ? "1 hari" : `${metricsInRange.length} hari/entri`}) di rentang ini —
+                  Visitors/Sessions/Page Views/Leads dijumlah, Bounce Rate & Avg Session Duration dirata-rata dibobot sessions.
+                </p>
                 {/* Metrik utama — sama set dengan 4 KPI di Client Portal, supaya admin lihat persis apa yang client lihat. */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <Card className="flex items-center gap-4">
@@ -237,7 +338,7 @@ export default async function AdminClientWebsitePage({
                       <Users className="h-5 w-5" strokeWidth={1.75} />
                     </div>
                     <div>
-                      <p className="font-data text-2xl font-bold text-ink">{latest.visitors?.toLocaleString("id-ID") ?? "—"}</p>
+                      <p className="font-data text-2xl font-bold text-ink">{summary.visitors?.toLocaleString("id-ID") ?? "—"}</p>
                       <p className="text-xs text-muted">Visitors</p>
                     </div>
                   </Card>
@@ -246,7 +347,7 @@ export default async function AdminClientWebsitePage({
                       <Activity className="h-5 w-5" strokeWidth={1.75} />
                     </div>
                     <div>
-                      <p className="font-data text-2xl font-bold text-ink">{latest.sessions?.toLocaleString("id-ID") ?? "—"}</p>
+                      <p className="font-data text-2xl font-bold text-ink">{summary.sessions?.toLocaleString("id-ID") ?? "—"}</p>
                       <p className="text-xs text-muted">Sessions</p>
                     </div>
                   </Card>
@@ -255,7 +356,7 @@ export default async function AdminClientWebsitePage({
                       <Eye className="h-5 w-5" strokeWidth={1.75} />
                     </div>
                     <div>
-                      <p className="font-data text-2xl font-bold text-ink">{latest.pageViews?.toLocaleString("id-ID") ?? "—"}</p>
+                      <p className="font-data text-2xl font-bold text-ink">{summary.pageViews?.toLocaleString("id-ID") ?? "—"}</p>
                       <p className="text-xs text-muted">Page Views</p>
                     </div>
                   </Card>
@@ -264,7 +365,7 @@ export default async function AdminClientWebsitePage({
                       <Globe className="h-5 w-5" strokeWidth={1.75} />
                     </div>
                     <div>
-                      <p className="font-data text-2xl font-bold text-ink">{latest.conversions?.toLocaleString("id-ID") ?? "—"}</p>
+                      <p className="font-data text-2xl font-bold text-ink">{summary.conversions?.toLocaleString("id-ID") ?? "—"}</p>
                       <p className="text-xs text-muted">Leads / Form Submissions</p>
                     </div>
                   </Card>
@@ -276,14 +377,14 @@ export default async function AdminClientWebsitePage({
                   <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-border bg-surface px-4 py-3">
                     <TrendingDown className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} />
                     <div>
-                      <p className="font-data text-sm font-bold text-ink">{latest.bounceRate != null ? `${latest.bounceRate}%` : "—"}</p>
+                      <p className="font-data text-sm font-bold text-ink">{summary.bounceRate != null ? `${summary.bounceRate.toFixed(1)}%` : "—"}</p>
                       <p className="text-[11px] text-muted">Bounce Rate</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 rounded-[var(--radius-md)] border border-border bg-surface px-4 py-3">
                     <Clock className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} />
                     <div>
-                      <p className="font-data text-sm font-bold text-ink">{latest.avgSessionDuration ?? "—"}</p>
+                      <p className="font-data text-sm font-bold text-ink">{summary.avgSessionDuration ?? "—"}</p>
                       <p className="text-[11px] text-muted">Avg Session Duration</p>
                     </div>
                   </div>
@@ -291,7 +392,7 @@ export default async function AdminClientWebsitePage({
                     <Percent className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} />
                     <div>
                       <p className="font-data text-sm font-bold text-ink">
-                        {latest.visitors ? `${(((latest.conversions ?? 0) / latest.visitors) * 100).toFixed(2)}%` : "—"}
+                        {summary.visitors ? `${(((summary.conversions ?? 0) / summary.visitors) * 100).toFixed(2)}%` : "—"}
                       </p>
                       <p className="text-[11px] text-muted">Conversion Rate (otomatis)</p>
                     </div>
@@ -307,12 +408,25 @@ export default async function AdminClientWebsitePage({
           </Card>
 
           <Card padding="lg">
-            <SectionHeading title="Performance History" description="Klik Edit untuk perbaiki data." />
-            {metrics.length === 0 ? (
-              <p className="text-xs text-muted">Belum ada data.</p>
+            <SectionHeading
+              title="Performance History"
+              description={
+                metrics.length === metricsInRange.length
+                  ? "Klik Edit untuk perbaiki data."
+                  : `Menampilkan ${metricsInRange.length} dari ${metrics.length} baris data — sisanya di luar filter tanggal di atas. Klik Edit untuk perbaiki data.`
+              }
+            />
+            {metricsInRange.length === 0 ? (
+              <p className="text-xs text-muted">
+                Tidak ada data di rentang tanggal ini. {metrics.length > 0 && (
+                  <Link href={`${path}?tab=performance&all=1`} className="text-accent underline">
+                    Lihat Semua Waktu ({metrics.length} baris)
+                  </Link>
+                )}
+              </p>
             ) : (
               <div className="divide-y divide-border border-t border-border">
-                {metrics.map((m) =>
+                {metricsInRange.map((m) =>
                   edit === m.id ? (
                     <div key={m.id} className="bg-accent-soft/40 py-3">
                       <WebsitePerformanceForm
@@ -330,7 +444,7 @@ export default async function AdminClientWebsitePage({
                         submitLabel="Save"
                         showPlusIcon={false}
                         extra={
-                          <Link href={path} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                          <Link href={`${path}?tab=performance&${filterQuery}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
                             Cancel
                           </Link>
                         }
@@ -351,7 +465,7 @@ export default async function AdminClientWebsitePage({
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Link href={`${path}?tab=performance&edit=${m.id}`} className="text-muted hover:text-ink" aria-label="Edit">
+                        <Link href={`${path}?tab=performance&edit=${m.id}&${filterQuery}`} className="text-muted hover:text-ink" aria-label="Edit">
                           <Pencil className="h-4 w-4" strokeWidth={1.75} />
                         </Link>
                         <form action={deleteMetricAction}>

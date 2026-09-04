@@ -12,6 +12,7 @@ import { SocialMediaPerformance } from "@/components/dashboard/social-media-perf
 import { PlatformPerformanceTable } from "@/components/dashboard/platform-performance-table";
 import { MetaAdsSummary } from "@/components/dashboard/meta-ads-summary";
 import { WebsiteSummary } from "@/components/dashboard/website-summary";
+import { aggregateWebsiteMetrics, filterWebsiteMetricsByDateRange, previousPeriodOf } from "@/lib/website-monthly";
 import { MomentumBanner } from "@/components/dashboard/momentum-banner";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import {
@@ -41,6 +42,28 @@ function isValidDate(value: string | undefined): value is string {
   return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value).getTime());
 }
 
+function toISO(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+/** "YYYY-MM" → {from: tanggal 1, to: tanggal terakhir bulan itu}, keduanya "YYYY-MM-DD". */
+function monthBounds(period: string): { from: string; to: string } {
+  const [y, m] = period.split("-").map(Number);
+  return { from: `${period}-01`, to: toISO(new Date(y, m, 0)) };
+}
+
+/** Label ringkas rentang tanggal untuk widget Website Performance — nama bulan penuh
+ * kalau rentangnya persis 1 bulan kalender, kalau tidak (rentang custom dari kalender
+ * di header) tampilkan tanggal awal–akhirnya apa adanya. */
+function formatWebsiteRangeLabel(from: string, to: string): string {
+  const bounds = monthBounds(from.slice(0, 7));
+  if (from === bounds.from && to === bounds.to) {
+    return new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(new Date(`${from}T00:00:00`));
+  }
+  const fmt = (iso: string) => new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${iso}T00:00:00`));
+  return `${fmt(from)} – ${fmt(to)}`;
+}
+
 export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ period?: string; from?: string; to?: string }> }) {
   const { period: periodParam, from: fromParam, to: toParam } = await searchParams;
   const client = await getCurrentClient();
@@ -68,10 +91,12 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
   // `period`/`range` (dari date-range picker di OverviewHeader) mempengaruhi
   // Monthly Delivery, "What AdsBangda Did", Platform Performance (delta-nya
   // dihitung periode vs periode sepanjang `range`, lihat getPlatformPerformanceTable),
-  // dan minggu yang ditampilkan di Kalender Konten (anchor ke `range.from`,
-  // lihat getWeeklyCalendar). Quick Stats & Meta Ads/Website Performance
-  // TETAP nunjukin snapshot/data TERBARU apa pun yang dipilih (belum masuk
-  // scope date-range ini).
+  // minggu yang ditampilkan di Kalender Konten (anchor ke `range.from`, lihat
+  // getWeeklyCalendar), dan SEKARANG JUGA Website Performance di bawah
+  // (SEBELUMNYA: selalu snapshot TERBARU apa pun yang dipilih di kalender —
+  // itu sumber laporan "saya pilih 1-31 Agustus tapi yang muncul entah data
+  // tanggal berapa" — bug, bukan by-design). Quick Stats & Meta Ads
+  // Performance masih belum masuk scope date-range ini.
   const [delivery, quickStats, attentionItems, activity, channelRows, upcomingEvents, weeklyCalendar, socialBreakdown, platformPerformance, performanceSummary] = await Promise.all([
     getMonthlyDelivery(client.id, period, range),
     getQuickStats(client.id),
@@ -84,6 +109,24 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
     client.socialMediaActive ? getPlatformPerformanceTable(client.id, range, period) : Promise.resolve([]),
     client.metaAdsActive || client.websiteActive || client.socialMediaActive ? getPerformanceSummary(client.id) : Promise.resolve(null),
   ]);
+
+  // Website Performance — SEKARANG ikut `period`/`range` dari kalender di
+  // OverviewHeader (bukan lagi selalu snapshot terbaru, lihat komentar di
+  // atas). `websiteRange` = rentang custom dari kalender kalau ada, kalau
+  // tidak = 1 bulan kalender penuh dari `period`. Dibandingkan dengan
+  // periode SEBANDING tepat sebelumnya (`previousPeriodOf`) untuk growth
+  // indicator, supaya tetap masuk akal walau rentangnya custom/bukan 1
+  // bulan kalender penuh.
+  const websiteRawMetrics = performanceSummary?.website ?? [];
+  const websiteRange = range ?? monthBounds(period);
+  const websitePrevRange = previousPeriodOf(websiteRange.from, websiteRange.to);
+  const websiteCurrentAgg = aggregateWebsiteMetrics(filterWebsiteMetricsByDateRange(websiteRawMetrics, websiteRange.from, websiteRange.to));
+  const websitePreviousAgg = aggregateWebsiteMetrics(filterWebsiteMetricsByDateRange(websiteRawMetrics, websitePrevRange.from, websitePrevRange.to));
+  const websiteSummaryMetrics = [
+    ...(websitePreviousAgg ? [{ ...websitePreviousAgg, date: websitePrevRange.from }] : []),
+    ...(websiteCurrentAgg ? [{ ...websiteCurrentAgg, date: websiteRange.from }] : []),
+  ];
+  const websiteRangeLabel = formatWebsiteRangeLabel(websiteRange.from, websiteRange.to);
 
   return (
     <div className="page-backdrop min-h-screen">
@@ -169,7 +212,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
                     </a>
                   }
                 />
-                <WebsiteSummary metrics={performanceSummary?.website ?? []} />
+                <WebsiteSummary metrics={websiteSummaryMetrics} periodLabel={websiteRangeLabel} />
               </Card>
             )}
 

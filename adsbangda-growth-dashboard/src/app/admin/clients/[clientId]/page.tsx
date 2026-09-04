@@ -6,6 +6,7 @@ import { Card } from "@/components/dashboard/card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { MetaAdsSummary } from "@/components/dashboard/meta-ads-summary";
 import { WebsiteSummary } from "@/components/dashboard/website-summary";
+import { aggregateWebsiteMetricsByMonth } from "@/lib/website-monthly";
 import { buttonVariants } from "@/components/dashboard/button";
 import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { LogoUploadField } from "@/components/admin/logo-upload-field";
@@ -347,7 +348,10 @@ export default async function AdminClientOverviewPage({ params }: { params: Prom
                   </Link>
                 }
               />
-              <WebsiteSummary metrics={[...websiteMetrics].reverse()} />
+              {/* Sama seperti versi client — digabung per bulan dulu supaya
+                  admin lihat angka bulan yang sama persis dengan yang
+                  client lihat, bukan angka satu hari acak. */}
+              <WebsiteSummary metrics={aggregateWebsiteMetricsByMonth([...websiteMetrics].reverse())} />
             </Card>
           )}
         </div>

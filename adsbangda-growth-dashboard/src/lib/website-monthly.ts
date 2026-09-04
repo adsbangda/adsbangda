@@ -34,6 +34,57 @@ function formatSecondsToDuration(totalSeconds: number): string {
 }
 
 /**
+ * Gabungkan SATU KUMPULAN baris `channel='website'` (mis. hasil filter
+ * rentang tanggal tertentu) jadi SATU ringkasan — dipakai baik oleh
+ * `aggregateWebsiteMetricsByMonth` di bawah (per bulan) maupun langsung oleh
+ * Admin Portal untuk meringkas rentang tanggal custom yang dipilih admin
+ * (7 hari terakhir, bulan ini, custom from–to, dst). Sama aturan agregasinya:
+ * jumlah/rata-rata dibobot sessions — lihat penjelasan di
+ * `aggregateWebsiteMetricsByMonth`. `undefined` kalau `rows` kosong.
+ */
+export function aggregateWebsiteMetrics(rows: PerformanceMetric[]): PerformanceMetric | undefined {
+  if (rows.length === 0) return undefined;
+
+  const sum = (key: "visitors" | "sessions" | "pageViews" | "conversions") =>
+    rows.reduce((total, r) => total + (r[key] ?? 0), 0);
+
+  const totalSessions = sum("sessions");
+  const weightOf = (r: PerformanceMetric) => (totalSessions > 0 ? (r.sessions ?? 0) / totalSessions : 1 / rows.length);
+
+  const bounceRows = rows.filter((r) => r.bounceRate != null);
+  const bounceWeightSum = bounceRows.reduce((total, r) => total + weightOf(r), 0);
+  const bounceRate =
+    bounceRows.length > 0 && bounceWeightSum > 0
+      ? bounceRows.reduce((total, r) => total + (r.bounceRate as number) * weightOf(r), 0) / bounceWeightSum
+      : undefined;
+
+  const durationRows = rows
+    .map((r) => ({ seconds: parseDurationToSeconds(r.avgSessionDuration), weight: weightOf(r) }))
+    .filter((r): r is { seconds: number; weight: number } => r.seconds != null);
+  const durationWeightSum = durationRows.reduce((total, r) => total + r.weight, 0);
+  const avgSessionDuration =
+    durationRows.length > 0 && durationWeightSum > 0
+      ? formatSecondsToDuration(durationRows.reduce((total, r) => total + r.seconds * r.weight, 0) / durationWeightSum)
+      : undefined;
+
+  // Baris paling baru dalam kumpulan ini — sumber id/clientId/dst, dan
+  // `date` fallback kalau pemanggil tidak override sendiri (lihat
+  // `aggregateWebsiteMetricsByMonth`).
+  const sorted = [...rows].sort((a, b) => a.date.localeCompare(b.date));
+  const last = sorted[sorted.length - 1];
+
+  return {
+    ...last,
+    visitors: sum("visitors"),
+    sessions: totalSessions,
+    pageViews: sum("pageViews"),
+    conversions: sum("conversions"),
+    bounceRate,
+    avgSessionDuration,
+  };
+}
+
+/**
  * Gabungkan baris `channel='website'` per bulan kalender (YYYY-MM):
  *   - visitors / sessions / pageViews / conversions → DIJUMLAH
  *   - bounceRate / avgSessionDuration → RATA-RATA DIBOBOT sessions hari itu
@@ -60,40 +111,44 @@ export function aggregateWebsiteMetricsByMonth(metrics: PerformanceMetric[]): Pe
     .sort() // "YYYY-MM" string-sortable secara kronologis
     .map((monthKey) => {
       const rows = buckets.get(monthKey)!;
-      const sum = (key: "visitors" | "sessions" | "pageViews" | "conversions") =>
-        rows.reduce((total, r) => total + (r[key] ?? 0), 0);
-
-      const totalSessions = sum("sessions");
-      const weightOf = (r: PerformanceMetric) => (totalSessions > 0 ? (r.sessions ?? 0) / totalSessions : 1 / rows.length);
-
-      const bounceRows = rows.filter((r) => r.bounceRate != null);
-      const bounceWeightSum = bounceRows.reduce((total, r) => total + weightOf(r), 0);
-      const bounceRate =
-        bounceRows.length > 0 && bounceWeightSum > 0
-          ? bounceRows.reduce((total, r) => total + (r.bounceRate as number) * weightOf(r), 0) / bounceWeightSum
-          : undefined;
-
-      const durationRows = rows
-        .map((r) => ({ seconds: parseDurationToSeconds(r.avgSessionDuration), weight: weightOf(r) }))
-        .filter((r): r is { seconds: number; weight: number } => r.seconds != null);
-      const durationWeightSum = durationRows.reduce((total, r) => total + r.weight, 0);
-      const avgSessionDuration =
-        durationRows.length > 0 && durationWeightSum > 0
-          ? formatSecondsToDuration(durationRows.reduce((total, r) => total + r.seconds * r.weight, 0) / durationWeightSum)
-          : undefined;
-
-      const last = rows[rows.length - 1];
-
+      const aggregated = aggregateWebsiteMetrics(rows)!; // rows tidak pernah kosong di sini (dari Map.set di atas)
       return {
-        ...last,
-        id: `${last.clientId}-website-${monthKey}`,
+        ...aggregated,
+        id: `${aggregated.clientId}-website-${monthKey}`,
         date: `${monthKey}-01`,
-        visitors: sum("visitors"),
-        sessions: totalSessions,
-        pageViews: sum("pageViews"),
-        conversions: sum("conversions"),
-        bounceRate,
-        avgSessionDuration,
       };
     });
+}
+
+/**
+ * Filter baris berdasarkan rentang tanggal INKLUSIF `[from, to]` (format
+ * "YYYY-MM-DD"). `from`/`to` boleh `undefined`/`null` masing-masing untuk
+ * "tanpa batas bawah"/"tanpa batas atas" — dipakai Admin Portal untuk
+ * preset "Semua Waktu" atau rentang custom yang cuma diisi salah satu sisi.
+ * Perbandingan string ISO date aman secara leksikografis (tidak perlu parse
+ * ke `Date`).
+ */
+export function filterWebsiteMetricsByDateRange(metrics: PerformanceMetric[], from?: string | null, to?: string | null): PerformanceMetric[] {
+  return metrics.filter((m) => {
+    if (from && m.date < from) return false;
+    if (to && m.date > to) return false;
+    return true;
+  });
+}
+
+/**
+ * Rentang tanggal SEBANDING (panjang hari sama) tepat sebelum `[from, to]`
+ * — dipakai buat bandingkan periode terpilih (mis. dari date-range picker
+ * di Overview) dengan periode sebelumnya, supaya growth indicator (naik/
+ * turun %) tetap masuk akal walau `[from, to]` bukan satu bulan kalender
+ * penuh (rentang custom dari kalender).
+ */
+export function previousPeriodOf(from: string, to: string): { from: string; to: string } {
+  const lengthDays = Math.round((new Date(`${to}T00:00:00Z`).getTime() - new Date(`${from}T00:00:00Z`).getTime()) / 86400000) + 1;
+  const prevTo = new Date(`${from}T00:00:00Z`);
+  prevTo.setUTCDate(prevTo.getUTCDate() - 1);
+  const prevFrom = new Date(prevTo);
+  prevFrom.setUTCDate(prevFrom.getUTCDate() - (lengthDays - 1));
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  return { from: iso(prevFrom), to: iso(prevTo) };
 }

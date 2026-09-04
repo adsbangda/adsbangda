@@ -26,7 +26,8 @@ function conversionRateOf(m?: { visitors?: number; conversions?: number }): numb
   return ((m.conversions ?? 0) / m.visitors) * 100;
 }
 
-export default async function WebsitePage() {
+export default async function WebsitePage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
+  const { month: monthParam } = await searchParams;
   const client = await getCurrentClient();
   const { website } = await getPerformanceSummary(client.id);
 
@@ -36,8 +37,17 @@ export default async function WebsitePage() {
   // naik-turun harian.
   const monthly = aggregateWebsiteMetricsByMonth(website);
 
-  const latest = monthly.at(-1);
-  const previous = monthly.at(-2);
+  // Client bisa pilih bulan mana yang mau dilihat (dropdown di bawah) —
+  // default ke bulan terbaru kalau belum pilih apa pun atau nilainya tidak
+  // valid/tidak ada datanya. KPI/Engagement/Conversion di bawah mengikuti
+  // bulan terpilih ini; chart "Website Traffic" TETAP menampilkan seluruh
+  // riwayat bulan (biar tren jangka panjang tetap kelihatan).
+  const availableMonthKeys = monthly.map((m) => m.date.slice(0, 7)); // ["2026-07", "2026-08", ...]
+  const selectedMonthKey = monthParam && availableMonthKeys.includes(monthParam) ? monthParam : availableMonthKeys.at(-1);
+  const selectedIndex = monthly.findIndex((m) => m.date.slice(0, 7) === selectedMonthKey);
+
+  const latest = selectedIndex >= 0 ? monthly[selectedIndex] : undefined;
+  const previous = selectedIndex > 0 ? monthly[selectedIndex - 1] : undefined;
 
   const visitorsDelta = pctDelta(latest?.visitors, previous?.visitors);
   const sessionsDelta = pctDelta(latest?.sessions, previous?.sessions);
@@ -55,13 +65,42 @@ export default async function WebsitePage() {
     pageViews: w.pageViews ?? null,
   }));
 
+  // Dropdown pemilih bulan — GET form biasa (tanpa JS tambahan), submit
+  // langsung update ?month= di URL. Cuma dirender kalau ada ≥2 bulan data
+  // (dengan 1 bulan atau 0, tidak ada gunanya milih-milih).
+  const monthPicker = availableMonthKeys.length > 1 && (
+    <form method="get" className="flex items-end gap-2">
+      <div>
+        <label htmlFor="month" className="font-data text-[11px] font-semibold uppercase tracking-wider text-muted">
+          Pilih Bulan
+        </label>
+        <select
+          id="month"
+          name="month"
+          defaultValue={selectedMonthKey}
+          className="mt-1 block rounded-[var(--radius-sm)] border border-border px-2.5 py-1.5 text-xs text-ink outline-none focus:border-ink"
+        >
+          {[...availableMonthKeys].reverse().map((key) => (
+            <option key={key} value={key}>
+              {monthLabel(`${key}-01`)}
+            </option>
+          ))}
+        </select>
+      </div>
+      <button type="submit" className="rounded-[var(--radius-sm)] border border-border px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:border-ink">
+        Tampilkan
+      </button>
+    </form>
+  );
+
   if (!latest) {
     return (
       <div className="page-backdrop min-h-screen">
         <Topbar title="Website" subtitle="Traffic & konversi website — data bulanan." />
-        <div className="p-5 lg:p-8">
+        <div className="space-y-4 p-5 lg:p-8">
+          {monthPicker}
           <Card>
-            <EmptyState icon={Globe} title="Belum ada data Website" description="Data akan muncul begitu tim Adsbangda mengisi/menyinkronkan performance website." />
+            <EmptyState icon={Globe} title="Belum ada data Website di bulan ini" description="Coba pilih bulan lain di atas, atau tunggu tim Adsbangda mengisi/menyinkronkan performance website." />
           </Card>
         </div>
       </div>
@@ -73,6 +112,8 @@ export default async function WebsitePage() {
       <Topbar title="Website" subtitle="Traffic & konversi website — data bulanan." />
 
       <div className="space-y-6 p-5 lg:p-8">
+        {monthPicker}
+
         {/* KPI utama — Visitors, Sessions, Page Views, Leads. Avg Session
             Duration & Bounce Rate SENGAJA tidak di sini (lihat Website
             Engagement di bawah) — 4 metrik ini yang paling mudah dipahami
@@ -114,7 +155,7 @@ export default async function WebsitePage() {
 
         {/* Website Traffic — satu chart gabungan Visitors/Sessions/Page Views, data langsung dari raw performance data. */}
         <Card>
-          <SectionHeading title="Website Traffic" description="Data bulanan" />
+          <SectionHeading title="Website Traffic" description="Data bulanan — seluruh riwayat (tidak mengikuti pilihan bulan di atas)" />
           <WebsiteTrendChart data={trafficChart} />
         </Card>
 
